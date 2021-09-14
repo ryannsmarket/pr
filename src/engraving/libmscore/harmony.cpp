@@ -785,9 +785,7 @@ const ChordDescription* Harmony::parseHarmony(const QString& ss, int* root, int*
     _userName = s;
     const ChordList* cl = score()->chordList();
     const ChordDescription* cd = 0;
-    if (useLiteral) {
-        cd = descr(s);
-    } else {
+    if (!useLiteral) {
         _parsedForm = new ParsedChord();
         _parsedForm->parse(s, cl, syntaxOnly, preferMinor);
         // parser prepends "=" to name of implied minor chords
@@ -795,20 +793,11 @@ const ChordDescription* Harmony::parseHarmony(const QString& ss, int* root, int*
         if (preferMinor) {
             s = _parsedForm->name();
         }
-        // look up to see if we already have a descriptor (chord has been used before)
-        cd = descr(s, _parsedForm);
     }
-    if (cd) {
-        // descriptor found; use its information
-        _id = cd->id;
-        if (!cd->names.empty()) {
-            _textName = cd->names.front();
-        }
-    } else {
-        // no descriptor yet; just set textname
-        // we will generate descriptor later if necessary (when we are done editing this chord)
-        _textName = s;
-    }
+    // no descriptor yet; just set textname
+    // we will generate descriptor later if necessary (when we are done editing this chord)
+    _textName = s;
+
     return cd;
 }
 
@@ -1249,36 +1238,6 @@ const ChordDescription* Harmony::descr() const
 }
 
 //---------------------------------------------------------
-//   descr
-//    look up name in chord list
-//    optionally look up by parsed chord as fallback
-//    return chord description if found, or null
-//---------------------------------------------------------
-
-const ChordDescription* Harmony::descr(const QString& name, const ParsedChord* pc) const
-{
-    const ChordList* cl = score()->chordList();
-    const ChordDescription* match = 0;
-    if (cl) {
-        for (const ChordDescription& cd : *cl) {
-            for (const QString& s : cd.names) {
-                if (s == name) {
-                    return &cd;
-                } else if (pc) {
-                    for (const ParsedChord& sParsed : cd.parsedChords) {
-                        if (sParsed == *pc) {
-                            match = &cd;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    // exact match failed, so fall back on parsed match if one was found
-    return match;
-}
-
-//---------------------------------------------------------
 //   getDescription
 //    look up id in chord list
 //    return chord description if found
@@ -1306,13 +1265,8 @@ const ChordDescription* Harmony::getDescription()
 
 const ChordDescription* Harmony::getDescription(const QString& name, const ParsedChord* pc)
 {
-    const ChordDescription* cd = descr(name, pc);
-    if (cd) {
-        _id = cd->id;
-    } else {
-        cd = generateDescription();
-        _id = cd->id;
-    }
+    const ChordDescription* cd = generateDescription();
+    _id = cd->id;
     return cd;
 }
 
@@ -1566,6 +1520,7 @@ void Harmony::draw(mu::draw::Painter* painter) const
     painter->setBrush(BrushStyle::NoBrush);
     Color color = textColor();
     painter->setPen(color);
+    qreal maxHt = 0;
     for (const TextSegment* ts : textList) {
         mu::draw::Font f(ts->m_font);
         f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
@@ -1575,6 +1530,14 @@ void Harmony::draw(mu::draw::Painter* painter) const
         painter->setFont(f);
         painter->drawText(ts->pos(), ts->text);
 #endif
+        maxHt = ts->boundingRect().height() > maxHt ? ts->boundingRect().height() : maxHt;
+    }
+    if (score()->style().styleV(Ms::Sid::chordBassNote).toString() == "/stacked" && _baseTpc != Tpc::TPC_INVALID) {
+        Color color = textColor();
+        Pen pen(color, frameWidth().val() * spatium(), PenStyle::SolidLine,
+                PenCapStyle::SquareCap, PenJoinStyle::MiterJoin);
+        painter->setPen(pen);
+        painter->drawLine(0, bbox().height() * 0.1, bbox().width(), bbox().height() * 0.1);
     }
 }
 
@@ -1661,6 +1624,12 @@ void Harmony::render(const QString& s, qreal& x, qreal& y)
     if (!s.isEmpty()) {
         mu::draw::Font f = _harmonyType != HarmonyType::ROMAN ? fontList[fontIdx] : font();
         TextSegment* ts = new TextSegment(s, f, x, y);
+        if (s == ")big" || s == "(big") {
+            int ht = ts->boundingRect().height();
+            ts->m_font.setPointSizeF(2 * f.pointSizeF());
+            ts->text = s[0];
+            ts->y = ht * 0.75;
+        }
         textList.append(ts);
         x += ts->width();
     }
@@ -1678,11 +1647,21 @@ void Harmony::render(const QList<RenderAction>& renderList, qreal& x, qreal& y, 
     int fontIdx    = 0;
     qreal _spatium = spatium();
     qreal mag      = magS();
+    bool shrinkModifiersStack = false;
+    qreal stackedModifiersMag = 0.5;
 
 // qDebug("===");
     for (const RenderAction& a : renderList) {
 // a.print();
         if (a.type == RenderAction::RenderActionType::SET) {
+            if (a.text == "startStacking") {
+                shrinkModifiersStack = true;
+                continue;
+            } else if (a.text == "endStacking") {
+                shrinkModifiersStack = false;
+                continue;
+            }
+
             TextSegment* ts = new TextSegment(fontList[fontIdx], x, y);
             ChordSymbol cs = chordList->symbol(a.text);
             if (cs.isValid()) {
@@ -1695,6 +1674,11 @@ void Harmony::render(const QList<RenderAction>& renderList, qreal& x, qreal& y, 
                 qreal nmag = chordList->nominalMag();
                 ts->m_font.setPointSizeF(ts->m_font.pointSizeF() * nmag);
             }
+
+            if (shrinkModifiersStack) {
+                ts->m_font.setPointSizeF(ts->m_font.pointSizeF() * stackedModifiersMag);
+            }
+
             textList.append(ts);
             x += ts->width();
         } else if (a.type == RenderAction::RenderActionType::MOVE) {
@@ -1769,6 +1753,121 @@ void Harmony::render(const QList<RenderAction>& renderList, qreal& x, qreal& y, 
 }
 
 //---------------------------------------------------------
+//   renderWidth
+// Temporary hack for finding the width
+//  of the bass note segment
+//---------------------------------------------------------
+
+void Harmony::renderWidth(const QList<RenderAction>& renderList, qreal& x, qreal& y, int tpc, NoteSpellingType noteSpelling,
+                          NoteCaseType noteCase)
+{
+    ChordList* chordList = score()->chordList();
+    QStack<PointF> stack;
+    int fontIdx    = 0;
+    qreal _spatium = spatium();
+    qreal mag      = magS();
+    bool shrinkModifiersStack = false;
+    qreal stackedModifiersMag = 0.5;
+
+// qDebug("===");
+    for (const RenderAction& a : renderList) {
+// a.print();
+        if (a.type == RenderAction::RenderActionType::SET) {
+            if (a.text == "startStacking") {
+                shrinkModifiersStack = true;
+                continue;
+            } else if (a.text == "endStacking") {
+                shrinkModifiersStack = false;
+                continue;
+            }
+
+            TextSegment* ts = new TextSegment(fontList[fontIdx], x, y);
+            ChordSymbol cs = chordList->symbol(a.text);
+            if (cs.isValid()) {
+                ts->m_font = fontList[cs.fontIdx];
+                ts->setText(cs.value);
+            } else {
+                ts->setText(a.text);
+            }
+            if (_harmonyType == HarmonyType::NASHVILLE) {
+                qreal nmag = chordList->nominalMag();
+                ts->m_font.setPointSizeF(ts->m_font.pointSizeF() * nmag);
+            }
+
+            if (shrinkModifiersStack) {
+                ts->m_font.setPointSizeF(ts->m_font.pointSizeF() * stackedModifiersMag);
+            }
+            x += ts->width();
+        } else if (a.type == RenderAction::RenderActionType::MOVE) {
+            x += a.movex * mag * _spatium * .2;
+            y += a.movey * mag * _spatium * .2;
+        } else if (a.type == RenderAction::RenderActionType::PUSH) {
+            stack.push(PointF(x, y));
+        } else if (a.type == RenderAction::RenderActionType::POP) {
+            if (!stack.empty()) {
+                PointF pt = stack.pop();
+                x = pt.x();
+                y = pt.y();
+            } else {
+                qDebug("RenderAction::RenderActionType::POP: stack empty");
+            }
+        } else if (a.type == RenderAction::RenderActionType::NOTE) {
+            QString c;
+            AccidentalVal acc;
+            if (tpcIsValid(tpc)) {
+                tpc2name(tpc, noteSpelling, noteCase, c, acc);
+            } else if (_function.size() > 0) {
+                c = _function.at(_function.size() - 1);
+            }
+            TextSegment* ts = new TextSegment(fontList[fontIdx], x, y);
+            QString lookup = "note" + c;
+            ChordSymbol cs = chordList->symbol(lookup);
+            if (!cs.isValid()) {
+                cs = chordList->symbol(c);
+            }
+            if (cs.isValid()) {
+                ts->m_font = fontList[cs.fontIdx];
+                ts->setText(cs.value);
+            } else {
+                ts->setText(c);
+            }
+            x += ts->width();
+        } else if (a.type == RenderAction::RenderActionType::ACCIDENTAL) {
+            QString c;
+            QString acc;
+            QString context = "accidental";
+            if (tpcIsValid(tpc)) {
+                tpc2name(tpc, noteSpelling, noteCase, c, acc);
+            } else if (_function.size() > 1) {
+                acc = _function.at(0);
+            }
+            // German spelling - use special symbol for accidental in TPC_B_B
+            // to allow it to be rendered as either Bb or B
+            if (tpc == Tpc::TPC_B_B && noteSpelling == NoteSpellingType::GERMAN) {
+                context = "german_B";
+            }
+            if (acc != "") {
+                TextSegment* ts = new TextSegment(fontList[fontIdx], x, y);
+                QString lookup = context + acc;
+                ChordSymbol cs = chordList->symbol(lookup);
+                if (!cs.isValid()) {
+                    cs = chordList->symbol(acc);
+                }
+                if (cs.isValid()) {
+                    ts->m_font = fontList[cs.fontIdx];
+                    ts->setText(cs.value);
+                } else {
+                    ts->setText(acc);
+                }
+                x += ts->width();
+            }
+        } else {
+            qDebug("unknown render action %d", static_cast<int>(a.type));
+        }
+    }
+}
+
+//---------------------------------------------------------
 //   render
 //    construct Chord Symbol
 //---------------------------------------------------------
@@ -1827,8 +1926,24 @@ void Harmony::render()
     }
 
     // render bass
+    bool stackedBass = score()->style().styleV(Ms::Sid::chordBassNote).toString() == "/stacked";
     if (_baseTpc != Tpc::TPC_INVALID) {
-        render(chordList->renderListBase, x, y, _baseTpc, _baseSpelling, _baseRenderCase);
+        if (stackedBass) {
+            qreal maxHt = 0;
+            for (const TextSegment* ts : textList) {
+                mu::draw::Font f(ts->m_font);
+                f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
+                maxHt = ts->boundingRect().height() > maxHt ? ts->boundingRect().height() : maxHt;
+            }
+            qreal x0 = x / 2;
+            qreal y0 = maxHt;
+            renderWidth(chordList->renderListBase, x0, y0, _baseTpc, _baseSpelling, _baseRenderCase);
+            x0 = x / 2 - (x0 - x / 2) / 2;
+            y0 = maxHt;
+            render(chordList->renderListBase, x0, y0, _baseTpc, _baseSpelling, _baseRenderCase);
+        } else {
+            render(chordList->renderListBase, x, y, _baseTpc, _baseSpelling, _baseRenderCase);
+        }
     }
 
     if (_rootTpc != Tpc::TPC_INVALID && capo > 0 && capo < 12) {
@@ -1856,7 +1971,11 @@ void Harmony::render()
             }
         }
 
-        render("(", x, y);
+        if (stackedBass) {
+            render("(big", x, y);
+        } else {
+            render("(", x, y);
+        }
         render(chordList->renderListRoot, x, y, capoRootTpc, _rootSpelling, _rootRenderCase);
 
         // render extension
@@ -1866,9 +1985,28 @@ void Harmony::render()
         }
 
         if (capoBassTpc != Tpc::TPC_INVALID) {
-            render(chordList->renderListBase, x, y, capoBassTpc, _baseSpelling, _baseRenderCase);
+            if (stackedBass) {
+                qreal maxHt = 0;
+                for (const TextSegment* ts : textList) {
+                    mu::draw::Font f(ts->m_font);
+                    f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
+                    maxHt = (ts->boundingRect().height() > maxHt) && (ts->text != "(") ? ts->boundingRect().height() : maxHt;
+                }
+                qreal x0 = (3 * x) / 4;
+                qreal y0 = maxHt;
+                renderWidth(chordList->renderListBase, x0, y0, capoRootTpc, _baseSpelling, _baseRenderCase);
+                x0 = (3 * x) / 4 - (x0 - ((3 * x) / 4)) / 2;
+                y0 = maxHt;
+                render(chordList->renderListBase, x0, y0, capoBassTpc, _baseSpelling, _baseRenderCase);
+            } else {
+                render(chordList->renderListBase, x, y, capoBassTpc, _baseSpelling, _baseRenderCase);
+            }
         }
-        render(")", x, y);
+        if (stackedBass) {
+            render(")big", x, y);
+        } else {
+            render(")", x, y);
+        }
     }
 
     if (_rightParen) {

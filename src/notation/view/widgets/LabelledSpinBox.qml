@@ -20,38 +20,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import QtQuick 2.15
-import QtQuick.Controls 2.15
 
 import MuseScore.UiComponents 1.0
-import MuseScore.Inspector 1.0
-import "../../common"
-import "internal"
 
 Column {
     id: root
 
-    property QtObject model: null
+    property alias text: label.text
 
-    objectName: "ChordSymbolSettings"
+    property alias currentValue: spinBox.currentValue
+    property alias step: spinBox.step
+    property alias decimals: spinBox.decimals
+    property alias minValue: spinBox.minValue
+    property alias maxValue: spinBox.maxValue
+    property alias units: spinBox.measureUnitsSymbol
 
-    spacing: 16
+    signal valueEdited(var newValue)
 
-    StyledTextLabel{
-        text: qsTrc("inspector", "Chord symbol style")
+    spacing: 6
+
+    StyledTextLabel {
+        id: label
+        anchors.bottomMargin: 8
+        horizontalAlignment: Text.AlignLeft
     }
 
-    ChordSymbolStyleSettings {
-        id: styleSettings
-        width: parent.width
-        chordStylesModel: root.model ? root.model.chordStylesModel : null
-    }
-
-    FlatButton {
-        width: parent.width
+    IncrementalPropertyControl {
+        id: spinBox
         height: 30
-
-        text: qsTrc("inspector", "Edit styles NW")
-
-        onClicked: root.model.openStylesDialog()
+        onValueEdited: function (newValue) {
+            root.valueEdited(newValue)
+        }
     }
 }

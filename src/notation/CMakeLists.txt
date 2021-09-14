@@ -51,6 +51,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/iinstrumentsrepository.h
     ${CMAKE_CURRENT_LIST_DIR}/iselectinstrumentscenario.h
 
+    ${CMAKE_CURRENT_LIST_DIR}/internal/chordsymbolstylemanager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/chordsymbolstylemanager.h    
     ${CMAKE_CURRENT_LIST_DIR}/internal/notationuiactions.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/notationuiactions.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/igetscore.h
@@ -135,6 +137,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/selectionfiltermodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/editgridsizedialogmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/editgridsizedialogmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/widgets/chordsymboleditormodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/widgets/chordsymboleditormodel.cpp
     )
 
 set(MODULE_UI

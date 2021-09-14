@@ -23,15 +23,14 @@
 #define MU_INSPECTOR_CHORDSYMBOLSETTINGSMODEL_H
 
 #include "models/abstractinspectormodel.h"
+#include "chordsymbolstylesmodel.h"
 
 namespace mu::inspector {
 class ChordSymbolSettingsModel : public AbstractInspectorModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(PropertyItem * isLiteral READ isLiteral CONSTANT)
-    Q_PROPERTY(PropertyItem * voicingType READ voicingType CONSTANT)
-    Q_PROPERTY(PropertyItem * durationType READ durationType CONSTANT)
+    Q_PROPERTY(ChordSymbolStylesModel * chordStylesModel READ chordStylesModel CONSTANT)
 
 public:
     explicit ChordSymbolSettingsModel(QObject* parent, IElementRepositoryService* repository);
@@ -41,14 +40,12 @@ public:
     void loadProperties() override;
     void resetProperties() override;
 
-    PropertyItem* isLiteral() const;
-    PropertyItem* voicingType() const;
-    PropertyItem* durationType() const;
+    ChordSymbolStylesModel* chordStylesModel() const;
+
+    Q_INVOKABLE void openStylesDialog();
 
 private:
-    PropertyItem* m_isLiteral = nullptr;
-    PropertyItem* m_voicingType = nullptr;
-    PropertyItem* m_durationType = nullptr;
+    ChordSymbolStylesModel* m_chordStylesModel = nullptr;
 };
 }
 

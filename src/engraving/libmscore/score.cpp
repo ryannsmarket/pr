@@ -4942,6 +4942,36 @@ void Score::changeSelectedNotesVoice(int voice)
 }
 
 //---------------------------------------------------------
+//   updateChordList
+//    updates qualitySymbols and
+//    other settings in the chord list
+//---------------------------------------------------------
+void Score::updateChordList()
+{
+    _chordList.qualitySymbols.clear();
+    _chordList.qualitySymbols.insert("major", "");
+    _chordList.qualitySymbols.insert("minor", style().value(Sid::chordQualityMinor).toString());
+    _chordList.qualitySymbols.insert("half-diminished", style().value(Sid::chordQualityHalfDiminished).toString());
+    _chordList.qualitySymbols.insert("major7th", style().value(Sid::chordQualityMajorSeventh).toString());
+    _chordList.qualitySymbols.insert("diminished", style().value(Sid::chordQualityDiminished).toString());
+    _chordList.qualitySymbols.insert("augmented", style().value(Sid::chordQualityAugmented).toString());
+    _chordList.qualitySymbols.insert("sixNine", style().value(Sid::chordExtensionSixNine).toString());
+    _chordList.qualitySymbols.insert("omit", style().value(Sid::chordModifierOmit).toString());
+    _chordList.qualitySymbols.insert("suspension", style().value(Sid::chordModifierSuspension).toString());
+    _chordList.qualitySymbols.insert("bassNote", style().value(Sid::chordBassNote).toString());
+
+    _chordList.usePresets = style().value(Sid::useChordSymbolPresets).toBool();
+    _chordList.stackModifiers = style().value(Sid::stackModifiers).toBool();
+    _chordList.autoCapitalization = style().value(Sid::automaticCapitalization).toBool();
+    _chordList.lowerCaseMajorSymbols = style().value(Sid::lowerCaseMajorSymbols).toBool();
+    _chordList.lowerCaseMinorSymbols = style().value(Sid::lowerCaseMinorSymbols).toBool();
+    _chordList.alterationsParentheses = style().value(Sid::chordAlterationsParentheses).toBool();
+    _chordList.suspensionsParentheses = style().value(Sid::chordSuspensionsParentheses).toBool();
+    _chordList.minMajParentheses = style().value(Sid::chordMinMajParentheses).toBool();
+    _chordList.addOmitParentheses = style().value(Sid::chordAddOmitParentheses).toBool();
+}
+
+//---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
 

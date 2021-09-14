@@ -153,6 +153,12 @@ public:
     bool parse(const QString&, const ChordList*, bool syntaxOnly = false, bool preferMinor = false);
     QString fromXml(const QString&, const QString&, const QString&, const QString&, const QList<HDegree>&, const ChordList*);
     const QList<RenderAction>& renderList(const ChordList*);
+    void respellQualitySymbols(const ChordList* cl);
+    void sortModifiers();
+    void stripParentheses();
+    void findModifierStackIndices();
+    void checkQualitySymbolsLetterCase(const ChordList* cl);
+    void addParentheses(const ChordList* cl);
     bool parseable() const { return _parseable; }
     bool understandable() const { return _understandable; }
     const QString& name() const { return _name; }
@@ -188,6 +194,12 @@ private:
     QString _xmlParens;
     QStringList _xmlDegrees;
     QStringList major, minor, diminished, augmented, lower, raise, mod1, mod2, symbols;
+    QList<int> alterationStackIndices; // Starting indices of alterations for stacking
+    QList<int> addOmitStackIndices; // Starting indices of add/omit for stacking
+    QList<int> openParenthesesIndices;
+    QList<int> closeParenthesesIndices;
+    int alterationStackingEnd = -1;
+    int addOmitStackingEnd = -1;
     HChord chord;
     bool _parseable;
     bool _understandable;
@@ -261,6 +273,7 @@ class ChordList : public QMap<int, ChordDescription>
     QMap<QString, ChordSymbol> symbols;
     bool _autoAdjust = false;
     qreal _nmag = 1.0, _nadjust = 0.0;
+    qreal _qmag = 1.0, _qadjust = 0.0;
     qreal _emag = 1.0, _eadjust = 0.0;
     qreal _mmag = 1.0, _madjust = 0.0;
 
@@ -272,13 +285,27 @@ public:
     QList<RenderAction> renderListFunction;
     QList<RenderAction> renderListBase;
     QList<ChordToken> chordTokenList;
+    QHash<QString, QString> qualitySymbols;
     static int privateID;
+
+    bool usePresets = false;
+    bool stackModifiers = false;
+    bool autoCapitalization = false;
+    bool lowerCaseMajorSymbols = false;
+    bool lowerCaseMinorSymbols = true;
+    bool alterationsParentheses = true;
+    bool suspensionsParentheses = true;
+    bool minMajParentheses = true;
+    bool addOmitParentheses = true;
 
     bool autoAdjust() const { return _autoAdjust; }
     qreal nominalMag() const { return _nmag; }
     qreal nominalAdjust() const { return _nadjust; }
-    void configureAutoAdjust(qreal emag = 1.0, qreal eadjust = 0.0, qreal mmag = 1.0, qreal madjust = 0.0);
+    qreal modifierMag() const { return _mmag; }
+    void configureAutoAdjust(qreal qmag = 1.0, qreal qadjust = 0.0, qreal emag = 1.0, qreal eadjust = 0.0, qreal mmag = 1.0,
+                             qreal madjust = 0.0);
     qreal position(const QStringList& names, ChordTokenClass ctc) const;
+    void respellRenderListBase();
 
     bool read(const QString&);
     bool read(QIODevice* device);

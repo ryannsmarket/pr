@@ -115,6 +115,8 @@ class Harmony final : public TextBase
     void render(const QString&, qreal&, qreal&);
     void render(const QList<RenderAction>& renderList, qreal&, qreal&, int tpc, NoteSpellingType noteSpelling = NoteSpellingType::STANDARD,
                 NoteCaseType noteCase = NoteCaseType::AUTO);
+    void renderWidth(const QList<RenderAction>& renderList, qreal&, qreal&, int tpc,
+                     NoteSpellingType noteSpelling = NoteSpellingType::STANDARD, NoteCaseType noteCase = NoteCaseType::AUTO);
     Sid getPropertyStyle(Pid) const override;
 
     Harmony* findInSeg(Segment* seg) const;
@@ -148,7 +150,6 @@ public:
     Segment* getParentSeg() const;
 
     const ChordDescription* descr() const;
-    const ChordDescription* descr(const QString&, const ParsedChord* pc = 0) const;
     const ChordDescription* getDescription();
     const ChordDescription* getDescription(const QString&, const ParsedChord* pc = 0);
     const ChordDescription* generateDescription();

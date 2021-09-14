@@ -27,6 +27,7 @@
 #include "context/iglobalcontext.h"
 #include "inotationconfiguration.h"
 #include "iinteractive.h"
+#include "ui/iuiengine.h"
 
 namespace mu::notation {
 class EditStyle : public QDialog, private Ui::EditStyleBase
@@ -36,6 +37,7 @@ class EditStyle : public QDialog, private Ui::EditStyleBase
     INJECT(notation, mu::context::IGlobalContext, globalContext)
     INJECT(notation, mu::notation::INotationConfiguration, configuration)
     INJECT(notation, mu::framework::IInteractive, interactive)
+    INJECT(notation, mu::ui::IUiEngine, qmlEngineProvider)
 
 public:
     EditStyle(QWidget* = nullptr);
@@ -44,6 +46,8 @@ public:
     void setPage(int idx);
     void gotoElement(EngravingItem* e);
     static bool elementHasPage(EngravingItem* e);
+
+    Q_INVOKABLE void goToChordTextSettings();
 
 public slots:
     void accept();
@@ -93,8 +97,6 @@ private:
     int pageListMap[50];
 
 private slots:
-    void selectChordDescriptionFile();
-    void setChordStyle(bool);
     void enableStyleWidget(const StyleId idx, bool enable);
     void enableVerticalSpreadClicked(bool);
     void disableVerticalSpreadClicked(bool);
