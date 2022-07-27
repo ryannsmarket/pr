@@ -35,6 +35,7 @@ using namespace mu::audio;
 using namespace mu::actions;
 using namespace mu::engraving;
 
+static const ActionCode LOADMEDIA_CODE("loadmedia");
 static const ActionCode PLAY_CODE("play");
 static const ActionCode STOP_CODE("stop");
 static const ActionCode REWIND_CODE("rewind");
@@ -49,6 +50,7 @@ static const ActionCode REPEAT_CODE("repeat");
 
 void PlaybackController::init()
 {
+    dispatcher()->reg(this, LOADMEDIA_CODE, this, &PlaybackController::loadMedia);
     dispatcher()->reg(this, PLAY_CODE, this, &PlaybackController::togglePlay);
     dispatcher()->reg(this, STOP_CODE, this, &PlaybackController::pause);
     dispatcher()->reg(this, REWIND_CODE, this, &PlaybackController::rewind);
@@ -87,6 +89,37 @@ void PlaybackController::init()
     });
 
     m_needRewindBeforePlay = true;
+}
+
+void PlaybackController::loadMedia()
+{
+    QString filterextension = QString("(*.wav)");
+    QString filter = qtrc("wav", "WAVE Sounds files") + filterextension;
+    io::path_t fileName = interactive()->selectOpeningFile("External wave file", QString(""), filter);
+
+    QFile* file = new QFile();
+    file->setFileName(fileName.toQString());
+    AudioOutputParams outParams;
+    outParams.muted=false;
+    AudioInputParams inParams;
+    InstrumentTrackId instrumentTrackId;
+    instrumentTrackId.partId=998;
+    instrumentTrackId.instrumentId="external-wave";
+    removeTrack(instrumentTrackId);
+    if (file->exists()) {
+        playback()->tracks()->addTrack(m_currentSequenceId, "WAVE", file, { std::move(inParams), std::move(outParams) })
+        .onResolve(this, [this, instrumentTrackId](const TrackId trackId, const AudioParams& appliedParams) {
+            m_trackIdMap.insert({ instrumentTrackId, trackId });
+
+            audioSettings()->setTrackInputParams(instrumentTrackId, appliedParams.in);
+            audioSettings()->setTrackOutputParams(instrumentTrackId, appliedParams.out);
+
+            updateMuteStates();
+        })
+        .onReject(this, [](int code, const std::string& msg) {
+            LOGE() << "can't add a new track, code: [" << code << "] " << msg;
+        });
+    }
 }
 
 void PlaybackController::updateCurrentTempo()
@@ -742,7 +775,7 @@ InstrumentTrackIdSet PlaybackController::availableInstrumentTracks() const
 void PlaybackController::removeNonExistingTracks()
 {
     for (const InstrumentTrackId& instrumentTrackId : availableInstrumentTracks()) {
-        if (instrumentTrackId == notationPlayback()->metronomeTrackId()) {
+        if ((instrumentTrackId == notationPlayback()->metronomeTrackId()) || instrumentTrackId.partId == 998) {
             continue;
         }
 

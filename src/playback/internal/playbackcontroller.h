@@ -39,13 +39,18 @@
 #include "audio/iaudiooutput.h"
 #include "audio/iplayback.h"
 #include "audio/audiotypes.h"
+#include "global/iinteractive.h"
+#include "io/file.h"
 
 #include "../iplaybackcontroller.h"
 #include "../iplaybackconfiguration.h"
+#include <QFile>
 
+using namespace mu::framework;
 namespace mu::playback {
 class PlaybackController : public IPlaybackController, public actions::Actionable, public async::Asyncable
 {
+    INJECT(playback, framework::IInteractive, interactive)
     INJECT(playback, actions::IActionsDispatcher, dispatcher)
     INJECT(playback, context::IGlobalContext, globalContext)
     INJECT(playback, IPlaybackConfiguration, configuration)
@@ -54,7 +59,7 @@ class PlaybackController : public IPlaybackController, public actions::Actionabl
 
 public:
     void init();
-
+    void loadMedia();
     bool isPlayAllowed() const override;
     async::Notification isPlayAllowedChanged() const override;
 
