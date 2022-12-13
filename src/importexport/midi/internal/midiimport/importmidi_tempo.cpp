@@ -30,6 +30,9 @@
 #include "libmscore/factory.h"
 #include "importmidi_operations.h"
 
+#include "modularity/ioc.h"
+#include "importexport/midi/imidiconfiguration.h"
+
 #include "log.h"
 
 using namespace mu::engraving;
@@ -78,7 +81,9 @@ void setTempoToScore(Score* score, int tick, double beatsPerSecond)
 
     auto* data = midiImportOperations.data();
     if (data->trackOpers.showTempoText.value()) {
-        const int tempoInBpm = qRound(beatsPerSecond * 60.0);
+        auto conf = mu::modularity::ioc()->resolve<mu::iex::midi::IMidiImportExportConfiguration>("iex_midi");
+        bool round = conf ? conf->roundTempo() : true;
+        const double tempoInBpm = round ? qRound(beatsPerSecond * 60.0) : (beatsPerSecond * 60.0);
 
         Measure* measure = score->tick2measure(Fraction::fromTicks(tick));
         if (!measure) {
@@ -102,7 +107,9 @@ void setTempoToScore(Score* score, int tick, double beatsPerSecond)
 
 double roundToBpm(double beatsPerSecond)
 {
-    return qRound(beatsPerSecond * 60.0) / 60.0;
+    auto conf = mu::modularity::ioc()->resolve<mu::iex::midi::IMidiImportExportConfiguration>("iex_midi");
+    bool round = conf ? conf->roundTempo() : true;
+    return round ? qRound(beatsPerSecond * 60.0) / 60.0 : beatsPerSecond;
 }
 
 void applyAllTempoEvents(const std::multimap<int, MTrack>& tracks, Score* score)
