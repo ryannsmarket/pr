@@ -115,6 +115,11 @@ int ImportPreferencesModel::currentShortestNote() const
     return midiImportExportConfiguration()->midiShortestNote();
 }
 
+bool ImportPreferencesModel::roundTempo() const
+{
+    return midiImportExportConfiguration()->roundTempo();
+}
+
 bool ImportPreferencesModel::needAskAboutApplyingNewStyle() const
 {
     return musicXmlConfiguration()->needAskAboutApplyingNewStyle();
@@ -178,6 +183,16 @@ void ImportPreferencesModel::setCurrentShortestNote(int note)
 
     midiImportExportConfiguration()->setMidiShortestNote(note);
     emit currentShortestNoteChanged(note);
+}
+
+void ImportPreferencesModel::setRoundTempo(bool value)
+{
+    if (value == roundTempo()) {
+        return;
+    }
+
+    midiImportExportConfiguration()->setRoundTempo(value);
+    emit roundTempoChanged(value);
 }
 
 void ImportPreferencesModel::setNeedAskAboutApplyingNewStyle(bool value)

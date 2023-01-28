@@ -55,6 +55,8 @@ class ImportPreferencesModel : public QObject, public async::Asyncable
 
     Q_PROPERTY(int currentShortestNote READ currentShortestNote WRITE setCurrentShortestNote NOTIFY currentShortestNoteChanged)
 
+    Q_PROPERTY(bool roundTempo READ roundTempo WRITE setRoundTempo NOTIFY roundTempoChanged)
+
     Q_PROPERTY(
         bool needAskAboutApplyingNewStyle READ needAskAboutApplyingNewStyle WRITE setNeedAskAboutApplyingNewStyle NOTIFY needAskAboutApplyingNewStyleChanged)
 
@@ -76,6 +78,8 @@ public:
     bool importBreaks() const;
     bool needUseDefaultFont() const;
 
+    bool roundTempo() const;
+
     int currentShortestNote() const;
 
     bool needAskAboutApplyingNewStyle() const;
@@ -90,6 +94,8 @@ public slots:
 
     void setCurrentShortestNote(int note);
 
+    void setRoundTempo(bool round);
+
     void setNeedAskAboutApplyingNewStyle(bool value);
 
 signals:
@@ -99,6 +105,9 @@ signals:
     void importBreaksChanged(bool importBreaks);
     void needUseDefaultFontChanged(bool needUseDefaultFont);
     void currentShortestNoteChanged(int currentShortestNote);
+
+    void roundTempoChanged(bool round);
+
     void needAskAboutApplyingNewStyleChanged(bool needAskAboutApplyingNewStyle);
 };
 }

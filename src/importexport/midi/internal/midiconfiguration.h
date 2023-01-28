@@ -34,6 +34,9 @@ public:
     int midiShortestNote() const override; // ticks
     void setMidiShortestNote(int ticks) override;
 
+    bool roundTempo() const override;
+    void setRoundTempo(bool round) override;
+
     bool isMidiExportRpns() const override;
     void setIsMidiExportRpns(bool exportRpns) const override;
 
