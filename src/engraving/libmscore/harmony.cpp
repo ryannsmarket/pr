@@ -1811,7 +1811,10 @@ void Harmony::render()
         render(u"( ", x, y);
     }
 
-    if (_rootTpc != Tpc::TPC_INVALID) {
+    bool capoChordsOnly = score()->styleB(Sid::capoChordsOnly);
+    bool renderRegularChords = capo == 0 || (capo > 0 && capo < 12 && !capoChordsOnly);
+
+    if (_rootTpc != Tpc::TPC_INVALID && renderRegularChords) {
         // render root
         render(chordList->renderListRoot, x, y, _rootTpc, _rootSpelling, _rootRenderCase);
         // render extension
@@ -1829,12 +1832,12 @@ void Harmony::render()
         if (cd) {
             render(cd->renderList, x, y, 0);
         }
-    } else {
+    } else if (renderRegularChords) {
         render(_textName, x, y);
     }
 
     // render bass
-    if (_baseTpc != Tpc::TPC_INVALID) {
+    if (_baseTpc != Tpc::TPC_INVALID && renderRegularChords) {
         render(chordList->renderListBase, x, y, _baseTpc, _baseSpelling, _baseRenderCase);
     }
 
@@ -1863,7 +1866,10 @@ void Harmony::render()
             }
         }
 
-        render(u"(", x, y);
+        if (!capoChordsOnly) {
+            render(u"(", x, y);
+        }
+
         render(chordList->renderListRoot, x, y, capoRootTpc, _rootSpelling, _rootRenderCase);
 
         // render extension
@@ -1875,7 +1881,10 @@ void Harmony::render()
         if (capoBassTpc != Tpc::TPC_INVALID) {
             render(chordList->renderListBase, x, y, capoBassTpc, _baseSpelling, _baseRenderCase);
         }
-        render(u")", x, y);
+
+        if (!capoChordsOnly) {
+            render(u")", x, y);
+        }
     }
 
     if (_rightParen) {

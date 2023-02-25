@@ -512,6 +512,7 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::oddFooterR,               false, oddFooterR,                   0 },
 
         { StyleId::ottavaNumbersOnly,        false, ottavaNumbersOnly,            resetOttavaNumbersOnly },
+        { StyleId::capoChordsOnly,           false, capoChordsOnly,               0 },
         { StyleId::capoPosition,             false, capoPosition,                 0 },
         { StyleId::fretNumMag,               true,  fretNumMag,                   0 },
         { StyleId::fretNumPos,               false, fretNumGroup,                 0 },

@@ -11017,6 +11017,13 @@ By default, they will be placed such as that their right end are at the same lev
                  </property>
                 </widget>
                </item>
+               <item row="3" column="1">
+                <widget class="QCheckBox" name="capoChordsOnly">
+                 <property name="text">
+                  <string>Display capo chords only</string>
+                 </property>
+                </widget>
+               </item>
                <item row="1" column="1" colspan="2">
                 <widget class="QGroupBox" name="harmonyPlay">
                  <property name="title">
@@ -13421,6 +13428,7 @@ By default, they will be placed such as that their right end are at the same lev
   <tabstop>resetMaxChordShiftAbove</tabstop>
   <tabstop>maxChordShiftBelow</tabstop>
   <tabstop>resetMaxChordShiftBelow</tabstop>
+  <tabstop>capoChordsOnly</tabstop>
   <tabstop>capoPosition</tabstop>
   <tabstop>fretY</tabstop>
   <tabstop>fretMag</tabstop>

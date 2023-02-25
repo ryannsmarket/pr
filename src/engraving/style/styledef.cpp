@@ -372,6 +372,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     { Sid::nashvilleNumberFrameFgColor,  "nashvilleNumberFrameFgColor",  PropertyValue::fromValue(Color::BLACK) },
     { Sid::nashvilleNumberFrameBgColor,  "nashvilleNumberFrameBgColor",  PropertyValue::fromValue(Color::transparent) },
 
+    { Sid::capoChordsOnly,          "capoChordsOnly",          false },
     { Sid::capoPosition,            "capoPosition",            PropertyValue(0) },
     { Sid::fretNumMag,              "fretNumMag",              PropertyValue(2.0) },
     { Sid::fretNumPos,              "fretNumPos",              PropertyValue(0) },
