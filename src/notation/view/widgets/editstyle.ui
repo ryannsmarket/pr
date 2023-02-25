@@ -13428,8 +13428,8 @@ By default, they will be placed such as that their right end are at the same lev
   <tabstop>resetMaxChordShiftAbove</tabstop>
   <tabstop>maxChordShiftBelow</tabstop>
   <tabstop>resetMaxChordShiftBelow</tabstop>
-  <tabstop>capoChordsOnly</tabstop>
   <tabstop>capoPosition</tabstop>
+  <tabstop>capoChordsOnly</tabstop>
   <tabstop>fretY</tabstop>
   <tabstop>fretMag</tabstop>
   <tabstop>radioFretNumRight</tabstop>
