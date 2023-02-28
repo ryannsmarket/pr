@@ -708,7 +708,8 @@ void Score::rebuildTempoAndTimeSigMaps(Measure* measure)
                 }
             }
             if (stretch != 0.0 && stretch != 1.0) {
-                BeatsPerSecond otempo = tempomap()->tempo(segment.tick().ticks());
+                BeatsPerSecond multiplier = tempomap()->tempoMultiplier();
+                BeatsPerSecond otempo = tempomap()->tempo(segment.tick().ticks()) / multiplier.val;
                 BeatsPerSecond ntempo = otempo.val / stretch;
                 tempomap()->setTempo(segment.tick().ticks(), ntempo);
 
