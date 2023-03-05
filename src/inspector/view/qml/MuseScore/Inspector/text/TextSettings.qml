@@ -142,6 +142,8 @@ Column {
             anchors.leftMargin: 2
             anchors.right: parent.right
 
+            showAlpha: true
+
             navigationName: "HighlightColorMenu"
             navigationPanel: root.navigationPanel
             navigationRowStart: borderColorSection.navigationRowEnd + 1

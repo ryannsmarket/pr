@@ -167,7 +167,7 @@ public:
     virtual io::paths_t selectMultipleDirectories(const QString& title, const io::path_t& dir, const io::paths_t& selectedDirectories) = 0;
 
     // color
-    virtual QColor selectColor(const QColor& color = Qt::white, const QString& title = "") = 0;
+    virtual QColor selectColor(const QColor& color = Qt::white, const QString& title = "", bool showAlpha = false) = 0;
 
     // custom
     virtual RetVal<Val> open(const std::string& uri) const = 0;

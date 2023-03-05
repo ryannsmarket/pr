@@ -223,14 +223,19 @@ io::paths_t Interactive::selectMultipleDirectories(const QString& title, const i
     return io::pathsFromString(result.val.toQString().toStdString());
 }
 
-QColor Interactive::selectColor(const QColor& color, const QString& title)
+QColor Interactive::selectColor(const QColor& color, const QString& title, bool showAlpha)
 {
-    QColor colorEditable = color;
-    if (colorEditable.alpha() == 0) {
-        colorEditable.setAlpha(255);
+    if (showAlpha == true) {
+        QColor colorEditable = color;
+        if (colorEditable.alpha() == 0) {
+            colorEditable.setAlpha(255);
+        }
+        QColor selectedColor = QColorDialog::getColor(colorEditable, nullptr, title, QColorDialog::ShowAlphaChannel);
+        return selectedColor.isValid() ? selectedColor : color;
+    } else {
+        QColor selectedColor = QColorDialog::getColor(color, nullptr, title);
+        return selectedColor.isValid() ? selectedColor : color;
     }
-    QColor selectedColor = QColorDialog::getColor(colorEditable, nullptr, title, QColorDialog::ShowAlphaChannel);
-    return selectedColor.isValid() ? selectedColor : color;
 }
 
 RetVal<Val> Interactive::open(const std::string& uri) const

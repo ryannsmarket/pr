@@ -29,7 +29,7 @@ ColorPickerModel::ColorPickerModel(QObject* parent)
 {
 }
 
-QColor ColorPickerModel::selectColor(const QColor& currentColor)
+QColor ColorPickerModel::selectColor(const QColor& currentColor, bool showAlpha)
 {
-    return interactive()->selectColor(currentColor);
+    return interactive()->selectColor(currentColor, "", showAlpha);
 }
