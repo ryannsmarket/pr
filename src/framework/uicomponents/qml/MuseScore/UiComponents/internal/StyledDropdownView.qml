@@ -54,6 +54,8 @@ DropdownView {
 
     property int contentWidth: root.itemWidth
     property int contentHeight: content.contentBodyHeight
+    property bool isFontDropdown: false
+    property var excludedFontNames: ["Bookshelf Symbol 7", "Webdings", "Wingdings", "Wingdings 2", "Wingdings 3", "MS Reference Specialty", "MT Extra"]
 
     //! NOTE: Due to the fact that the dropdown window opens without activating focus,
     //!       for all items in the dropdown, the accessible window must be the window
@@ -263,6 +265,19 @@ DropdownView {
                     anchors.leftMargin: 12
                     horizontalAlignment: Text.AlignLeft
 
+                    function isFontVisible() {
+                        if(root.isFontDropdown) {
+                            if(excludedFontNames.includes(Utils.getItemValue(root.model, model.index, root.valueRole, undefined))) {
+                                return ui.theme.bodyFont.family
+                            } else {
+                                return Utils.getItemValue(root.model, model.index, root.valueRole, undefined)
+                            }
+                        } else {
+                            return ui.theme.bodyFont.family
+                        }
+                    }
+
+                    font.family: isFontVisible()
                     text: Utils.getItemValue(root.model, model.index, root.textRole, "")
                 }
 
