@@ -36,6 +36,8 @@ Rectangle {
 
     signal newColorSelected(var newColor)
 
+    property bool showAlpha: false
+
     height: 30
     width: parent.width
 
@@ -57,7 +59,7 @@ Rectangle {
         id: prv
 
         function selectColor() {
-            var selectedColor = colorPickerModel.selectColor(root.color)
+            var selectedColor = colorPickerModel.selectColor(root.color, showAlpha)
             root.newColorSelected(selectedColor)
         }
     }

@@ -31,6 +31,8 @@ InspectorPropertyView {
     height: implicitHeight
     width: parent.width
 
+    property alias showAlpha: colorPicker.showAlpha
+
     titleText: qsTrc("inspector", "Color")
 
     navigationName: "Color Section"

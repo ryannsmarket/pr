@@ -38,7 +38,7 @@ class ColorPickerModel : public QObject
 public:
     explicit ColorPickerModel(QObject* parent = nullptr);
 
-    Q_INVOKABLE QColor selectColor(const QColor& currentColor);
+    Q_INVOKABLE QColor selectColor(const QColor& currentColor, bool showAlpha = false);
 };
 }
 
