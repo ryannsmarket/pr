@@ -36,6 +36,8 @@
 #include "types/translatablestring.h"
 #include "types/val.h"
 #include "view/iconcodes.h"
+#include "shortcuts/shortcutstypes.h"
+#include "context/shortcutcontext.h"
 
 namespace mu::ui {
 using ThemeCode = std::string;
@@ -188,9 +190,32 @@ enum class Checkable {
     Yes
 };
 
+enum class ActionCategory {
+    Undefined = -1,
+    Internal,
+    Tablature,
+    ViewingNavigation,
+    Playback,
+    LayoutFormatting,
+    SelectingEditing,
+    Application,
+    Accessibility,
+    File,
+    SelectionNavigation,
+    TextLyrics,
+    ChordSymbolsFiguredBass,
+    Measures,
+    MusicalSymbols,
+    DialogsPanels,
+    NoteInput,
+    Workspace,
+    Plugins
+};
+
 struct UiAction
 {
     actions::ActionCode code;
+    ActionCategory category = ActionCategory::Internal;
     UiContext uiCtx = UiCtxAny;
     std::string scCtx = "any";
     MnemonicString title;
@@ -200,24 +225,24 @@ struct UiAction
     std::vector<std::string> shortcuts;
 
     UiAction() = default;
-    UiAction(const actions::ActionCode& code, UiContext ctx, std::string scCtx, Checkable ch = Checkable::No)
-        : code(code), uiCtx(ctx), scCtx(scCtx), checkable(ch) {}
+    UiAction(const actions::ActionCode& code, ActionCategory cat, UiContext ctx, std::string scCtx, Checkable ch = Checkable::No)
+        : code(code), category(cat), uiCtx(ctx), scCtx(scCtx), checkable(ch) {}
 
-    UiAction(const actions::ActionCode& code, UiContext ctx, std::string scCtx, const MnemonicString& title,
+    UiAction(const actions::ActionCode& code, ActionCategory cat, UiContext ctx, std::string scCtx, const MnemonicString& title,
              Checkable ch = Checkable::No)
-        : code(code), uiCtx(ctx), scCtx(scCtx), title(title), checkable(ch) {}
+        : code(code), category(cat), uiCtx(ctx), scCtx(scCtx), title(title), checkable(ch) {}
 
-    UiAction(const actions::ActionCode& code, UiContext ctx, std::string scCtx, const MnemonicString& title,
+    UiAction(const actions::ActionCode& code, ActionCategory cat, UiContext ctx, std::string scCtx, const MnemonicString& title,
              const TranslatableString& desc, Checkable ch = Checkable::No)
-        : code(code), uiCtx(ctx), scCtx(scCtx), title(title), description(desc),  checkable(ch) {}
+        : code(code), category(cat), uiCtx(ctx), scCtx(scCtx), title(title), description(desc),  checkable(ch) {}
 
-    UiAction(const actions::ActionCode& code, UiContext ctx, std::string scCtx, const MnemonicString& title,
+    UiAction(const actions::ActionCode& code, ActionCategory cat, UiContext ctx, std::string scCtx, const MnemonicString& title,
              const TranslatableString& desc, IconCode::Code icon, Checkable ch = Checkable::No)
-        : code(code), uiCtx(ctx), scCtx(scCtx), title(title), description(desc), iconCode(icon), checkable(ch) {}
+        : code(code), category(cat), uiCtx(ctx), scCtx(scCtx), title(title), description(desc), iconCode(icon), checkable(ch) {}
 
-    UiAction(const actions::ActionCode& code, UiContext ctx, std::string scCtx, const MnemonicString& title, IconCode::Code icon,
+    UiAction(const actions::ActionCode& code, ActionCategory cat, UiContext ctx, std::string scCtx, const MnemonicString& title, IconCode::Code icon,
              Checkable ch = Checkable::No)
-        : code(code), uiCtx(ctx), scCtx(scCtx), title(title), iconCode(icon), checkable(ch) {}
+        : code(code), category(cat), uiCtx(ctx), scCtx(scCtx), title(title), iconCode(icon), checkable(ch) {}
 
     bool isValid() const
     {
@@ -229,6 +254,7 @@ struct UiAction
         return code == other.code
                && uiCtx == other.uiCtx
                && scCtx == other.scCtx
+               && category == other.category
                && title == other.title
                && description == other.description
                && iconCode == other.iconCode

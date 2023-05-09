@@ -51,14 +51,37 @@ class ShortcutsModel : public QAbstractListModel, public async::Asyncable
     Q_PROPERTY(QVariant currentShortcut READ currentShortcut NOTIFY selectionChanged)
 
 public:
+    inline static std::vector<TranslatableString> categories
+        = { TranslatableString("framework/actioncategory", "Undefined"),
+            TranslatableString("framework/actioncategory", "Internal"),
+            TranslatableString("framework/actioncategory", "Tablature"),
+            TranslatableString("framework/actioncategory", "Viewing & Navigation"),
+            TranslatableString("framework/actioncategory", "Playback"),
+            TranslatableString("framework/actioncategory", "Layout & Formatting"),
+            TranslatableString("framework/actioncategory", "Selecting & Editing"),
+            TranslatableString("framework/actioncategory", "Application"),
+            TranslatableString("framework/actioncategory", "Accessibility"),
+            TranslatableString("framework/actioncategory", "File"),
+            TranslatableString("framework/actioncategory", "Selection & Navigation"),
+            TranslatableString("framework/actioncategory", "Text & Lyrics"),
+            TranslatableString("framework/actioncategory", "Chord symbols & figured bass"),
+            TranslatableString("framework/actioncategory", "Measures"),
+            TranslatableString("framework/actioncategory", "Musical Symbols"),
+            TranslatableString("framework/actioncategory", "Dialogs & Panels"),
+            TranslatableString("framework/actioncategory", "Note Input"),
+            TranslatableString("framework/actioncategory", "Workspace"),
+            TranslatableString("framework/actioncategory", "Plugins") };
     explicit ShortcutsModel(QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;
+    const QString sectionName(const Shortcut& shortcut) const;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QHash<int, QByteArray> roleNames() const override;
 
     QItemSelection selection() const;
     QVariant currentShortcut() const;
+
+    QString getCategoryName(ui::ActionCategory category) const;
 
     Q_INVOKABLE void load();
     Q_INVOKABLE bool apply();
@@ -73,6 +96,7 @@ public:
     Q_INVOKABLE void resetToDefaultSelectedShortcuts();
 
     Q_INVOKABLE QVariantList shortcuts() const;
+    Q_INVOKABLE QStringList sections() const;
 
 public slots:
     void setSelection(const QItemSelection& selection);
@@ -93,7 +117,10 @@ private:
         RoleTitle = Qt::UserRole + 1,
         RoleIcon,
         RoleSequence,
-        RoleSearchKey
+        RoleSearchKey,
+        RoleSection,
+        RoleSectionKey,
+        RoleSectionValue
     };
 
     QList<Shortcut> m_shortcuts;

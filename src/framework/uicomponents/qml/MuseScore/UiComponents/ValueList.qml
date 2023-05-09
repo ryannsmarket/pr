@@ -34,6 +34,7 @@ Item {
     property alias model: sortFilterProxyModel.sourceModel
 
     property bool readOnly: false
+    property int categorized: -1
 
     property string keyRoleName: "key"
     //: As in a "key/value" pair: for example, the "key" could be
@@ -48,12 +49,45 @@ Item {
     property string iconRoleName: "icon"
 
     property alias hasSelection: selectionModel.hasSelection
+    property alias keySorterRole: keySorter.roleName
+    property alias valueSorterRole: valueSorter.roleName
+
+    property var allSections : []
     readonly property var selection: sortFilterProxyModel.mapSelectionToSource(selectionModel.selection)
 
     property NavigationSection navigationSection: null
     property int navigationOrderStart: 0
 
     signal handleItem(var index, var item)
+
+    Component.onCompleted: {
+        performExpandCollapse()
+    }
+
+    function performExpandCollapse() {
+        if(!categorized) {
+            // 0: Collapse
+            for(var i = 0; i < allSections.length; i++) {
+                view.collapsed[allSections[i]] = true
+            }
+
+        } else {
+            for(var i = 0; i < allSections.length; i++) {
+                delete view.collapsed[allSections[i]]
+            }
+        }
+
+        view.collapsedChanged()
+    }
+
+    function toggleExpandCollapse() {
+        if (categorized == -1) {
+            return
+        }
+
+        categorized = !categorized
+        performExpandCollapse()
+    }
 
     QtObject {
         id: prv
@@ -177,6 +211,48 @@ Item {
     StyledListView {
         id: view
 
+        property var collapsed: ({})
+        function toggleSection (section) {
+            if (isSectionExpanded(section)) {
+                hideSection(section)
+            } else {
+                showSection(section)
+            }
+        }
+
+        function isSectionExpanded(section) {
+            console.log("Checking " + section +  ": " + (section in collapsed))
+            return !(section in collapsed)
+        }
+
+        function areAllSectionsCollapsed() {
+            for(var i = 0; i < allSections.length; i++) {
+                if (!(allSections[i] in collapsed)) {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+        function showSection(section){
+            delete collapsed[section]
+            root.categorized = 2
+            collapsedChanged()
+        }
+
+        function hideSection(section){
+            collapsed[section] = true
+
+            if(view.areAllSectionsCollapsed()) {
+                root.categorized = 0
+            } else {
+                root.categorized = 2
+            }
+
+            collapsedChanged()
+        }
+
         anchors.top: header.bottom
         anchors.left: parent.left
         anchors.leftMargin: background.border.width
@@ -211,7 +287,15 @@ Item {
 
             item: model
 
+            clip: true
+
             property var modelIndex: sortFilterProxyModel.index(model.index, 0)
+
+            height: view.isSectionExpanded(model["ownerSection"]) ? 34 : 0
+
+//            Behavior on height {
+//                NumberAnimation {duration : 200 }
+//            }
 
             keyRoleName: root.keyRoleName
             valueRoleName: root.valueRoleName
@@ -229,7 +313,7 @@ Item {
             valueItemWidth: prv.valueItemWidth
 
             navigation.panel: view.navigation
-            navigation.enabled: enabled
+            navigation.enabled: view.isSectionExpanded(model["ownerSection"])
             navigation.row: model.index
             navigation.column: 0
 
@@ -264,6 +348,22 @@ Item {
             onFocusChanged: {
                 if (activeFocus) {
                     view.positionViewAtIndex(index, ListView.Contain)
+                }
+            }
+        }
+
+        section {
+            property: "ownerSection"
+            criteria: ViewSection.FullString
+
+            delegate: ValueListSection {
+                text: section
+                spacing: prv.spacing
+                sideMargin: prv.sideMargin
+                valueItemWidth: prv.valueItemWidth
+                expanded: view.isSectionExpanded(section)
+                onClickedUp: {
+                    view.toggleSection ( section )
                 }
             }
         }
