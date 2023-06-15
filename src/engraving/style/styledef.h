@@ -387,6 +387,7 @@ enum class Sid {
     nashvilleNumberFrameFgColor,
     nashvilleNumberFrameBgColor,
 
+    capoChordsOnly,
     capoPosition,
     fretNumMag,
     fretNumPos,
