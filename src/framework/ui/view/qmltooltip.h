@@ -41,7 +41,15 @@ class QmlToolTip : public QObject, public async::Asyncable
 public:
     explicit QmlToolTip(QObject* parent = nullptr);
 
-    Q_INVOKABLE void show(QQuickItem* item, const QString& title, const QString& description = "", const QString& shortcut = "");
+    enum ToolTipType {
+        Default,
+        FileToolTip
+    };
+
+    Q_ENUM(ToolTipType)
+
+    Q_INVOKABLE void show(QQuickItem* item, const QString& title, const QString& description = "", const QString& shortcut = "",
+                          const ToolTipType& toolTipType = Default);
     Q_INVOKABLE void hide(QQuickItem* item, bool force = false);
 
     Q_INVOKABLE void init();
@@ -51,7 +59,8 @@ private slots:
     void doHide();
 
 signals:
-    void showToolTip(QQuickItem* item, const QString& title, const QString& description, const QString& shortcut);
+    void showToolTip(QQuickItem* item, const QString& title, const QString& description, const QString& shortcut,
+                     const ToolTipType& toolTipType);
     void hideToolTip();
 
 private:
@@ -61,6 +70,7 @@ private:
     QString m_title;
     QString m_description;
     QString m_shortcut;
+    ToolTipType m_toolTipType;
 
     QTimer m_openTimer;
     QTimer m_closeTimer;
