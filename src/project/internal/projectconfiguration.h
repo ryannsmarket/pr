@@ -156,6 +156,7 @@ private:
     io::path_t appTemplatesPath() const;
     io::path_t legacyCloudProjectsPath() const;
     io::path_t cloudProjectsPath() const;
+    std::string uniqueFileNameAddition(const io::path_t& filename, const io::path_t& folderPath, const std::string& suffix) const;
 
     async::Channel<io::path_t> m_userTemplatesPathChanged;
     async::Channel<io::path_t> m_userScoresPathChanged;
