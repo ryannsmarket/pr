@@ -345,15 +345,16 @@ io::path_t ProjectConfiguration::defaultSavingFilePath(INotationProjectPtr proje
            .appendingSuffix(theSuffix);
 }
 
-std::string ProjectConfiguration::uniqueFileNameAddition(const io::path_t& filename, const io::path_t& folderPath, const std::string& suffix) const {
-    // Check to make sure there isn't already a default titled file existing
-    // Return a filename addition to make the "complete" filename unique
-    const std::string theSuffix = suffix.empty()? DEFAULT_FILE_SUFFIX : suffix;
+std::string ProjectConfiguration::uniqueFileNameAddition(const io::path_t& filename, const io::path_t& folderPath,
+                                                         const std::string& suffix) const
+{
+    // Return a filename addition which would make filename unique if it wasn't already
+    const std::string theSuffix = suffix.empty() ? DEFAULT_FILE_SUFFIX : suffix;
     std::string addition;
     int id = 1;
-    while(fileSystem()->exists(folderPath
-                             .appendingComponent(filename + addition)
-                             .appendingSuffix(theSuffix))) {
+    while (fileSystem()->exists(folderPath
+                                .appendingComponent(filename + addition)
+                                .appendingSuffix(theSuffix))) {
         addition = " (" + std::to_string(id) + ")";
         id++;
     }
