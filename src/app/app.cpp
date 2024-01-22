@@ -56,7 +56,7 @@ void App::addModule(modularity::IModuleSetup* module)
     m_modules.push_back(module);
 }
 
-int App::run(int argc, char** argv)
+mu::Ret App::run(int argc, char** argv)
 {
     // ====================================================
     // Setup global Qt application variables
@@ -236,8 +236,8 @@ int App::run(int argc, char** argv)
             CommandLineParser::Diagnostic diagnostic = commandLineParser.diagnostic();
             if (diagnostic.type != CommandLineParser::DiagnosticType::Undefined) {
                 QMetaObject::invokeMethod(qApp, [this, diagnostic]() {
-                        int code = processDiagnostic(diagnostic);
-                        qApp->exit(code);
+                        m_ret = processDiagnostic(diagnostic);
+                        qApp->exit(m_ret.value().code());
                     }, Qt::QueuedConnection);
             } else {
                 // ====================================================
@@ -245,8 +245,8 @@ int App::run(int argc, char** argv)
                 // ====================================================
                 CommandLineParser::ConverterTask task = commandLineParser.converterTask();
                 QMetaObject::invokeMethod(qApp, [this, task]() {
-                        int code = processConverter(task);
-                        qApp->exit(code);
+                        m_ret = processConverter(task);
+                        qApp->exit(m_ret.value().code());
                     }, Qt::QueuedConnection);
             }
         }
@@ -326,8 +326,8 @@ int App::run(int argc, char** argv)
         CommandLineParser::AudioPluginRegistration pluginRegistration = commandLineParser.audioPluginRegistration();
 
         QMetaObject::invokeMethod(qApp, [this, pluginRegistration]() {
-                int code = processAudioPluginRegistration(pluginRegistration);
-                qApp->exit(code);
+                m_ret = processAudioPluginRegistration(pluginRegistration);
+                qApp->exit(m_ret.value().code());
             }, Qt::QueuedConnection);
     } break;
     }
@@ -380,7 +380,11 @@ int App::run(int argc, char** argv)
 
     delete app;
 
-    return retCode;
+    if (m_ret.has_value()) {
+        return m_ret.value();
+    }
+
+    return make_ret(static_cast<Ret::Code>(retCode));
 }
 
 void App::applyCommandLineOptions(const CommandLineParser::Options& options, framework::IApplication::RunMode runMode)
@@ -452,7 +456,7 @@ void App::applyCommandLineOptions(const CommandLineParser::Options& options, fra
     }
 }
 
-int App::processConverter(const CommandLineParser::ConverterTask& task)
+mu::Ret App::processConverter(const CommandLineParser::ConverterTask& task)
 {
     Ret ret = make_ret(Ret::Code::Ok);
     io::path_t stylePath = task.params[CommandLineParser::ParamKey::StylePath].toString();
@@ -504,10 +508,10 @@ int App::processConverter(const CommandLineParser::ConverterTask& task)
         LOGE() << "failed convert, error: " << ret.toString();
     }
 
-    return ret.code();
+    return ret;
 }
 
-int App::processDiagnostic(const CommandLineParser::Diagnostic& task)
+mu::Ret App::processDiagnostic(const CommandLineParser::Diagnostic& task)
 {
     if (!diagnosticDrawProvider()) {
         return make_ret(Ret::Code::NotSupported);
@@ -559,10 +563,10 @@ int App::processDiagnostic(const CommandLineParser::Diagnostic& task)
         LOGE() << "diagnostic ret: " << ret.toString();
     }
 
-    return ret.code();
+    return ret;
 }
 
-int App::processAudioPluginRegistration(const CommandLineParser::AudioPluginRegistration& task)
+mu::Ret App::processAudioPluginRegistration(const CommandLineParser::AudioPluginRegistration& task)
 {
     Ret ret = make_ret(Ret::Code::Ok);
 
@@ -576,7 +580,7 @@ int App::processAudioPluginRegistration(const CommandLineParser::AudioPluginRegi
         LOGE() << ret.toString();
     }
 
-    return ret.code();
+    return ret;
 }
 
 void App::processAutobot(const CommandLineParser::Autobot& task)
@@ -586,7 +590,8 @@ void App::processAutobot(const CommandLineParser::Autobot& task)
     stepCh.onReceive(nullptr, [](const StepInfo& step, const Ret& ret){
         if (!ret) {
             LOGE() << "failed step: " << step.name << ", ret: " << ret.toString();
-            qApp->exit(ret.code());
+            m_ret = ret;
+            qApp->exit(m_ret.value().code());
         } else {
             LOGI() << "success step: " << step.name << ", ret: " << ret.toString();
         }
