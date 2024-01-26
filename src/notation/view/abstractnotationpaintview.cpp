@@ -32,7 +32,7 @@ using namespace mu::ui;
 using namespace mu::draw;
 using namespace mu::notation;
 
-static constexpr qreal SCROLL_LIMIT_OFF_OVERSCROLL_FACTOR = 0.5;
+static constexpr qreal SCROLL_LIMIT_OFF_OVERSCROLL_FACTOR = 0.75;
 
 static void compensateFloatPart(RectF& rect)
 {
