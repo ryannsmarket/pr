@@ -3425,7 +3425,8 @@ ChordRest* Score::deleteRange(Segment* s1, Segment* s2, track_idx_t track1, trac
 
 void Score::cmdDeleteSelection()
 {
-    ChordRest* crSelectedAfterDeletion = 0;              // select something after deleting notes
+    Note* noteSelectedAfterDeletion = 0;                 // select previous note if in note input mode
+    ChordRest* crSelectedAfterDeletion = 0;              // otherwise, select something after deleting notes
 
     if (selection().isRange()) {
         Segment* s1 = selection().startSegment();
@@ -3550,6 +3551,9 @@ void Score::cmdDeleteSelection()
             if (needFindCR) {
                 crSelectedAfterDeletion = findCR(tick, track);
             }
+            if (!noteSelectedAfterDeletion && e->isNote()) {
+                noteSelectedAfterDeletion = prevChordNote(toNote(e));
+            }
 
             // add these linked elements to list of already-deleted elements
             for (EngravingObject* se : links) {
@@ -3561,9 +3565,11 @@ void Score::cmdDeleteSelection()
     deselectAll();
     // make new selection if appropriate
     if (noteEntryMode()) {
-        if (crSelectedAfterDeletion) {
-            m_is.setSegment(crSelectedAfterDeletion->segment());
-        } else {
+        if (noteSelectedAfterDeletion) {
+            select(noteSelectedAfterDeletion, SelectType::SINGLE);
+            m_is.moveToNextInputPos();
+            return;
+        } else if (!crSelectedAfterDeletion) {
             crSelectedAfterDeletion = m_is.cr();
         }
     }
