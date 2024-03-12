@@ -41,8 +41,8 @@ void FocusListener::setItem(QQuickItem* item)
     if (m_item == item) {
         return;
     }
-
     m_item = item;
+    m_item->forceActiveFocus();
     listenFocusChanged();
 
     emit itemChanged();
