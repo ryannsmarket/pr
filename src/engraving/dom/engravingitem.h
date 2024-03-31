@@ -71,6 +71,7 @@ typedef std::shared_ptr<AccessibleItem> AccessibleItemPtr;
 
 enum class Pid;
 class StaffType;
+class AnimationTrack;
 
 //---------------------------------------------------------
 //   OffsetChange
@@ -159,6 +160,7 @@ class EngravingItem : public EngravingObject
     M_PROPERTY2(bool, isPositionLinkedToMaster, setPositionLinkedToMaster, true)
     M_PROPERTY2(bool, isAppearanceLinkedToMaster, setAppearanceLinkedToMaster, true)
     M_PROPERTY2(bool, excludeFromOtherParts, setExcludeFromOtherParts, false)
+    std::map<std::string, AnimationTrack*> _animationTracks;
 
 public:
 
@@ -274,6 +276,12 @@ public:
         renderer()->drawItem(this, p);
         p->translate(-pt);
     }
+
+    const std::map<std::string, AnimationTrack*>& animationTracks() const { return _animationTracks; }
+    std::map<std::string, AnimationTrack*>& animationTracks() { return _animationTracks; }
+    AnimationTrack* getAnimationTrack(const std::string& propertyName);
+    AnimationTrack* createAnimationTrack(const std::string& propertyName);
+    void removeAnimationTrack(const std::string& propertyName);
 
 //       virtual ElementGroup getElementGroup() { return SingleElementGroup(this); }
     virtual std::unique_ptr<ElementGroup> getDragGroup(std::function<bool(const EngravingItem*)> /*isDragged*/)
