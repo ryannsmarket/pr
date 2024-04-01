@@ -91,9 +91,11 @@ DockPage {
     }
 
     readonly property int verticalPanelDefaultWidth: 300
-
+    readonly property int verticalPanelMinHeight: 200
+    
     readonly property int horizontalPanelMinHeight: 100
     readonly property int horizontalPanelMaxHeight: 520
+    readonly property int horizontalPanelMinWidth: 300
 
     readonly property string verticalPanelsGroup: "VERTICAL_PANELS"
     readonly property string horizontalPanelsGroup: "HORIZONTAL_PANELS"
@@ -222,6 +224,8 @@ DockPage {
             minimumWidth: root.verticalPanelDefaultWidth
             maximumWidth: root.verticalPanelDefaultWidth
 
+            minimumHeight: root.verticalPanelMinHeight
+
             groupName: root.verticalPanelsGroup
 
             dropDestinations: root.verticalPanelDropDestinations
@@ -246,6 +250,8 @@ DockPage {
             width: root.verticalPanelDefaultWidth
             minimumWidth: root.verticalPanelDefaultWidth
             maximumWidth: root.verticalPanelDefaultWidth
+
+            minimumHeight: root.verticalPanelMinHeight
 
             groupName: root.verticalPanelsGroup
 
@@ -272,6 +278,8 @@ DockPage {
             minimumWidth: root.verticalPanelDefaultWidth
             maximumWidth: root.verticalPanelDefaultWidth
 
+            minimumHeight: root.verticalPanelMinHeight
+                        
             groupName: root.verticalPanelsGroup
 
             dropDestinations: root.verticalPanelDropDestinations
@@ -293,6 +301,8 @@ DockPage {
             width: root.verticalPanelDefaultWidth
             minimumWidth: root.verticalPanelDefaultWidth
             maximumWidth: root.verticalPanelDefaultWidth
+
+            minimumHeight: root.verticalPanelMinHeight
 
             groupName: root.verticalPanelsGroup
 
@@ -320,6 +330,8 @@ DockPage {
             minimumHeight: root.horizontalPanelMinHeight
             maximumHeight: root.horizontalPanelMaxHeight
 
+            minimumWidth: root.horizontalPanelMinWidth
+
             groupName: root.horizontalPanelsGroup
 
             //! NOTE: hidden by default
@@ -337,10 +349,6 @@ DockPage {
                 Component.onCompleted: {
                     mixerPanel.contextMenuModel = contextMenuModel
                 }
-
-                onResizeRequested: function(newWidth, newHeight) {
-                    mixerPanel.resize(newWidth, newHeight)
-                }
             }
         },
 
@@ -353,6 +361,8 @@ DockPage {
             height: 200
             minimumHeight: root.horizontalPanelMinHeight
             maximumHeight: root.horizontalPanelMaxHeight
+            
+            minimumWidth: root.horizontalPanelMinWidth
 
             groupName: root.horizontalPanelsGroup
 
@@ -383,6 +393,8 @@ DockPage {
             height: 200
             minimumHeight: root.horizontalPanelMinHeight
             maximumHeight: root.horizontalPanelMaxHeight
+
+            minimumWidth: root.horizontalPanelMinWidth
 
             groupName: root.horizontalPanelsGroup
 
