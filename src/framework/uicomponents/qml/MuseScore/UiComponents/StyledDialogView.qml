@@ -40,6 +40,7 @@ DialogView {
     property alias navigationSection: navSec
 
     property bool closeOnEscape : true
+    property bool updateGeometryOnHeightChange: false
 
     contentWidth: 240
     contentHeight: contentBody.childrenRect.height
@@ -48,6 +49,13 @@ DialogView {
         navSec.requestActive()
         root.navigationActivateRequested()
         accessibilityActiveTimer.start()
+    }
+
+    onHeightChanged: {
+        if (root.updateGeometryOnHeightChange) {
+            root.updateGeometry()
+            root.updateGeometryOnHeightChange = false
+        }
     }
 
     signal navigationActivateRequested()
