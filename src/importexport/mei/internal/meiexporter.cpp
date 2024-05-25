@@ -43,6 +43,7 @@
 #include "engraving/dom/keysig.h"
 #include "engraving/dom/lyrics.h"
 #include "engraving/dom/marker.h"
+#include "engraving/dom/masterscore.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/measurerepeat.h"
 #include "engraving/dom/note.h"
@@ -86,6 +87,8 @@ using namespace mu::engraving;
 
 bool MeiExporter::write(std::string& meiData)
 {
+    bool useMscoreIds = true; //configuration()->meiUseMscoreIds();
+
     m_uids = UIDRegister::instance();
     m_xmlIDCounter = 0;
 
@@ -122,10 +125,19 @@ bool MeiExporter::write(std::string& meiData)
         m_mei = meiDoc.append_child("mei");
         m_mei.append_attribute("xmlns") = "http://www.music-encoding.org/ns/mei";
 
-        // Save xml:id metaTag's as mei@xml:id
-        String xmlId = m_score->metaTag(u"xml:id");
-        if (!xmlId.isEmpty()) {
-            m_mei.append_attribute("xml:id") = xmlId.toStdString().c_str();
+        // Option to use MuseScore Ids has priority
+        if (useMscoreIds) {
+            std::stringstream xmlId;
+            xmlId << "mscore-" << m_score->masterScore()->getEID()->lastID();
+            m_mei.append_attribute("xml:id") = xmlId.str().c_str();
+        }
+        // Otherwise check if we have a metaTag
+        else {
+            // Save xml:id metaTag's as mei@xml:id
+            String xmlId = m_score->metaTag(u"xml:id");
+            if (!xmlId.isEmpty()) {
+                m_mei.append_attribute("xml:id") = xmlId.toStdString().c_str();
+            }
         }
 
         libmei::AttConverter converter;
@@ -2402,7 +2414,11 @@ std::string MeiExporter::generateHashID()
 
 std::string MeiExporter::getXmlIdFor(const EngravingItem* item, const char c)
 {
-    if (m_uids->hasUid(item)) {
+    bool useMscoreIds = true; //configuration()->meiUseMscoreIds();
+
+    if (useMscoreIds) {
+        return "mscore-" + item->eid().toStdString();
+    } else if (m_uids->hasUid(item)) {
         return m_uids->uid(item);
     }
 
