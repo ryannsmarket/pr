@@ -87,7 +87,7 @@ using namespace mu::engraving;
 
 bool MeiExporter::write(std::string& meiData)
 {
-    bool useMscoreIds = configuration()->meiUseMscoreIds();
+    const bool useMuseScoreIds = configuration()->meiUseMuseScoreIds();
 
     m_uids = UIDRegister::instance();
     m_xmlIDCounter = 0;
@@ -126,7 +126,7 @@ bool MeiExporter::write(std::string& meiData)
         m_mei.append_attribute("xmlns") = "http://www.music-encoding.org/ns/mei";
 
         // Option to use MuseScore Ids has priority
-        if (useMscoreIds) {
+        if (useMuseScoreIds) {
             std::stringstream xmlId;
             xmlId << "mscore-" << m_score->masterScore()->getEID()->lastID();
             m_mei.append_attribute("xml:id") = xmlId.str().c_str();
@@ -2414,9 +2414,9 @@ std::string MeiExporter::generateHashID()
 
 std::string MeiExporter::getXmlIdFor(const EngravingItem* item, const char c)
 {
-    bool useMscoreIds = configuration()->meiUseMscoreIds();
+    const bool useMuseScoreIds = configuration()->meiUseMuseScoreIds();
 
-    if (useMscoreIds) {
+    if (useMuseScoreIds) {
         return "mscore-" + item->eid().toStdString();
     } else if (m_uids->hasUid(item)) {
         return m_uids->uid(item);
