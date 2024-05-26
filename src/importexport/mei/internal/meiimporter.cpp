@@ -91,7 +91,7 @@ bool MeiImporter::read(const muse::io::path_t& path)
 {
     m_uids = UIDRegister::instance();
     m_uids->clear();
-    m_hasMscoreIds = false;
+    m_hasMuseScoreIds = false;
 
     m_lastMeasure = nullptr;
     m_tremoloId.clear();
@@ -135,7 +135,7 @@ bool MeiImporter::read(const muse::io::path_t& path)
         String xmlIdStr = String(xmlId.value());
         if (xmlIdStr.startsWith(u"mscore-")) {
             // Keep a global flag since we are going to read them only if mei@xml:id is given with LastEID
-            m_hasMscoreIds = true;
+            m_hasMuseScoreIds = true;
             String valStr = xmlIdStr.remove(u"mscore-");
             // The  mei@xml:id store the LastEID
             m_score->masterScore()->getEID()->init(valStr.toInt());
@@ -865,7 +865,7 @@ void MeiImporter::readXmlId(engraving::EngravingItem* item, const std::string& m
 {
     String xmlIdStr = String::fromStdString(meiUID);
     // We have a file that has MuseScore EIDs and one on this element
-    if (m_hasMscoreIds && xmlIdStr.startsWith(u"mscore-")) {
+    if (m_hasMuseScoreIds && xmlIdStr.startsWith(u"mscore-")) {
         String valStr = xmlIdStr.remove(u"mscore-");
         EID eid = EID::fromStdString(valStr.toStdString());
         if (!eid.isValid()) {
