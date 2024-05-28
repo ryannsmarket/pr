@@ -96,6 +96,7 @@ DockPage {
     readonly property int horizontalPanelMinHeight: 100
     readonly property int horizontalPanelMaxHeight: 520
     readonly property int horizontalPanelMinWidth: 300
+    readonly property int horizontalPanelMaxWidth: 800
 
     readonly property string verticalPanelsGroup: "VERTICAL_PANELS"
     readonly property string horizontalPanelsGroup: "HORIZONTAL_PANELS"
@@ -330,6 +331,7 @@ DockPage {
             minimumHeight: root.horizontalPanelMinHeight
             maximumHeight: root.horizontalPanelMaxHeight
 
+            maximumWidth: root.horizontalPanelMaxWidth
             minimumWidth: root.horizontalPanelMinWidth
 
             groupName: root.horizontalPanelsGroup
@@ -349,6 +351,11 @@ DockPage {
                 Component.onCompleted: {
                     mixerPanel.contextMenuModel = contextMenuModel
                 }
+
+                onResizeRequested: function(newWidth, newHeight) {
+                    mixerPanel.resize(newWidth, newHeight)
+                }
+
             }
         },
 
