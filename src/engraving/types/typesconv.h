@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -85,6 +85,7 @@ public:
     static DynamicType dynamicType(SymId v);
     static DynamicType dynamicType(const AsciiStringView& string);
     static AsciiStringView toXml(DynamicType v);
+    static bool dynamicValid(const AsciiStringView& tag);
     static DynamicType fromXml(const AsciiStringView& tag, DynamicType def);
     static String translatedUserName(DynamicRange v);
     static String toXml(DynamicRange v);
@@ -226,11 +227,20 @@ public:
     static AsciiStringView toXml(LyricsSyllabic v);
     static LyricsSyllabic fromXml(const AsciiStringView& tag, LyricsSyllabic def);
 
+    static AsciiStringView toXml(LyricsDashSystemStart v);
+    static LyricsDashSystemStart fromXml(const AsciiStringView& tag, LyricsDashSystemStart def);
+
     static const char* userName(Key v, bool isAtonal = false, bool isCustom = false);
     static String translatedUserName(Key v, bool isAtonal = false, bool isCustom = false);
 
     static AsciiStringView toXml(TiePlacement interval);
     static TiePlacement fromXml(const AsciiStringView& str, TiePlacement def);
+
+    static AsciiStringView toXml(VoiceApplication voiceAppl);
+    static VoiceApplication fromXml(const AsciiStringView& str, VoiceApplication def);
+
+    static AsciiStringView toXml(AutoOnOff autoOnOff);
+    static AutoOnOff fromXml(const AsciiStringView& str, AutoOnOff def);
 };
 }
 

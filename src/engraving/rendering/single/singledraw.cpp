@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -140,9 +140,10 @@
 using namespace mu::engraving::rendering::single;
 using namespace mu::engraving;
 using namespace mu::engraving::rtti;
-using namespace mu::draw;
+using namespace muse;
+using namespace muse::draw;
 
-void SingleDraw::drawItem(const EngravingItem* item, draw::Painter* painter)
+void SingleDraw::drawItem(const EngravingItem* item, Painter* painter)
 {
     switch (item->type()) {
     case ElementType::ACCIDENTAL:   draw(item_cast<const Accidental*>(item), painter);
@@ -337,7 +338,7 @@ void SingleDraw::drawItem(const EngravingItem* item, draw::Painter* painter)
     }
 }
 
-void SingleDraw::draw(const Accidental* item, draw::Painter* painter)
+void SingleDraw::draw(const Accidental* item, Painter* painter)
 {
     IF_ASSERT_FAILED(item->ldata()) {
         return;
@@ -349,15 +350,15 @@ void SingleDraw::draw(const Accidental* item, draw::Painter* painter)
     }
 }
 
-void SingleDraw::draw(const ActionIcon* item, draw::Painter* painter)
+void SingleDraw::draw(const ActionIcon* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
     const ActionIcon::LayoutData* ldata = item->ldata();
     painter->setFont(item->iconFont());
-    painter->drawText(ldata->bbox(), draw::AlignCenter, Char(item->icon()));
+    painter->drawText(ldata->bbox(), muse::draw::AlignCenter, Char(item->icon()));
 }
 
-void SingleDraw::draw(const Ambitus* item, draw::Painter* painter)
+void SingleDraw::draw(const Ambitus* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
@@ -377,7 +378,7 @@ void SingleDraw::draw(const Ambitus* item, draw::Painter* painter)
     }
 }
 
-void SingleDraw::draw(const Arpeggio* item, draw::Painter* painter)
+void SingleDraw::draw(const Arpeggio* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
@@ -438,7 +439,7 @@ void SingleDraw::draw(const Arpeggio* item, draw::Painter* painter)
     painter->restore();
 }
 
-void SingleDraw::draw(const Articulation* item, draw::Painter* painter)
+void SingleDraw::draw(const Articulation* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
@@ -448,7 +449,7 @@ void SingleDraw::draw(const Articulation* item, draw::Painter* painter)
     if (item->textType() == ArticulationTextType::NO_TEXT) {
         item->drawSymbol(item->symId(), painter, PointF(-0.5 * item->width(), 0.0));
     } else {
-        mu::draw::Font scaledFont(item->font());
+        Font scaledFont(item->font());
         scaledFont.setPointSizeF(scaledFont.pointSizeF() * item->magS() * MScore::pixelRatio);
         painter->setFont(scaledFont);
         painter->drawText(ldata->bbox(), TextDontClip | AlignLeft | AlignTop, TConv::text(item->textType()));
@@ -463,7 +464,7 @@ void SingleDraw::draw(const Note* item, Painter* painter)
     }
 
     const Note::LayoutData* ldata = item->ldata();
-    auto config = item->engravingConfiguration();
+    auto config = item->configuration();
 
     bool negativeFret = item->negativeFretUsed() && item->staff()->isTabStaff(item->tick());
 
@@ -509,7 +510,7 @@ void SingleDraw::draw(const Note* item, Painter* painter)
                 painter->restore();
             }
         }
-        mu::draw::Font f(tab->fretFont());
+        Font f(tab->fretFont());
         f.setPointSizeF(f.pointSizeF() * item->magS() * MScore::pixelRatio);
         painter->setFont(f);
         painter->setPen(c);
@@ -560,12 +561,12 @@ void SingleDraw::draw(const NoteHead* item, Painter* painter)
     draw(static_cast<const Symbol*>(item), painter);
 }
 
-void SingleDraw::draw(const Ornament* item, draw::Painter* painter)
+void SingleDraw::draw(const Ornament* item, Painter* painter)
 {
     draw(static_cast<const Articulation*>(item), painter);
 }
 
-void SingleDraw::draw(const BagpipeEmbellishment* item, draw::Painter* painter)
+void SingleDraw::draw(const BagpipeEmbellishment* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
@@ -606,15 +607,15 @@ void SingleDraw::draw(const BagpipeEmbellishment* item, draw::Painter* painter)
         Pen beamPen(item->curColor(), dataBeam.width, PenStyle::SolidLine, PenCapStyle::FlatCap);
         painter->setPen(beamPen);
         // draw the beams
-        auto drawBeams = [](mu::draw::Painter* painter, const double spatium,
+        auto drawBeams = [](Painter* painter, const double spatium,
                             const double x1, const double x2, double y)
         {
             // draw the beams
-            painter->drawLine(mu::LineF(x1, y, x2, y));
+            painter->drawLine(LineF(x1, y, x2, y));
             y += spatium / 1.5;
-            painter->drawLine(mu::LineF(x1, y, x2, y));
+            painter->drawLine(LineF(x1, y, x2, y));
             y += spatium / 1.5;
-            painter->drawLine(mu::LineF(x1, y, x2, y));
+            painter->drawLine(LineF(x1, y, x2, y));
         };
 
         drawBeams(painter, data->spatium, dataBeam.x1, dataBeam.x2, dataBeam.y);
@@ -834,7 +835,7 @@ void SingleDraw::draw(const Beam* item, Painter* painter)
             PointF(bs1->line.x2(), bs1->line.y2() + ww),
             PointF(bs1->line.x1(), bs1->line.y1() + ww),
         }),
-            draw::FillRule::OddEvenFill);
+            FillRule::OddEvenFill);
     }
 }
 
@@ -850,7 +851,7 @@ void SingleDraw::draw(const Bend* item, Painter* painter)
     painter->setPen(pen);
     painter->setBrush(Brush(item->curColor()));
 
-    mu::draw::Font f = item->font(_spatium * MScore::pixelRatio);
+    Font f = item->font(_spatium * MScore::pixelRatio);
     painter->setFont(f);
 
     double x  = ldata->noteWidth + _spatium * .2;
@@ -877,7 +878,7 @@ void SingleDraw::draw(const Bend* item, Painter* painter)
             int idx = (pitch + 12) / 25;
             const char* l = item->label[idx];
             painter->drawText(RectF(x2, y2, .0, .0),
-                              draw::AlignHCenter | draw::AlignBottom | draw::TextDontClip,
+                              muse::draw::AlignHCenter | muse::draw::AlignBottom | muse::draw::TextDontClip,
                               String::fromAscii(l));
 
             y = y2;
@@ -909,7 +910,7 @@ void SingleDraw::draw(const Bend* item, Painter* painter)
             const char* l = item->label[idx];
             double ty = y2;       // - _spatium;
             painter->drawText(RectF(x2, ty, .0, .0),
-                              draw::AlignHCenter | draw::AlignBottom | draw::TextDontClip,
+                              muse::draw::AlignHCenter | muse::draw::AlignBottom | muse::draw::TextDontClip,
                               String::fromAscii(l));
         } else {
             // down
@@ -1044,7 +1045,7 @@ void SingleDraw::draw(const DeadSlapped* item, Painter* painter)
         return;
     }
 
-    painter->setPen(draw::PenStyle::NoPen);
+    painter->setPen(PenStyle::NoPen);
     painter->setBrush(item->curColor());
     painter->drawPath(ldata->path1);
     painter->drawPath(ldata->path2);
@@ -1089,7 +1090,7 @@ void SingleDraw::draw(const FiguredBassItem* item, Painter* painter)
     int font = 0;
     double _spatium = item->spatium();
     // set font from general style
-    mu::draw::Font f(FiguredBass::FBFonts().at(font).family, draw::Font::Type::Tablature);
+    Font f(FiguredBass::FBFonts().at(font).family, Font::Type::Tablature);
 
     // (use the same font selection as used in layout() above)
     double m = item->style().styleD(Sid::figuredBassFontSize) * item->spatium() / SPATIUM20;
@@ -1099,7 +1100,7 @@ void SingleDraw::draw(const FiguredBassItem* item, Painter* painter)
     painter->setBrush(BrushStyle::NoBrush);
     Pen pen(item->figuredBass()->curColor(), FiguredBass::FB_CONTLINE_THICKNESS * _spatium, PenStyle::SolidLine, PenCapStyle::RoundCap);
     painter->setPen(pen);
-    painter->drawText(ldata->bbox(), draw::TextDontClip | draw::AlignLeft | draw::AlignTop, ldata->displayText);
+    painter->drawText(ldata->bbox(), muse::draw::TextDontClip | muse::draw::AlignLeft | muse::draw::AlignTop, ldata->displayText);
 
     // continuation line
     double lineEndX = 0.0;
@@ -1142,7 +1143,8 @@ void SingleDraw::draw(const FiguredBassItem* item, Painter* painter)
     // closing cont.line parenthesis
     if (item->parenth5() != FiguredBassItem::Parenthesis::NONE) {
         int x = lineEndX > 0.0 ? lineEndX : ldata->textWidth;
-        painter->drawText(RectF(x, 0, ldata->bbox().width(), ldata->bbox().height()), draw::AlignLeft | draw::AlignTop,
+        painter->drawText(RectF(x, 0, ldata->bbox().width(), ldata->bbox().height()),
+                          muse::draw::AlignLeft | muse::draw::AlignTop,
                           Char(FiguredBass::FBFonts().at(font).displayParenthesis[int(item->parenth5())].unicode()));
     }
 }
@@ -1285,7 +1287,7 @@ void SingleDraw::draw(const FretDiagram* item, Painter* painter)
     // Draw fret offset number
     if (item->fretOffset() > 0) {
         double fretNumMag = item->style().styleD(Sid::fretNumMag);
-        mu::draw::Font scaledFont(item->font());
+        Font scaledFont(item->font());
         scaledFont.setPointSizeF(item->font().pointSizeF()
                                  * item->userMag()
                                  * (item->spatium() / SPATIUM20)
@@ -1297,10 +1299,10 @@ void SingleDraw::draw(const FretDiagram* item, Painter* painter)
         if (item->orientation() == Orientation::VERTICAL) {
             if (item->numPos() == 0) {
                 painter->drawText(RectF(-ldata->stringDist * .4, .0, .0, ldata->fretDist),
-                                  draw::AlignVCenter | draw::AlignRight | draw::TextDontClip, text);
+                                  muse::draw::AlignVCenter | muse::draw::AlignRight | muse::draw::TextDontClip, text);
             } else {
                 painter->drawText(RectF(x2 + (ldata->stringDist * .4), .0, .0, ldata->fretDist),
-                                  draw::AlignVCenter | draw::AlignLeft | draw::TextDontClip,
+                                  muse::draw::AlignVCenter | muse::draw::AlignLeft | muse::draw::TextDontClip,
                                   String::number(item->fretOffset() + 1));
             }
         } else if (item->orientation() == Orientation::HORIZONTAL) {
@@ -1309,9 +1311,11 @@ void SingleDraw::draw(const FretDiagram* item, Painter* painter)
             painter->rotate(90);
             if (item->numPos() == 0) {
                 painter->drawText(RectF(.0, ldata->stringDist * (item->strings() - 1), .0, .0),
-                                  draw::AlignLeft | draw::TextDontClip, text);
+                                  muse::draw::AlignLeft | muse::draw::TextDontClip,
+                                  text);
             } else {
-                painter->drawText(RectF(.0, .0, .0, .0), draw::AlignBottom | draw::AlignLeft | draw::TextDontClip, text);
+                painter->drawText(RectF(.0, .0, .0, .0),
+                                  muse::draw::AlignBottom | muse::draw::AlignLeft | muse::draw::TextDontClip, text);
             }
             painter->restore();
         }
@@ -1365,13 +1369,13 @@ void SingleDraw::draw(const GlissandoSegment* item, Painter* painter)
     }
 
     if (glissando->showText()) {
-        mu::draw::Font f(glissando->fontFace(), draw::Font::Type::Unknown);
+        Font f(glissando->fontFace(), Font::Type::Unknown);
         f.setPointSizeF(glissando->fontSize() * _spatium / SPATIUM20);
         f.setBold(glissando->fontStyle() & FontStyle::Bold);
         f.setItalic(glissando->fontStyle() & FontStyle::Italic);
         f.setUnderline(glissando->fontStyle() & FontStyle::Underline);
         f.setStrike(glissando->fontStyle() & FontStyle::Strike);
-        mu::draw::FontMetrics fm(f);
+        FontMetrics fm(f);
         RectF r = fm.boundingRect(glissando->text());
 
         // if text longer than available space, skip it
@@ -1380,7 +1384,7 @@ void SingleDraw::draw(const GlissandoSegment* item, Painter* painter)
             // raise text slightly above line and slightly more with WAVY than with STRAIGHT
             yOffset += _spatium * (glissando->glissandoType() == GlissandoType::WAVY ? 0.4 : 0.1);
 
-            mu::draw::Font scaledFont(f);
+            Font scaledFont(f);
             scaledFont.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
             painter->setFont(scaledFont);
 
@@ -1490,13 +1494,13 @@ void SingleDraw::draw(const StretchedBend* item, Painter* painter)
     TRACE_DRAW_ITEM;
 
     double sp = item->spatium();
-    const mu::draw::Color& color = item->curColor();
+    const Color& color = item->curColor();
     const int textFlags = item->textFlags();
 
     Pen pen(color, item->lineWidth(), PenStyle::SolidLine, PenCapStyle::RoundCap, PenJoinStyle::RoundJoin);
     painter->setPen(pen);
     painter->setBrush(Brush(color));
-    mu::draw::Font f = item->font(sp * MScore::pixelRatio);
+    Font f = item->font(sp * MScore::pixelRatio);
     painter->setFont(f);
 
     bool isTextDrawn = false;
@@ -1571,7 +1575,7 @@ void SingleDraw::drawTextBase(const TextBase* item, Painter* painter)
 
     if (item->hasFrame()) {
         double baseSpatium = DefaultStyle::baseStyle().value(Sid::spatium).toReal();
-        if (item->frameWidth().val() != 0.0) {
+        if (!RealIsNull(item->frameWidth().val())) {
             Color fColor = item->curColor(item->visible(), item->frameColor());
             double frameWidthVal = item->frameWidth().val() * (item->sizeIsSpatiumDependent() ? item->spatium() : baseSpatium);
 
@@ -1729,7 +1733,7 @@ void SingleDraw::draw(const GradualTempoChangeSegment* item, Painter* painter)
     drawTextLineBaseSegment(item, painter);
 }
 
-void SingleDraw::draw(const GuitarBendSegment*, draw::Painter*)
+void SingleDraw::draw(const GuitarBendSegment*, Painter*)
 {
     // TRACE_DRAW_ITEM;
     // To be implemented
@@ -1784,7 +1788,7 @@ void SingleDraw::draw(const Harmony* item, Painter* painter)
     const Harmony::LayoutData* ldata = item->ldata();
 
     if (item->hasFrame()) {
-        if (item->frameWidth().val() != 0.0) {
+        if (!RealIsNull(item->frameWidth().val())) {
             Color color = item->frameColor();
             Pen pen(color, item->frameWidth().val() * item->spatium(), PenStyle::SolidLine,
                     PenCapStyle::SquareCap, PenJoinStyle::MiterJoin);
@@ -1808,7 +1812,7 @@ void SingleDraw::draw(const Harmony* item, Painter* painter)
     Color color = item->textColor();
     painter->setPen(color);
     for (const TextSegment* ts : item->textList()) {
-        mu::draw::Font f(ts->m_font);
+        Font f(ts->m_font);
         f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
 #ifndef Q_OS_MACOS
         TextBase::drawTextWorkaround(painter, f, ts->pos(), ts->text);
@@ -1850,7 +1854,7 @@ void SingleDraw::draw(const Image* item, Painter* painter)
             }
 
             Transform t = painter->worldTransform();
-            Size ss = Size(s.width() * t.m11(), s.height() * t.m22());
+            muse::Size ss = muse::Size(s.width() * t.m11(), s.height() * t.m22());
             t.setMatrix(1.0, t.m12(), t.m13(), t.m21(), 1.0, t.m23(), t.m31(), t.m32(), t.m33());
             painter->setWorldTransform(t);
             if ((item->buffer().size() != ss || item->dirty()) && item->rasterImage() && !item->rasterImage()->isNull()) {
@@ -1868,8 +1872,8 @@ void SingleDraw::draw(const Image* item, Painter* painter)
     }
 
     if (emptyImage) {
-        painter->setBrush(mu::draw::BrushStyle::NoBrush);
-        painter->setPen(item->engravingConfiguration()->defaultColor());
+        painter->setBrush(BrushStyle::NoBrush);
+        painter->setPen(item->configuration()->defaultColor());
         painter->drawRect(ldata->bbox());
         painter->drawLine(0.0, 0.0, ldata->bbox().width(), ldata->bbox().height());
         painter->drawLine(ldata->bbox().width(), 0.0, 0.0, ldata->bbox().height());
@@ -1927,7 +1931,7 @@ void SingleDraw::draw(const KeySig* item, Painter* painter)
 
     if (!item->explicitParent() && (item->isAtonal() || item->isCustom()) && ldata->keySymbols.empty()) {
         // empty custom or atonal key signature - draw something for palette
-        painter->setPen(item->engravingConfiguration()->formattingMarksColor());
+        painter->setPen(item->configuration()->formattingMarksColor());
         item->drawSymbol(SymId::timeSigX, painter, PointF(item->symWidth(SymId::timeSigX) * -0.5, 2.0 * item->spatium()));
     }
 }
@@ -1937,7 +1941,7 @@ void SingleDraw::draw(const LayoutBreak* item, Painter* painter)
     TRACE_DRAW_ITEM;
 
     Pen pen;
-    pen.setColor(item->engravingConfiguration()->fontPrimaryColor());
+    pen.setColor(item->configuration()->fontPrimaryColor());
     pen.setWidthF(item->lineWidth() / 2);
     pen.setJoinStyle(PenJoinStyle::MiterJoin);
     pen.setCapStyle(PenCapStyle::SquareCap);
@@ -2058,7 +2062,7 @@ void SingleDraw::draw(const ShadowNote* item, Painter* painter)
     PointF ap(item->pagePos());
     painter->translate(ap);
     double lw = item->style().styleMM(Sid::stemWidth) * item->mag();
-    Pen pen(item->engravingConfiguration()->highlightSelectionColor(item->voice()), lw, PenStyle::SolidLine, PenCapStyle::FlatCap);
+    Pen pen(item->configuration()->highlightSelectionColor(item->voice()), lw, PenStyle::SolidLine, PenCapStyle::FlatCap);
     painter->setPen(pen);
 
     bool up = item->computeUp();
@@ -2189,7 +2193,7 @@ void SingleDraw::draw(const Spacer* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
-    auto conf = item->engravingConfiguration();
+    auto conf = item->configuration();
 
     Pen pen(conf->fontPrimaryColor(), item->spatium() * 0.3);
 
@@ -2210,7 +2214,7 @@ void SingleDraw::draw(const StaffState* item, Painter* painter)
     TRACE_DRAW_ITEM;
 
     const StaffState::LayoutData* ldata = item->ldata();
-    auto conf = item->engravingConfiguration();
+    auto conf = item->configuration();
 
     Pen pen(item->selected() ? conf->selectionColor() : conf->formattingMarksColor(),
             ldata->lw, PenStyle::SolidLine, PenCapStyle::RoundCap, PenJoinStyle::RoundJoin);
@@ -2235,7 +2239,7 @@ void SingleDraw::draw(const StaffTypeChange* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
-    auto conf = item->engravingConfiguration();
+    auto conf = item->configuration();
 
     double _spatium = item->style().spatium();
     double h  = _spatium * 2.5;
@@ -2286,7 +2290,7 @@ void SingleDraw::draw(const FSymbol* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
-    mu::draw::Font f(item->font());
+    Font f(item->font());
     f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
     painter->setFont(f);
     painter->setPen(item->curColor());
@@ -2304,13 +2308,13 @@ void SingleDraw::draw(const SystemText* item, Painter* painter)
     drawTextBase(item, painter);
 }
 
-void SingleDraw::draw(const SoundFlag* item, draw::Painter* painter)
+void SingleDraw::draw(const SoundFlag* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
-    mu::draw::Font f(item->iconFont());
+    Font f(item->iconFont());
     painter->setFont(f);
-    painter->drawText(item->ldata()->bbox(), draw::AlignCenter, Char(item->iconCode()));
+    painter->drawText(item->ldata()->bbox(), muse::draw::AlignCenter, Char(item->iconCode()));
 }
 
 void SingleDraw::draw(const TempoText* item, Painter* painter)
@@ -2398,7 +2402,7 @@ void SingleDraw::draw(const TimeSig* item, Painter* painter)
     }
 }
 
-void SingleDraw::draw(const TremoloSingleChord* item, draw::Painter* painter)
+void SingleDraw::draw(const TremoloSingleChord* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
@@ -2427,7 +2431,7 @@ void SingleDraw::draw(const TremoloSingleChord* item, draw::Painter* painter)
     }
 }
 
-void SingleDraw::draw(const TremoloTwoChord* item, draw::Painter* painter)
+void SingleDraw::draw(const TremoloTwoChord* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 

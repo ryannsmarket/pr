@@ -20,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_MPE_MPETYPES_H
-#define MU_MPE_MPETYPES_H
+#ifndef MUSE_MPE_MPETYPES_H
+#define MUSE_MPE_MPETYPES_H
 
 #include <stdint.h>
 #include <math.h>
@@ -42,7 +42,7 @@
 #undef C
 #endif
 
-namespace mu::mpe {
+namespace muse::mpe {
 // common
 using usecs_t = int64_t; // microseconds
 using percentage_t = int_fast16_t;
@@ -150,7 +150,8 @@ private:
             }
 
             float newPointPositionCoef = (pair.second / static_cast<float>(pair.first)) * positionAmplifyFactor;
-            duration_percentage_t newPointPosition = static_cast<duration_percentage_t>(RealRound(pair.second / newPointPositionCoef, 0));
+            duration_percentage_t newPointPosition
+                = static_cast<duration_percentage_t>(RealRound(pair.second / newPointPositionCoef, 0));
 
             result.insert({ newPointPosition, pair.second });
         }
@@ -264,15 +265,21 @@ enum class ArticulationType {
 
     GhostNote,
     CrossNote,
+    CrossLargeNote,
     CrossOrnateNote,
     CircleNote,
     CircleCrossNote,
     CircleDotNote,
-    TriangleNote,
+    TriangleLeftNote,
+    TriangleRightNote,
+    TriangleUpNote,
+    TriangleDownNote,
     TriangleRoundDownNote,
     DiamondNote,
+    MoonNote,
     PlusNote,
     SlashNote,
+    SquareNote,
     SlashedBackwardsNote,
     SlashedForwardsNote,
 
@@ -282,25 +289,11 @@ enum class ArticulationType {
     Plop,
     Scoop,
     BrassBend,
-    Multibend,
     SlideOutDown,
     SlideOutUp,
     SlideInAbove,
     SlideInBelow,
     VolumeSwell,
-
-    // multi-note articulations
-    Crescendo,
-    Decrescendo,
-    DiscreteGlissando,
-    ContinuousGlissando,
-    Legato,
-    Pedal,
-    Arpeggio,
-    ArpeggioUp,
-    ArpeggioDown,
-    ArpeggioStraightUp,
-    ArpeggioStraightDown,
 
     Vibrato,
     WideVibrato,
@@ -313,7 +306,6 @@ enum class ArticulationType {
     Tremolo64th,
     TremoloBuzz,
 
-    Trill,
     TrillBaroque,
     UpperMordent,
     LowerMordent,
@@ -342,40 +334,50 @@ enum class ArticulationType {
     Slap,
     Pop,
 
+    // multi-note articulations
+    Trill,
+    Crescendo,
+    Decrescendo,
+    DiscreteGlissando,
+    ContinuousGlissando,
+    Legato,
+    Pedal,
+    Multibend,
+    Arpeggio,
+    ArpeggioUp,
+    ArpeggioDown,
+    ArpeggioStraightUp,
+    ArpeggioStraightDown,
+
     Last
 };
 
 using ArticulationTypeSet = std::unordered_set<ArticulationType>;
 
-inline bool isSingleNoteArticulation(const ArticulationType type)
-{
-    static const ArticulationTypeSet SINGLE_NOTE_TYPES = {
-        ArticulationType::Standard, ArticulationType::Staccato, ArticulationType::Staccatissimo,
-        ArticulationType::Tenuto, ArticulationType::Marcato, ArticulationType::Accent,
-        ArticulationType::SoftAccent, ArticulationType::LaissezVibrer,
-        ArticulationType::Subito, ArticulationType::FadeIn, ArticulationType::FadeOut,
-        ArticulationType::Harmonic, ArticulationType::PalmMute, ArticulationType::Mute, ArticulationType::Open,
-        ArticulationType::Pizzicato, ArticulationType::SnapPizzicato, ArticulationType::RandomPizzicato,
-        ArticulationType::UpBow, ArticulationType::DownBow, ArticulationType::Detache,
-        ArticulationType::Martele, ArticulationType::Jete, ArticulationType::GhostNote,
-        ArticulationType::CrossNote, ArticulationType::CircleNote, ArticulationType::TriangleNote,
-        ArticulationType::CrossOrnateNote, ArticulationType::CircleCrossNote, ArticulationType::CircleDotNote,
-        ArticulationType::TriangleRoundDownNote, ArticulationType::PlusNote, ArticulationType::SlashNote,
-        ArticulationType::SlashedBackwardsNote, ArticulationType::SlashedForwardsNote,
-        ArticulationType::DiamondNote, ArticulationType::Fall, ArticulationType::QuickFall,
-        ArticulationType::Doit, ArticulationType::Plop, ArticulationType::Scoop,
-        ArticulationType::BrassBend, ArticulationType::SlideOutDown, ArticulationType::SlideOutUp,
-        ArticulationType::SlideInAbove, ArticulationType::SlideInBelow, ArticulationType::VolumeSwell,
-        ArticulationType::Vibrato,
-        ArticulationType::TremoloBuzz,
-    };
-
-    return SINGLE_NOTE_TYPES.find(type) != SINGLE_NOTE_TYPES.cend();
-}
-
 inline bool isMultiNoteArticulation(const ArticulationType type)
 {
-    return !isSingleNoteArticulation(type);
+    static const ArticulationTypeSet MULTI_TYPES = {
+        ArticulationType::Trill,
+        ArticulationType::Crescendo,
+        ArticulationType::Decrescendo,
+        ArticulationType::DiscreteGlissando,
+        ArticulationType::ContinuousGlissando,
+        ArticulationType::Legato,
+        ArticulationType::Pedal,
+        ArticulationType::Multibend,
+        ArticulationType::Arpeggio,
+        ArticulationType::ArpeggioUp,
+        ArticulationType::ArpeggioDown,
+        ArticulationType::ArpeggioStraightUp,
+        ArticulationType::ArpeggioStraightDown,
+    };
+
+    return muse::contains(MULTI_TYPES, type);
+}
+
+inline bool isSingleNoteArticulation(const ArticulationType type)
+{
+    return !isMultiNoteArticulation(type);
 }
 
 inline bool isRangedArticulation(const ArticulationType type)
@@ -934,4 +936,4 @@ private:
 };
 }
 
-#endif // MU_MPE_MPETYPES_H
+#endif // MUSE_MPE_MPETYPES_H

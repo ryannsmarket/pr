@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE draw)
+declare_module(muse_draw)
+set(MODULE_ALIAS muse::draw)
 
 set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/drawmodule.cpp
@@ -80,7 +81,7 @@ else()
         ${CMAKE_CURRENT_LIST_DIR}/internal/qimagepainterprovider.h
         )
 
-    if (MUE_COMPILE_USE_QTFONTMETRICS)
+    if (MUSE_MODULE_DRAW_USE_QTFONTMETRICS)
         set(MODULE_SRC ${MODULE_SRC}
             ${CMAKE_CURRENT_LIST_DIR}/internal/qfontprovider.cpp
             ${CMAKE_CURRENT_LIST_DIR}/internal/qfontprovider.h
@@ -122,12 +123,12 @@ else()
 
 endif()
 
-if (MUE_ENABLE_DRAW_TRACE)
-    set(MODULE_DEF ${MODULE_DEF} -DMUE_ENABLE_DRAW_TRACE)
+if (MUSE_MODULE_DRAW_TRACE)
+    set(MODULE_DEF ${MODULE_DEF} -DMUSE_MODULE_DRAW_TRACE)
 endif()
 
-include(SetupModule)
+setup_module()
 
-if (MUE_BUILD_DRAW_TESTS)
+if (MUSE_MODULE_DRAW_TESTS)
     add_subdirectory(tests)
 endif()

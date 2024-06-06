@@ -20,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_AUDIO_AUDIOIOHANDLER_H
-#define MU_AUDIO_AUDIOIOHANDLER_H
+#ifndef MUSE_AUDIO_AUDIOIOHANDLER_H
+#define MUSE_AUDIO_AUDIOIOHANDLER_H
 
 #include "global/modularity/ioc.h"
 #include "global/async/asyncable.h"
@@ -30,7 +30,7 @@
 #include "iaudiooutput.h"
 #include "igettracksequence.h"
 
-namespace mu::audio {
+namespace muse::audio {
 class Mixer;
 
 namespace soundtrack {
@@ -38,12 +38,12 @@ class SoundTrackWriter;
 using SoundTrackWriterPtr = std::shared_ptr<SoundTrackWriter>;
 }
 
-class AudioOutputHandler : public IAudioOutput, public async::Asyncable
+class AudioOutputHandler : public IAudioOutput, public Injectable, public async::Asyncable
 {
-    Inject<fx::IFxResolver> fxResolver;
+    Inject<fx::IFxResolver> fxResolver = { this };
 
 public:
-    explicit AudioOutputHandler(IGetTrackSequence* getSequence);
+    explicit AudioOutputHandler(IGetTrackSequence* getSequence, const muse::modularity::ContextPtr& iocCtx);
 
     async::Promise<AudioOutputParams> outputParams(const TrackSequenceId sequenceId, const TrackId trackId) const override;
     void setOutputParams(const TrackSequenceId sequenceId, const TrackId trackId, const AudioOutputParams& params) override;
@@ -63,7 +63,7 @@ public:
                                         const SoundTrackFormat& format) override;
     void abortSavingAllSoundTracks() override;
 
-    mu::Progress saveSoundTrackProgress(const TrackSequenceId sequenceId) override;
+    Progress saveSoundTrackProgress(const TrackSequenceId sequenceId) override;
 
     void clearAllFx() override;
 
@@ -78,9 +78,9 @@ private:
     mutable async::Channel<AudioOutputParams> m_masterOutputParamsChanged;
     mutable async::Channel<TrackSequenceId, TrackId, AudioOutputParams> m_outputParamsChanged;
 
-    std::unordered_map<TrackSequenceId, mu::Progress> m_saveSoundTracksProgressMap;
+    std::unordered_map<TrackSequenceId, Progress> m_saveSoundTracksProgressMap;
     std::unordered_map<TrackSequenceId, soundtrack::SoundTrackWriterPtr> m_saveSoundTracksWritersMap;
 };
 }
 
-#endif // MU_AUDIO_AUDIOIOHANDLER_H
+#endif // MUSE_AUDIO_AUDIOIOHANDLER_H

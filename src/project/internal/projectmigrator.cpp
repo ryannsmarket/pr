@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -35,6 +35,7 @@ using namespace mu;
 using namespace mu::project;
 using namespace mu::engraving;
 using namespace mu::engraving::compat;
+using namespace muse;
 
 static const Uri MIGRATION_DIALOG_URI("musescore://project/migration");
 static const QString LELAND_STYLE_PATH(":/engraving/styles/migration-306-style-Leland.mss");
@@ -133,6 +134,12 @@ void ProjectMigrator::resetStyleSettings(mu::engraving::MasterScore* score)
     score->resetStyleValue(mu::engraving::Sid::measureSpacing);
 }
 
+bool ProjectMigrator::resetCrossBeams(engraving::MasterScore* score)
+{
+    score->setResetCrossBeams();
+    return true;
+}
+
 Ret ProjectMigrator::migrateProject(engraving::EngravingProjectPtr project, const MigrationOptions& opt)
 {
     TRACEFUNC;
@@ -157,6 +164,10 @@ Ret ProjectMigrator::migrateProject(engraving::EngravingProjectPtr project, cons
 
     if (ok && score->mscVersion() < 300) {
         ok = resetAllElementsPositions(score);
+    }
+
+    if (ok && score->mscVersion() <= 206) {
+        ok = resetCrossBeams(score);
     }
 
     if (ok && score->mscVersion() != mu::engraving::Constants::MSC_VERSION) {

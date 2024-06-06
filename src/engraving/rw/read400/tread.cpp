@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -141,6 +141,7 @@
 
 #include "log.h"
 
+using namespace muse::draw;
 using namespace mu::engraving;
 using namespace mu::engraving::read400;
 
@@ -320,6 +321,12 @@ void TRead::readProperty(EngravingItem* item, XmlReader& xml, ReadContext& ctx, 
         break;
     }
 
+    // Pre-4.4 compatibility: these items now use DIRECTION property
+    if (pid == Pid::PLACEMENT && item->hasVoiceApplicationProperties()) {
+        pid = Pid::DIRECTION;
+        v = v.value<PlacementV>() == PlacementV::ABOVE ? PropertyValue(DirectionV::UP) : PropertyValue(DirectionV::DOWN);
+    }
+
     item->setProperty(pid, v);
     if (item->isStyled(pid)) {
         item->setPropertyFlags(pid, PropertyFlags::UNSTYLED);
@@ -420,7 +427,7 @@ bool TRead::readItemProperties(EngravingItem* item, XmlReader& e, ReadContext& c
             return true;
         }
         int id = e.readInt();
-        item->setLinks(mu::value(ctx.linkIds(), id, nullptr));
+        item->setLinks(muse::value(ctx.linkIds(), id, nullptr));
         if (!item->links()) {
             if (!ctx.isMasterScore()) {       // DEBUG
                 LOGD() << "not found link, id: " << id << ", count: " << ctx.linkIds().size() << ", item: " << item->typeName();
@@ -535,7 +542,7 @@ bool TRead::readProperties(StaffTextBase* t, XmlReader& e, ReadContext& ctx)
         voice_idx_t voice = static_cast<voice_idx_t>(e.intAttribute("voice", -1));
         if (voice < VOICES) {
             t->setChannelName(voice, e.attribute("name"));
-        } else if (voice == mu::nidx) {
+        } else if (voice == muse::nidx) {
             // no voice applies channel to all voices for
             // compatibility
             for (voice_idx_t i = 0; i < VOICES; ++i) {
@@ -1528,6 +1535,7 @@ void TRead::read(Tuplet* t, XmlReader& e, ReadContext& ctx)
             Tuplet::resetNumberProperty(number);
             TRead::read(number, e, ctx);
             number->setVisible(t->visible());         //?? override saved property
+            number->setColor(t->color());
             number->setTrack(t->track());
             // move property flags from _number back to tuplet
             for (auto p : { Pid::FONT_FACE, Pid::FONT_SIZE, Pid::FONT_STYLE, Pid::ALIGN }) {
@@ -2323,11 +2331,11 @@ void TRead::read(Symbol* sym, XmlReader& e, ReadContext& ctx)
 
 void TRead::read(FSymbol* sym, XmlReader& e, ReadContext& ctx)
 {
-    mu::draw::Font font = sym->font();
+    Font font = sym->font();
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
         if (tag == "font") {
-            font.setFamily(e.readText(), draw::Font::Type::Unknown);
+            font.setFamily(e.readText(), Font::Type::Unknown);
         } else if (tag == "fontsize") {
             font.setPointSizeF(e.readDouble());
         } else if (tag == "code") {
@@ -4093,10 +4101,25 @@ int TRead::read(SigEvent* item, XmlReader& e, int fileDivision)
 
 void TRead::read(TremoloCompat& t, XmlReader& e, ReadContext& ctx)
 {
-    auto item = [](TremoloCompat& t) -> EngravingItem* {
+    auto createDefaultTremolo = [](TremoloCompat& t) {
+        t.single = Factory::createTremoloSingleChord(t.parent);
+        t.single->setTrack(t.parent->track());
+        t.single->setTremoloType(TremoloType::R8);
+    };
+
+    auto item = [createDefaultTremolo](TremoloCompat& t) -> EngravingItem* {
         if (t.two) {
             return t.two;
         }
+
+        if (!t.single) {
+            // If no item been created yet at this point,
+            // that means no "subtype" tag was present in the XML file.
+            // In this case, we create a single eighth-note tremolo,
+            // since that was the default.
+            createDefaultTremolo(t);
+        }
+
         return t.single;
     };
 
@@ -4158,6 +4181,14 @@ void TRead::read(TremoloCompat& t, XmlReader& e, ReadContext& ctx)
         } else if (!readItemProperties(item(t), e, ctx)) {
             e.unknown();
         }
+    }
+
+    if (!t.two && !t.single) {
+        // If no item been created yet at this point,
+        // that means no "subtype" tag was present in the XML file.
+        // In this case, we create a single eighth-note tremolo,
+        // since that was the default.
+        createDefaultTremolo(t);
     }
 }
 

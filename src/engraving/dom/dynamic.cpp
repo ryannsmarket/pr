@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,6 +24,7 @@
 #include "types/translatablestring.h"
 #include "types/typesconv.h"
 
+#include "anchors.h"
 #include "dynamichairpingroup.h"
 #include "expression.h"
 #include "measure.h"
@@ -101,7 +102,6 @@ const std::vector<Dyn> Dynamic::DYN_LIST = {
 //---------------------------------------------------------
 
 static const ElementStyle dynamicsStyle {
-    { Sid::dynamicsPlacement, Pid::PLACEMENT },
     { Sid::dynamicsMinDistance, Pid::MIN_DISTANCE },
     { Sid::avoidBarLines, Pid::AVOID_BARLINES },
     { Sid::dynamicsSize, Pid::DYNAMICS_SIZE },
@@ -260,6 +260,22 @@ double Dynamic::customTextOffset() const
     return 0.0;
 }
 
+bool Dynamic::isEditAllowed(EditData& ed) const
+{
+    if (ed.editTextualProperties) {
+        return TextBase::isEditAllowed(ed);
+    }
+
+    static const std::set<KeyboardKey> ARROW_KEYS {
+        Key_Left,
+        Key_Right,
+        Key_Up,
+        Key_Down
+    };
+
+    return muse::contains(ARROW_KEYS, static_cast<KeyboardKey>(ed.key));
+}
+
 //-------------------------------------------------------------------
 //   doAutoplace
 //
@@ -302,7 +318,7 @@ double Dynamic::customTextOffset() const
 
 void Dynamic::manageBarlineCollisions()
 {
-    if (!_avoidBarLines || score()->nstaves() <= 1) {
+    if (!_avoidBarLines || score()->nstaves() <= 1 || anchorToEndOfPrevious()) {
         return;
     }
 
@@ -316,7 +332,7 @@ void Dynamic::manageBarlineCollisions()
         return;
     }
 
-    staff_idx_t barLineStaff = mu::nidx;
+    staff_idx_t barLineStaff = muse::nidx;
     if (placeAbove()) {
         // need to find the barline from the staff above
         // taking into account there could be invisible staves
@@ -333,7 +349,7 @@ void Dynamic::manageBarlineCollisions()
         barLineStaff = staffIdx();
     }
 
-    if (barLineStaff == mu::nidx) {
+    if (barLineStaff == muse::nidx) {
         return;
     }
 
@@ -414,12 +430,18 @@ String Dynamic::dynamicText(DynamicType t)
 bool Dynamic::acceptDrop(EditData& ed) const
 {
     ElementType droppedType = ed.dropElement->type();
-    return droppedType == ElementType::DYNAMIC || droppedType == ElementType::EXPRESSION;
+    return droppedType == ElementType::DYNAMIC || droppedType == ElementType::EXPRESSION || droppedType == ElementType::HAIRPIN;
 }
 
 EngravingItem* Dynamic::drop(EditData& ed)
 {
     EngravingItem* item = ed.dropElement;
+
+    if (item->isHairpin()) {
+        score()->addHairpinToDynamic(toHairpin(item), this);
+        return item;
+    }
+
     if (!(item->isDynamic() || item->isExpression())) {
         return nullptr;
     }
@@ -434,6 +456,11 @@ EngravingItem* Dynamic::drop(EditData& ed)
     return item;
 }
 
+int Dynamic::dynamicVelocity(DynamicType t)
+{
+    return DYN_LIST[int(t)].velocity;
+}
+
 TranslatableString Dynamic::subtypeUserName() const
 {
     return TranslatableString::untranslatable(TConv::toXml(dynamicType()).ascii());
@@ -444,24 +471,189 @@ String Dynamic::translatedSubtypeUserName() const
     return String::fromAscii(TConv::toXml(dynamicType()).ascii());
 }
 
-//---------------------------------------------------------
-//   startEdit
-//---------------------------------------------------------
-
 void Dynamic::startEdit(EditData& ed)
 {
-    TextBase::startEdit(ed);
+    if (ed.editTextualProperties) {
+        TextBase::startEdit(ed);
+    } else {
+        startEditNonTextual(ed);
+    }
 }
 
-//---------------------------------------------------------
-//   endEdit
-//---------------------------------------------------------
+bool Dynamic::edit(EditData& ed)
+{
+    if (ed.editTextualProperties) {
+        return TextBase::edit(ed);
+    } else {
+        return editNonTextual(ed);
+    }
+}
+
+bool Dynamic::editNonTextual(EditData& ed)
+{
+    if (ed.key == Key_Shift) {
+        if (ed.isKeyRelease) {
+            score()->hideAnchors();
+        } else {
+            EditTimeTickAnchors::updateAnchors(this, tick(), track());
+        }
+        triggerLayout();
+        return true;
+    }
+
+    if (!isEditAllowed(ed)) {
+        return false;
+    }
+
+    bool leftRightKey = ed.key == Key_Left || ed.key == Key_Right;
+    bool altMod = ed.modifiers & AltModifier;
+    bool shiftMod = ed.modifiers & ShiftModifier;
+
+    bool changeAnchorType = shiftMod && altMod && leftRightKey;
+    if (changeAnchorType) {
+        if (changeTimeAnchorType(ed)) {
+            return true;
+        }
+    }
+
+    bool moveSeg = shiftMod && (ed.key == Key_Left || ed.key == Key_Right);
+    if (moveSeg) {
+        return moveSegment(ed);
+    }
+
+    if (shiftMod) {
+        return false;
+    }
+
+    if (!nudge(ed)) {
+        return false;
+    }
+
+    triggerLayout();
+    return true;
+}
+
+bool Dynamic::changeTimeAnchorType(const EditData& ed)
+{
+    Segment* curSeg = segment();
+
+    undoChangeProperty(Pid::ANCHOR_TO_END_OF_PREVIOUS, !anchorToEndOfPrevious(), propertyFlags(Pid::ANCHOR_TO_END_OF_PREVIOUS));
+    if (anchorToEndOfPrevious() && curSeg->rtick().isZero() && ed.key == Key_Left) {
+        Segment* endOfPrevMeasTick = curSeg->prev1(SegmentType::TimeTick);
+        if (endOfPrevMeasTick && endOfPrevMeasTick->tick() == curSeg->tick()) {
+            score()->undoChangeParent(this, endOfPrevMeasTick, staffIdx());
+            if (snappedExpression()) {
+                score()->undoChangeParent(snappedExpression(), endOfPrevMeasTick, staffIdx());
+            }
+            return true;
+        }
+    } else if (!anchorToEndOfPrevious() && curSeg->rtick() == curSeg->measure()->ticks() && ed.key == Key_Right) {
+        Segment* startOfNextMeas = curSeg->next1(SegmentType::ChordRest);
+        if (startOfNextMeas && startOfNextMeas->tick() == curSeg->tick()) {
+            score()->undoChangeParent(this, startOfNextMeas, staffIdx());
+            if (snappedExpression()) {
+                score()->undoChangeParent(snappedExpression(), startOfNextMeas, staffIdx());
+            }
+            return true;
+        }
+    }
+    if ((anchorToEndOfPrevious() && ed.key == Key_Left)
+        || (!anchorToEndOfPrevious() && ed.key == Key_Right)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool Dynamic::moveSegment(const EditData& ed)
+{
+    if (!(ed.modifiers & AltModifier) && anchorToEndOfPrevious()) {
+        undoResetProperty(Pid::ANCHOR_TO_END_OF_PREVIOUS);
+        return true;
+    }
+    Segment* curSeg = segment();
+    if (!curSeg) {
+        return false;
+    }
+
+    bool forward = ed.key == Key_Right;
+    Segment* newSeg = forward ? curSeg->next1ChordRestOrTimeTick() : curSeg->prev1ChordRestOrTimeTick();
+    if (!newSeg) {
+        return false;
+    }
+
+    score()->undoChangeParent(this, newSeg, staffIdx());
+    if (snappedExpression()) {
+        score()->undoChangeParent(snappedExpression(), newSeg, staffIdx());
+    }
+
+    EditTimeTickAnchors::updateAnchors(this, tick(), staffIdx());
+    return true;
+}
+
+bool Dynamic::nudge(const EditData& ed)
+{
+    bool ctrlMod = ed.modifiers & ControlModifier;
+    double step = spatium() * (ctrlMod ? MScore::nudgeStep10 : MScore::nudgeStep);
+    PointF addOffset = PointF();
+    switch (ed.key) {
+    case Key_Up:
+        addOffset = PointF(0.0, -step);
+        break;
+    case Key_Down:
+        addOffset = PointF(0.0, step);
+        break;
+    case Key_Left:
+        addOffset = PointF(-step, 0.0);
+        break;
+    case Key_Right:
+        addOffset = PointF(step, 0.0);
+        break;
+    default:
+        return false;
+    }
+    undoChangeProperty(Pid::OFFSET, offset() + addOffset, PropertyFlags::UNSTYLED);
+    return true;
+}
+
+void Dynamic::editDrag(EditData& ed)
+{
+    EditTimeTickAnchors::updateAnchors(this, tick(), track());
+
+    KeyboardModifiers km = ed.modifiers;
+    if (km != (ShiftModifier | ControlModifier)) {
+        staff_idx_t si = staffIdx();
+        Segment* seg = segment();
+        score()->dragPosition(canvasPos(), &si, &seg, allowTimeAnchor());
+        if (seg != segment() || staffIdx() != si) {
+            const PointF oldOffset = offset();
+            PointF pos1(canvasPos());
+            score()->undoChangeParent(this, seg, si);
+            setOffset(PointF());
+
+            renderer()->layoutItem(this);
+
+            PointF pos2(canvasPos());
+            const PointF newOffset = pos1 - pos2;
+            setOffset(newOffset);
+            setOffsetChanged(true);
+            ElementEditDataPtr eed = ed.getData(this);
+            eed->initOffset += newOffset - oldOffset;
+        }
+    }
+
+    EngravingItem::editDrag(ed);
+}
 
 void Dynamic::endEdit(EditData& ed)
 {
-    TextBase::endEdit(ed);
-    if (!xmlText().contains(String::fromUtf8(DYN_LIST[int(m_dynamicType)].text))) {
-        m_dynamicType = DynamicType::OTHER;
+    if (ed.editTextualProperties) {
+        TextBase::endEdit(ed);
+        if (!xmlText().contains(String::fromUtf8(DYN_LIST[int(m_dynamicType)].text))) {
+            m_dynamicType = DynamicType::OTHER;
+        }
+    } else {
+        endEditNonTextual(ed);
     }
 }
 
@@ -471,6 +663,8 @@ void Dynamic::endEdit(EditData& ed)
 
 void Dynamic::reset()
 {
+    undoResetProperty(Pid::DIRECTION);
+    undoResetProperty(Pid::CENTER_BETWEEN_STAVES);
     TextBase::reset();
 }
 
@@ -490,40 +684,6 @@ std::unique_ptr<ElementGroup> Dynamic::getDragGroup(std::function<bool(const Eng
         return g;
     }
     return TextBase::getDragGroup(isDragged);
-}
-
-//---------------------------------------------------------
-//   drag
-//---------------------------------------------------------
-
-mu::RectF Dynamic::drag(EditData& ed)
-{
-    RectF f = EngravingItem::drag(ed);
-
-    //
-    // move anchor
-    //
-    KeyboardModifiers km = ed.modifiers;
-    if (km != (ShiftModifier | ControlModifier)) {
-        staff_idx_t si = staffIdx();
-        Segment* seg = segment();
-        score()->dragPosition(canvasPos(), &si, &seg);
-        if (seg != segment() || staffIdx() != si) {
-            const PointF oldOffset = offset();
-            PointF pos1(canvasPos());
-            score()->undoChangeParent(this, seg, si);
-            setOffset(PointF());
-
-            renderer()->layoutItem(this);
-
-            PointF pos2(canvasPos());
-            const PointF newOffset = pos1 - pos2;
-            setOffset(newOffset);
-            ElementEditDataPtr eed = ed.getData(this);
-            eed->initOffset += newOffset - oldOffset;
-        }
-    }
-    return f;
 }
 
 //---------------------------------------------------------
@@ -566,6 +726,8 @@ PropertyValue Dynamic::getProperty(Pid propertyId) const
         return _centerOnNotehead;
     case Pid::PLAY:
         return playDynamic();
+    case Pid::ANCHOR_TO_END_OF_PREVIOUS:
+        return anchorToEndOfPrevious();
     default:
         return TextBase::getProperty(propertyId);
     }
@@ -610,6 +772,9 @@ bool Dynamic::setProperty(Pid propertyId, const PropertyValue& v)
     case Pid::PLAY:
         setPlayDynamic(v.toBool());
         break;
+    case Pid::ANCHOR_TO_END_OF_PREVIOUS:
+        setAnchorToEndOfPrevious(v.toBool());
+        break;
     default:
         if (!TextBase::setProperty(propertyId, v)) {
             return false;
@@ -643,6 +808,8 @@ PropertyValue Dynamic::propertyDefault(Pid id) const
         return DynamicSpeed::NORMAL;
     case Pid::PLAY:
         return true;
+    case Pid::ANCHOR_TO_END_OF_PREVIOUS:
+        return false;
     default:
         return TextBase::propertyDefault(id);
     }

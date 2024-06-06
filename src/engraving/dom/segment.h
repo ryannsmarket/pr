@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -121,16 +121,20 @@ public:
     Segment* next1MM() const;
     Segment* next1MMenabled() const;
     Segment* next1(SegmentType) const;
+    Segment* next1ChordRestOrTimeTick() const;
+    Segment* next1WithElemsOnStaff(staff_idx_t staffIdx, SegmentType segType = SegmentType::ChordRest);
     Segment* next1MM(SegmentType) const;
 
     Segment* prev1() const;
+    Segment* prev1ChordRestOrTimeTick() const;
+    Segment* prev1WithElemsOnStaff(staff_idx_t staffIdx, SegmentType segType = SegmentType::ChordRest);
     Segment* prev1enabled() const;
     Segment* prev1MM() const;
     Segment* prev1MMenabled() const;
     Segment* prev1(SegmentType) const;
     Segment* prev1MM(SegmentType) const;
 
-    Segment* nextCR(track_idx_t track = mu::nidx, bool sameStaff = false) const;
+    Segment* nextCR(track_idx_t track = muse::nidx, bool sameStaff = false) const;
 
     ChordRest* nextChordRest(track_idx_t track, bool backwards = false) const;
 
@@ -151,7 +155,7 @@ public:
     System* system() const { return toSystem(explicitParent()->explicitParent()); }
     double x() const override { return ldata()->pos().x(); }
 
-    mu::RectF contentRect() const;
+    RectF contentRect() const;
 
     void insertStaff(staff_idx_t staff);
     void removeStaff(staff_idx_t staff);
@@ -199,6 +203,7 @@ public:
     std::vector<EngravingItem*> findAnnotations(ElementType type, track_idx_t minTrack, track_idx_t maxTrack) const;
     bool hasElements() const;
     bool hasElements(track_idx_t minTrack, track_idx_t maxTrack) const;
+    bool hasElements(staff_idx_t staffIdx) const;
     bool allElementsInvisible() const;
 
     Spatium extraLeadingSpace() const { return m_extraLeadingSpace; }
@@ -219,8 +224,8 @@ public:
 
     EngravingItem* firstInNextSegments(staff_idx_t activeStaff);   //<
     EngravingItem* lastInPrevSegments(staff_idx_t activeStaff);     //<
-    EngravingItem* firstElement(staff_idx_t staff);                //<  These methods are used for navigation
-    EngravingItem* lastElement(staff_idx_t staff);                 //<  for next-element and prev-element
+    EngravingItem* firstElementForNavigation(staff_idx_t staff);                //<  These methods are used for navigation
+    EngravingItem* lastElementForNavigation(staff_idx_t staff);                 //<  for next-element and prev-element
     EngravingItem* firstElementOfSegment(Segment* s, staff_idx_t activeStaff);
     EngravingItem* nextElementOfSegment(Segment* s, EngravingItem* e, staff_idx_t activeStaff);
     EngravingItem* prevElementOfSegment(Segment* s, EngravingItem* e, staff_idx_t activeStaff);
@@ -236,6 +241,8 @@ public:
     EngravingItem* nextElement(staff_idx_t activeStaff);
     using EngravingItem::prevElement;
     EngravingItem* prevElement(staff_idx_t activeStaff);
+
+    EngravingItem* firstElement(staff_idx_t staffIdx) const;
 
     std::vector<Shape> shapes() { return m_shapes; }
     const std::vector<Shape>& shapes() const { return m_shapes; }
@@ -275,7 +282,10 @@ public:
     bool isEndBarLineType() const { return m_segmentType == SegmentType::EndBarLine; }
     bool isKeySigAnnounceType() const { return m_segmentType == SegmentType::KeySigAnnounce; }
     bool isTimeSigAnnounceType() const { return m_segmentType == SegmentType::TimeSigAnnounce; }
+    bool isTimeTickType() const { return m_segmentType == SegmentType::TimeTick; }
     bool isRightAligned() const { return isClefType() || isBreathType(); }
+
+    bool canWriteSpannerStartEnd(track_idx_t track, const Spanner* spanner) const;
 
     Fraction shortestChordRest() const;
     void computeCrossBeamType(Segment* nextSeg);
@@ -292,7 +302,7 @@ public:
 
     void checkEmpty() const;
 
-    static constexpr SegmentType durationSegmentsMask = SegmentType::ChordRest;   // segment types which may have non-zero tick length
+    static constexpr SegmentType durationSegmentsMask = SegmentType::ChordRest | SegmentType::TimeTick;   // segment types which may have non-zero tick length
 
 private:
 

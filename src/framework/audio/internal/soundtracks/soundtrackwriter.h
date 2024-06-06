@@ -20,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_AUDIO_SOUNDTRACKWRITER_H
-#define MU_AUDIO_SOUNDTRACKWRITER_H
+#ifndef MUSE_AUDIO_SOUNDTRACKWRITER_H
+#define MUSE_AUDIO_SOUNDTRACKWRITER_H
 
 #include <vector>
 
@@ -33,17 +33,18 @@
 #include "iaudiosource.h"
 #include "internal/encoders/abstractaudioencoder.h"
 
-namespace mu::audio::soundtrack {
-class SoundTrackWriter : public async::Asyncable
+namespace muse::audio::soundtrack {
+class SoundTrackWriter : public muse::Injectable, public async::Asyncable
 {
-    INJECT_STATIC(IAudioConfiguration, config)
+    muse::Inject<IAudioConfiguration> config = { this };
 public:
-    SoundTrackWriter(const io::path_t& destination, const SoundTrackFormat& format, const msecs_t totalDuration, IAudioSourcePtr source);
+    SoundTrackWriter(const io::path_t& destination, const SoundTrackFormat& format, const msecs_t totalDuration, IAudioSourcePtr source,
+                     const muse::modularity::ContextPtr& iocCtx);
 
     Ret write();
     void abort();
 
-    mu::Progress progress();
+    Progress progress();
 
 private:
     encode::AbstractAudioEncoderPtr createEncoder(const SoundTrackType& type) const;
@@ -58,9 +59,9 @@ private:
 
     encode::AbstractAudioEncoderPtr m_encoderPtr = nullptr;
 
-    mu::Progress m_progress;
+    Progress m_progress;
     std::atomic<bool> m_isAborted = false;
 };
 }
 
-#endif // MU_AUDIO_SOUNDTRACKWRITER_H
+#endif // MUSE_AUDIO_SOUNDTRACKWRITER_H

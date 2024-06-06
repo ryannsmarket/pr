@@ -34,8 +34,8 @@
 
 #include "log.h"
 
-using namespace mu::accessibility;
-using namespace mu::modularity;
+using namespace muse::accessibility;
+using namespace muse::modularity;
 
 std::string AccessibilityModule::moduleName() const
 {
@@ -44,10 +44,10 @@ std::string AccessibilityModule::moduleName() const
 
 void AccessibilityModule::registerExports()
 {
-    m_configuration = std::make_shared<AccessibilityConfiguration>();
+    m_configuration = std::make_shared<AccessibilityConfiguration>(iocContext());
 
     ioc()->registerExport<IAccessibilityConfiguration>(moduleName(), m_configuration);
-    ioc()->registerExport<IAccessibilityController>(moduleName(), std::make_shared<AccessibilityController>());
+    ioc()->registerExport<IAccessibilityController>(moduleName(), std::make_shared<AccessibilityController>(iocContext()));
     ioc()->registerExport<IQAccessibleInterfaceRegister>(moduleName(), new QAccessibleInterfaceRegister());
 }
 
@@ -58,17 +58,17 @@ void AccessibilityModule::resolveImports()
 #ifdef Q_OS_MAC
         accr->registerInterfaceGetter("QQuickWindow", AccessibilityController::accessibleInterface);
 #endif
-        accr->registerInterfaceGetter("mu::accessibility::AccessibleObject", AccessibleObject::accessibleInterface);
+        accr->registerInterfaceGetter("muse::accessibility::AccessibleObject", AccessibleObject::accessibleInterface);
     }
 }
 
 void AccessibilityModule::registerApi()
 {
-    using namespace mu::api;
+    using namespace muse::api;
 
     auto api = ioc()->resolve<IApiRegister>(moduleName());
     if (api) {
-        api->regApiCreator(moduleName(), "api.accessibility", new ApiCreator<AccessibilityApi>());
+        api->regApiCreator(moduleName(), "api.accessibility", new ApiCreator<api::AccessibilityApi>());
     }
 }
 

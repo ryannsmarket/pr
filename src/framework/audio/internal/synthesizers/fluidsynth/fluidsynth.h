@@ -20,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_AUDIO_FLUIDSYNTH_H
-#define MU_AUDIO_FLUIDSYNTH_H
+#ifndef MUSE_AUDIO_FLUIDSYNTH_H
+#define MUSE_AUDIO_FLUIDSYNTH_H
 
 #include <memory>
 #include <optional>
@@ -33,7 +33,7 @@
 #include "../../abstractsynthesizer.h"
 #include "fluidsequencer.h"
 
-namespace mu::audio::synth {
+namespace muse::audio::synth {
 struct Fluid;
 class FluidSynth : public AbstractSynthesizer
 {
@@ -102,7 +102,8 @@ private:
     void toggleExpressionController();
 
     int setExpressionLevel(int level);
-    int setControllerValue(const midi::Event& event);
+    int setControllerValue(int channel, int ctrl, int value);
+    int setPitchBend(int channel, int pitchBend);
 
     std::shared_ptr<Fluid> m_fluid = nullptr;
 
@@ -118,4 +119,4 @@ private:
 using FluidSynthPtr = std::shared_ptr<FluidSynth>;
 }
 
-#endif //MU_AUDIO_FLUIDSYNTH_H
+#endif //MUSE_AUDIO_FLUIDSYNTH_H

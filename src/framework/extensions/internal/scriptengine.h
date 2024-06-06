@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_EXTENSIONS_SCRIPTENGINE_H
-#define MU_EXTENSIONS_SCRIPTENGINE_H
+#ifndef MUSE_EXTENSIONS_SCRIPTENGINE_H
+#define MUSE_EXTENSIONS_SCRIPTENGINE_H
 
 #include <QString>
 #include <QJSValue>
@@ -34,14 +34,14 @@
 
 #include "global/api/iapiengine.h"
 
-namespace mu::extensions {
+namespace muse::extensions {
 class JsModuleLoader;
-class ScriptEngine : public mu::api::IApiEngine
+class ScriptEngine : public muse::api::IApiEngine
 {
-    Inject<io::IFileSystem> fileSystem;
+    GlobalInject<io::IFileSystem> fileSystem;
 
 public:
-    ScriptEngine(int apiverion);
+    ScriptEngine(const modularity::ContextPtr& iocCtx, int apiverion);
     ~ScriptEngine();
 
     struct CallData {
@@ -68,12 +68,13 @@ public:
     void setExports(const QJSValue& obj);
 
     // IApiEngine
+    const modularity::ContextPtr& iocContext() const override;
     QJSValue newQObject(QObject* o) override;
     QJSValue newObject() override;
     QJSValue newArray(size_t length = 0) override;
 
     static void dump(const QString& name, const QJSValue& val);
-    static mu::Ret jsValueToRet(const QJSValue& val);
+    static Ret jsValueToRet(const QJSValue& val);
 
 private:
 
@@ -88,6 +89,7 @@ private:
         QJSValue func;
     };
 
+    const modularity::ContextPtr m_iocContext;
     QJSEngine* m_engine = nullptr;
     QObject* m_api = nullptr;
     JsModuleLoader* m_moduleLoader = nullptr;
@@ -98,4 +100,4 @@ private:
 };
 }
 
-#endif // MU_EXTENSIONS_SCRIPTENGINE_H
+#endif // MUSE_EXTENSIONS_SCRIPTENGINE_H

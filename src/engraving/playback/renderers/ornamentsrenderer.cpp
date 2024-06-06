@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,7 +30,8 @@
 #include "playback/metaparsers/notearticulationsparser.h"
 
 using namespace mu::engraving;
-using namespace mu::mpe;
+using namespace muse;
+using namespace muse::mpe;
 
 namespace mu::engraving {
 struct IntervalsInfo {
@@ -407,11 +408,11 @@ void OrnamentsRenderer::createEvents(const ArticulationType type, NominalNoteCtx
 
 float DisclosurePattern::subNoteDurationTicks(const double bps) const
 {
-    if (RealIsEqualOrMore(bps, PRESTISSIMO_BPS_BOUND)) {
+    if (muse::RealIsEqualOrMore(bps, PRESTISSIMO_BPS_BOUND)) {
         return boundaries.highTempoDurationTicks;
     }
 
-    if (RealIsEqualOrMore(bps, MODERATO_BPS_BOUND)) {
+    if (muse::RealIsEqualOrMore(bps, MODERATO_BPS_BOUND)) {
         return boundaries.mediumTempoDurationTicks;
     }
 
@@ -428,8 +429,8 @@ DisclosurePattern DisclosurePattern::buildActualPattern(const Note* note, const 
 
     float subNoteTicks = subNoteDurationTicks(bps);
 
-    result.prefixDurationTicks = RealRound(prefixPitchOffsets.size() * subNoteTicks, 0);
-    result.suffixDurationTicks = RealRound(suffixPitchOffsets.size() * subNoteTicks, 0);
+    result.prefixDurationTicks = muse::RealRound(prefixPitchOffsets.size() * subNoteTicks, 0);
+    result.suffixDurationTicks = muse::RealRound(suffixPitchOffsets.size() * subNoteTicks, 0);
 
     return result;
 }

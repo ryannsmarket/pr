@@ -25,7 +25,7 @@
 
 #include "log.h"
 
-using namespace mu::actions;
+using namespace muse::actions;
 
 ActionsDispatcher::~ActionsDispatcher()
 {
@@ -93,4 +93,9 @@ void ActionsDispatcher::reg(Actionable* client, const ActionCode& actionCode, co
     Clients& clients = m_clients[actionCode];
     CallBacks& callbacks = clients[client];
     callbacks.insert({ actionCode, call });
+}
+
+bool ActionsDispatcher::isReg(Actionable* client) const
+{
+    return client->isDispatcher(this);
 }

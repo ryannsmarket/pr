@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -98,7 +98,8 @@
 
 #include "log.h"
 
-using namespace mu::draw;
+using namespace muse;
+using namespace muse::draw;
 using namespace mu::engraving;
 using namespace mu::engraving::rendering::dev;
 using namespace mu::engraving::rendering::single;
@@ -368,7 +369,7 @@ void SingleLayout::layout(Ambitus* item, const Context& ctx)
                    ldata->bottomPos.y());
     // shorten line on each side by offsets
     double yDelta = ldata->bottomPos.y() - ldata->topPos.y();
-    if (yDelta != 0.0) {
+    if (!RealIsNull(yDelta)) {
         double off = spatium * Ambitus::LINEOFFSET_DEFAULT;
         PointF p1 = fullLine.pointAt(off / yDelta);
         PointF p2 = fullLine.pointAt(1 - (off / yDelta));
@@ -460,9 +461,9 @@ void SingleLayout::layout(Articulation* item, const Context&)
     RectF bbox;
 
     if (item->textType() != ArticulationTextType::NO_TEXT) {
-        mu::draw::Font scaledFont(item->font());
+        Font scaledFont(item->font());
         scaledFont.setPointSizeF(item->font().pointSizeF() * item->magS());
-        mu::draw::FontMetrics fm(scaledFont);
+        FontMetrics fm(scaledFont);
         bbox = fm.boundingRect(scaledFont, TConv::text(item->textType()));
     } else {
         bbox = item->symBbox(item->symId());
@@ -521,7 +522,7 @@ void SingleLayout::layout(BagpipeEmbellishment* item, const Context& ctx)
 
         // flag
         if (ldata->isDrawFlag) {
-            noteData.flagXY = mu::PointF(x - ldata->stemLineW * .5 + xcorr, y1 + ycorr);
+            noteData.flagXY = PointF(x - ldata->stemLineW * .5 + xcorr, y1 + ycorr);
             ldata->addBbox(flagBBox.translated(noteData.flagXY));
         }
 
@@ -547,7 +548,7 @@ void SingleLayout::layout(BarLine* item, const Context& ctx)
 
     double spatium = item->spatium();
     ldata->y1 = (spatium * .5 * item->spanFrom());
-    if (RealIsEqual(ldata->y2, 0.0)) {
+    if (muse::RealIsEqual(ldata->y2, 0.0)) {
         ldata->y2 = (spatium * .5 * (8.0 + item->spanTo()));
     }
 
@@ -611,7 +612,7 @@ void SingleLayout::layout(Bend* item, const Context&)
 
     RectF bb;
 
-    mu::draw::FontMetrics fm(item->font(spatium));
+    FontMetrics fm(item->font(spatium));
 
     size_t n   = item->points().size();
     double x = ldata->noteWidth;
@@ -639,7 +640,7 @@ void SingleLayout::layout(Bend* item, const Context&)
             int idx = (pitch + 12) / 25;
             const char* l = Bend::label[idx];
             bb.unite(fm.boundingRect(RectF(x2, y2, 0, 0),
-                                     draw::AlignHCenter | draw::AlignBottom | draw::TextDontClip,
+                                     muse::draw::AlignHCenter | muse::draw::AlignBottom | muse::draw::TextDontClip,
                                      String::fromAscii(l)));
             y = y2;
         }
@@ -666,7 +667,7 @@ void SingleLayout::layout(Bend* item, const Context&)
             int idx = (item->points().at(pt + 1).pitch + 12) / 25;
             const char* l = Bend::label[idx];
             bb.unite(fm.boundingRect(RectF(x2, y2, 0, 0),
-                                     draw::AlignHCenter | draw::AlignBottom | draw::TextDontClip,
+                                     muse::draw::AlignHCenter | muse::draw::AlignBottom | muse::draw::TextDontClip,
                                      String::fromAscii(l)));
         } else {
             // down
@@ -909,12 +910,12 @@ void SingleLayout::layout(FretDiagram* item, const Context& ctx)
 
     // Allocate space for fret offset number
     if (item->fretOffset() > 0) {
-        mu::draw::Font scaledFont(item->font());
+        Font scaledFont(item->font());
         scaledFont.setPointSizeF(item->font().pointSizeF() * item->userMag());
 
         double fretNumMag = ctx.style().styleD(Sid::fretNumMag);
         scaledFont.setPointSizeF(scaledFont.pointSizeF() * fretNumMag);
-        mu::draw::FontMetrics fm2(scaledFont);
+        FontMetrics fm2(scaledFont);
         double numw = fm2.width(String::number(item->fretOffset() + 1));
         double xdiff = numw + ldata->stringDist * .4;
         w += xdiff;
@@ -931,7 +932,7 @@ void SingleLayout::layout(FretDiagram* item, const Context& ctx)
 
 void SingleLayout::layout(FSymbol* item, const Context&)
 {
-    item->setbbox(draw::FontMetrics::boundingRect(item->font(), item->toString()));
+    item->setbbox(FontMetrics::boundingRect(item->font(), item->toString()));
     item->setOffset(0.0, 0.0);
     item->setPos(0.0, 0.0);
 }
@@ -1460,8 +1461,8 @@ void SingleLayout::layout(StringTunings* item, const Context& ctx)
 
     for (TextBlock& block : item->mutldata()->blocks) {
         for (TextFragment& fragment : block.fragments()) {
-            mu::draw::Font font = fragment.font(item);
-            if (font.type() != mu::draw::Font::Type::MusicSymbol) {
+            Font font = fragment.font(item);
+            if (font.type() != Font::Type::MusicSymbol) {
                 // HACK: the music symbol doesn't have a good baseline
                 // to go with text so we correct text here
                 const double baselineAdjustment = font.pointSizeF();

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -248,7 +248,7 @@ static void playNote(EventsHolder& events, const Note* note, PlayNoteParams para
     if (acc) {
         AccidentalType type = acc->accidentalType();
         double cents = Accidental::subtype2centOffset(type);
-        if (!RealIsNull(cents)) {
+        if (!muse::RealIsNull(cents)) {
             double pwValue = cents / 100.0 * (double)wheelSpec.mLimit / (double)wheelSpec.mAmplitude;
             PitchWheelRenderer::PitchWheelFunction func;
             func.mStartTick = params.onTime - params.offset;
@@ -278,8 +278,7 @@ static void playNote(EventsHolder& events, const Note* note, PlayNoteParams para
     }
 
     ev.setVelo(0);
-    if (!note->part()->instrument(note->tick())->useDrumset()
-        && params.offTime != -1) {
+    if (params.offTime != -1) {
         events[params.channel].insert(std::pair<int, NPlayEvent>(std::max(0, params.offTime - params.offset), ev));
     }
 }
@@ -805,7 +804,8 @@ CompatMidiRendererInternal::ChordParams CompatMidiRendererInternal::collectChord
         if (spanner->isLetRing()) {
             LetRing* letRing = toLetRing(spanner);
             chordParams.letRing = true;
-            chordParams.endLetRingTick = letRing->endCR()->tick().ticks() + letRing->endCR()->ticks().ticks() + tickOffset;
+            ChordRest* endCR = letRing->endCR();
+            chordParams.endLetRingTick = (endCR ? endCR->tick().ticks() + endCR->ticks().ticks() : letRing->tick2().ticks()) + tickOffset;
         } else if (spanner->isPalmMute()) {
             chordParams.palmMute = true;
         }
@@ -1489,7 +1489,7 @@ void fillScoreVelocities(const Score* score, CompatMidiRendererInternal::Context
 
                     double veloMultiplier = chordVelocityMultiplier(chord, context);
 
-                    if (RealIsEqual(veloMultiplier, 1.0)) {
+                    if (muse::RealIsEqual(veloMultiplier, 1.0)) {
                         continue;
                     }
 

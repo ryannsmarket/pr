@@ -30,9 +30,9 @@
 
 #include "log.h"
 
-using namespace mu;
-using namespace mu::audio;
-using namespace mu::audio::synth;
+using namespace muse;
+using namespace muse::audio;
+using namespace muse::audio::synth;
 
 static const audioch_t AUDIO_CHANNELS = 2;
 
@@ -46,7 +46,7 @@ static const Settings::Key USER_SOUNDFONTS_PATHS("midi", "application/paths/mySo
 
 static const AudioResourceId DEFAULT_SOUND_FONT_NAME = "MS Basic";
 static const AudioResourceAttributes DEFAULT_AUDIO_RESOURCE_ATTRIBUTES = {
-    { PLAYBACK_SETUP_DATA_ATTRIBUTE, mpe::GENERIC_SETUP_DATA_STRING },
+    { PLAYBACK_SETUP_DATA_ATTRIBUTE, muse::mpe::GENERIC_SETUP_DATA_STRING },
     { SOUNDFONT_NAME_ATTRIBUTE, String::fromStdString(DEFAULT_SOUND_FONT_NAME) } };
 
 static const AudioResourceMeta DEFAULT_AUDIO_RESOURCE_META
@@ -166,7 +166,7 @@ async::Notification AudioConfiguration::sampleRateChanged() const
 size_t AudioConfiguration::minTrackCountForMultithreading() const
 {
     // Start mutlithreading-processing only when there are more or equal number of tracks
-    return 3;
+    return 2;
 }
 
 AudioInputParams AudioConfiguration::defaultAudioInputParams() const

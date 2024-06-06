@@ -23,9 +23,9 @@
 
 #include "log.h"
 
-using namespace mu::draw;
+using namespace muse::draw;
 
-int FontProvider::addSymbolFont(const mu::String& family, const mu::io::path_t& path)
+int FontProvider::addSymbolFont(const muse::String& family, const io::path_t& path)
 {
     //! NOTE Adding fonts in the fontsmodule
     UNUSED(family);
@@ -33,14 +33,14 @@ int FontProvider::addSymbolFont(const mu::String& family, const mu::io::path_t& 
     return 1;
 }
 
-int FontProvider::addTextFont(const mu::io::path_t& path)
+int FontProvider::addTextFont(const io::path_t& path)
 {
     //! NOTE Adding fonts in the fontsmodule
     UNUSED(path);
     return 1;
 }
 
-void FontProvider::insertSubstitution(const mu::String& from, const mu::String& to)
+void FontProvider::insertSubstitution(const muse::String& from, const muse::String& to)
 {
     //! NOTE Instead of substitution, default fonts are used
     //! Set in the fontsmodule
@@ -48,82 +48,82 @@ void FontProvider::insertSubstitution(const mu::String& from, const mu::String& 
     UNUSED(to);
 }
 
-double FontProvider::lineSpacing(const mu::draw::Font& f) const
+double FontProvider::lineSpacing(const muse::draw::Font& f) const
 {
     return fontsEngine()->lineSpacing(f);
 }
 
-double FontProvider::xHeight(const mu::draw::Font& f) const
+double FontProvider::xHeight(const muse::draw::Font& f) const
 {
     return fontsEngine()->xHeight(f);
 }
 
-double FontProvider::height(const mu::draw::Font& f) const
+double FontProvider::height(const muse::draw::Font& f) const
 {
     return fontsEngine()->height(f);
 }
 
-double FontProvider::ascent(const mu::draw::Font& f) const
+double FontProvider::ascent(const muse::draw::Font& f) const
 {
     return fontsEngine()->ascent(f);
 }
 
-double FontProvider::descent(const mu::draw::Font& f) const
+double FontProvider::descent(const muse::draw::Font& f) const
 {
     return fontsEngine()->descent(f);
 }
 
-bool FontProvider::inFont(const mu::draw::Font& f, mu::Char ch) const
+bool FontProvider::inFont(const muse::draw::Font& f, muse::Char ch) const
 {
     return inFontUcs4(f, static_cast<char32_t>(ch.unicode()));
 }
 
-bool FontProvider::inFontUcs4(const mu::draw::Font& f, char32_t ucs4) const
+bool FontProvider::inFontUcs4(const muse::draw::Font& f, char32_t ucs4) const
 {
     return fontsEngine()->inFontUcs4(f, ucs4);
 }
 
 // Text
-double FontProvider::horizontalAdvance(const mu::draw::Font& f, const mu::String& string) const
+double FontProvider::horizontalAdvance(const muse::draw::Font& f, const muse::String& string) const
 {
     return fontsEngine()->horizontalAdvance(f, string.toStdU32String());
 }
 
-double FontProvider::horizontalAdvance(const mu::draw::Font& f, const mu::Char& ch) const
+double FontProvider::horizontalAdvance(const muse::draw::Font& f, const muse::Char& ch) const
 {
     return fontsEngine()->horizontalAdvance(f, ch.unicode());
 }
 
-mu::RectF FontProvider::boundingRect(const mu::draw::Font& f, const mu::String& string) const
+RectF FontProvider::boundingRect(const muse::draw::Font& f, const muse::String& string) const
 {
     return fontsEngine()->boundingRect(f, string.toStdU32String());
 }
 
-mu::RectF FontProvider::boundingRect(const mu::draw::Font& f, const mu::Char& ch) const
+RectF FontProvider::boundingRect(const muse::draw::Font& f, const muse::Char& ch) const
 {
     return fontsEngine()->boundingRect(f, ch.unicode());
 }
 
-mu::RectF FontProvider::boundingRect(const mu::draw::Font& f, const mu::RectF& r, int flags, const mu::String& string) const
+RectF FontProvider::boundingRect(const muse::draw::Font& f, const RectF& r, int flags, const muse::String& string) const
 {
     UNUSED(r);
     UNUSED(flags);
     return boundingRect(f, string);
 }
 
-mu::RectF FontProvider::tightBoundingRect(const mu::draw::Font& f, const mu::String& string) const
+RectF FontProvider::tightBoundingRect(const muse::draw::Font& f, const muse::String& string) const
 {
     return fontsEngine()->tightBoundingRect(f, string.toStdU32String());
 }
 
 // Score symbols
-mu::RectF FontProvider::symBBox(const mu::draw::Font& f, char32_t ucs4, double DPI_F) const
+RectF FontProvider::symBBox(const muse::draw::Font& f, char32_t ucs4, double DPI_F) const
 {
     UNUSED(DPI_F);
     return fontsEngine()->symBBox(f, ucs4);
 }
 
-double FontProvider::symAdvance(const mu::draw::Font& f, char32_t ucs4, double DPI_F) const
+double FontProvider::symAdvance(const muse::draw::Font& f, char32_t ucs4, double DPI_F) const
 {
     UNUSED(DPI_F);
     return fontsEngine()->symAdvance(f, ucs4);

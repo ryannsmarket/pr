@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -222,7 +222,7 @@ void BspTree::initialize(const RectF& rec, int dep, int index)
     Node* node = &m_nodes[index];
     if (index == 0) {
         node->type = Node::Type::HORIZONTAL;
-        node->offset = rec.center().x();
+        node->offset = rec.center().y();
     }
 
     if (dep) {
@@ -266,7 +266,7 @@ void BspTree::initialize(const RectF& rec, int dep, int index)
 //   climbTree
 //---------------------------------------------------------
 
-void BspTree::climbTree(BspTreeVisitor* visitor, const mu::PointF& pos, int index)
+void BspTree::climbTree(BspTreeVisitor* visitor, const PointF& pos, int index)
 {
     if (m_nodes.empty()) {
         return;
@@ -300,7 +300,7 @@ void BspTree::climbTree(BspTreeVisitor* visitor, const mu::PointF& pos, int inde
 //   climbTree
 //---------------------------------------------------------
 
-void BspTree::climbTree(BspTreeVisitor* visitor, const mu::RectF& rec, int index)
+void BspTree::climbTree(BspTreeVisitor* visitor, const RectF& rec, int index)
 {
     if (m_nodes.empty()) {
         return;
@@ -339,7 +339,7 @@ void BspTree::climbTree(BspTreeVisitor* visitor, const mu::RectF& rec, int index
 //   rectForIndex
 //---------------------------------------------------------
 
-mu::RectF BspTree::rectForIndex(int index) const
+RectF BspTree::rectForIndex(int index) const
 {
     if (index <= 0) {
         return m_rect;

@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_AUDIO_MIXER_H
-#define MU_AUDIO_MIXER_H
+#ifndef MUSE_AUDIO_MIXER_H
+#define MUSE_AUDIO_MIXER_H
 
 #include <memory>
 #include <map>
@@ -36,7 +36,7 @@
 #include "iaudioconfiguration.h"
 #include "iclock.h"
 
-namespace mu::audio {
+namespace muse::audio {
 class Mixer : public AbstractAudioSource, public std::enable_shared_from_this<Mixer>, public async::Asyncable
 {
     Inject<fx::IFxResolver> fxResolver;
@@ -48,7 +48,7 @@ public:
 
     IAudioSourcePtr mixedSource();
 
-    RetVal<MixerChannelPtr> addChannel(const TrackId trackId, IAudioSourcePtr source);
+    RetVal<MixerChannelPtr> addChannel(const TrackId trackId, ITrackAudioInputPtr source);
     RetVal<MixerChannelPtr> addAuxChannel(const TrackId trackId);
     Ret removeChannel(const TrackId trackId);
 
@@ -88,7 +88,10 @@ private:
     void notifyNoAudioSignal();
     void notifyAboutAudioSignalChanges(const audioch_t audioChannelNumber, const float linearRms) const;
 
+    msecs_t currentTime() const;
+
     size_t m_minTrackCountForMultithreading = 0;
+    size_t m_nonMutedTrackCount = 0;
 
     std::vector<float> m_writeCacheBuff;
 
@@ -121,4 +124,4 @@ private:
 using MixerPtr = std::shared_ptr<Mixer>;
 }
 
-#endif // MU_AUDIO_MIXER_H
+#endif // MUSE_AUDIO_MIXER_H

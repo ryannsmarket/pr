@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -125,10 +125,10 @@ public:
 
     bool layoutCloseToNote() const;
 
-    const draw::Font& font() const { return m_font; }
+    const muse::draw::Font& font() const { return m_font; }
     bool isHiddenOnTabStaff() const;
 
-    std::vector<mu::LineF> dragAnchorLines() const override;
+    std::vector<LineF> dragAnchorLines() const override;
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -218,7 +218,7 @@ private:
     String m_channelName;
 
     ArticulationTextType m_textType = ArticulationTextType::NO_TEXT;
-    draw::Font m_font; // used for drawing text type articulations
+    muse::draw::Font m_font; // used for drawing text type articulations
 
     ArticulationAnchor m_anchor = ArticulationAnchor::AUTO;
 

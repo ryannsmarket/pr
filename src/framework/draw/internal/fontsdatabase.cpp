@@ -29,23 +29,23 @@
 
 #include "log.h"
 
-using namespace mu::draw;
+using namespace muse::draw;
 
 static int s_fontID = -1;
 
-void FontsDatabase::setDefaultFont(mu::draw::Font::Type type, const FontDataKey& key)
+void FontsDatabase::setDefaultFont(Font::Type type, const FontDataKey& key)
 {
     m_defaults[type] = key;
 }
 
-const FontDataKey& FontsDatabase::defaultFont(mu::draw::Font::Type type) const
+const FontDataKey& FontsDatabase::defaultFont(Font::Type type) const
 {
     auto it = m_defaults.find(type);
     if (it != m_defaults.end()) {
         return it->second;
     }
 
-    it = m_defaults.find(mu::draw::Font::Type::Unknown);
+    it = m_defaults.find(Font::Type::Unknown);
     IF_ASSERT_FAILED(it != m_defaults.end()) {
         static FontDataKey null;
         return null;
@@ -53,7 +53,7 @@ const FontDataKey& FontsDatabase::defaultFont(mu::draw::Font::Type type) const
     return it->second;
 }
 
-int FontsDatabase::addFont(const FontDataKey& key, const mu::io::path_t& path)
+int FontsDatabase::addFont(const FontDataKey& key, const io::path_t& path)
 {
     s_fontID++;
     m_fonts.push_back(FontInfo { s_fontID, key, path });
@@ -63,17 +63,17 @@ int FontsDatabase::addFont(const FontDataKey& key, const mu::io::path_t& path)
     return s_fontID;
 }
 
-FontDataKey FontsDatabase::actualFont(const FontDataKey& requireKey, mu::draw::Font::Type type) const
+FontDataKey FontsDatabase::actualFont(const FontDataKey& requireKey, Font::Type type) const
 {
-    mu::io::path_t path = fontInfo(requireKey).path;
-    if (!path.empty() && mu::io::File::exists(path)) {
+    io::path_t path = fontInfo(requireKey).path;
+    if (!path.empty() && io::File::exists(path)) {
         return requireKey;
     }
 
     return defaultFont(type);
 }
 
-std::vector<FontDataKey> FontsDatabase::substitutionFonts(mu::draw::Font::Type type) const
+std::vector<FontDataKey> FontsDatabase::substitutionFonts(Font::Type type) const
 {
     auto it = m_substitutions.find(type);
     if (it != m_substitutions.end()) {
@@ -84,15 +84,15 @@ std::vector<FontDataKey> FontsDatabase::substitutionFonts(mu::draw::Font::Type t
     return null;
 }
 
-FontData FontsDatabase::fontData(const FontDataKey& requireKey, mu::draw::Font::Type type) const
+FontData FontsDatabase::fontData(const FontDataKey& requireKey, Font::Type type) const
 {
     FontDataKey key = actualFont(requireKey, type);
-    mu::io::path_t path = fontInfo(key).path;
-    IF_ASSERT_FAILED(mu::io::File::exists(path)) {
+    io::path_t path = fontInfo(key).path;
+    IF_ASSERT_FAILED(io::File::exists(path)) {
         return FontData();
     }
 
-    mu::io::File file(path);
+    io::File file(path);
     if (!file.open()) {
         LOGE() << "failed open font file: " << path;
         return FontData();
@@ -104,14 +104,14 @@ FontData FontsDatabase::fontData(const FontDataKey& requireKey, mu::draw::Font::
     return fd;
 }
 
-mu::io::path_t FontsDatabase::fontPath(const FontDataKey& requireKey, mu::draw::Font::Type type) const
+io::path_t FontsDatabase::fontPath(const FontDataKey& requireKey, Font::Type type) const
 {
     FontDataKey key = actualFont(requireKey, type);
-    mu::io::path_t path = fontInfo(key).path;
-    if (!mu::io::File::exists(path)) {
+    io::path_t path = fontInfo(key).path;
+    if (!io::File::exists(path)) {
         LOGE() << "not exists font: " << path;
-        DO_ASSERT(mu::io::File::exists(path));
-        return mu::io::path_t();
+        DO_ASSERT(io::File::exists(path));
+        return io::path_t();
     }
     return path;
 }
@@ -128,15 +128,15 @@ const FontsDatabase::FontInfo& FontsDatabase::fontInfo(const FontDataKey& key) c
     return null;
 }
 
-void FontsDatabase::addAdditionalFonts(const mu::io::path_t& path)
+void FontsDatabase::addAdditionalFonts(const io::path_t& path)
 {
-    mu::io::File f(path + "/fontslist.json");
-    if (!f.open(mu::io::IODevice::ReadOnly)) {
+    io::File f(path + "/fontslist.json");
+    if (!f.open(io::IODevice::ReadOnly)) {
         LOGE() << "failed open file: " << f.filePath();
         return;
     }
 
-    mu::io::path_t absolutePath = mu::io::Dir(path).absolutePath() + "/";
+    io::path_t absolutePath = io::Dir(path).absolutePath() + "/";
 
     mu::ByteArray data = f.readAll();
     std::string err;
@@ -163,6 +163,6 @@ void FontsDatabase::addAdditionalFonts(const mu::io::path_t& path)
 
         FontDataKey fontDataKey(family, bold, italic);
         addFont(fontDataKey, absolutePath + file);
-        m_substitutions[mu::draw::Font::Type::Text].push_back(fontDataKey);
+        m_substitutions[Font::Type::Text].push_back(fontDataKey);
     }
 }

@@ -54,12 +54,13 @@
 
 #include "log.h"
 
-using namespace mu::modularity;
-using namespace mu::audio;
-using namespace mu::audio::synth;
-using namespace mu::audio::fx;
+using namespace muse;
+using namespace muse::modularity;
+using namespace muse::audio;
+using namespace muse::audio::synth;
+using namespace muse::audio::fx;
 
-#ifdef JACK_AUDIO
+#ifdef MUSE_MODULE_AUDIO_JACK
 #include "internal/platform/jack/jackaudiodriver.h"
 #endif
 
@@ -107,11 +108,11 @@ void AudioModule::registerExports()
     m_audioOutputController = std::make_shared<AudioOutputDeviceController>();
     m_fxResolver = std::make_shared<FxResolver>();
     m_synthResolver = std::make_shared<SynthResolver>();
-    m_playbackFacade = std::make_shared<Playback>();
+    m_playbackFacade = std::make_shared<Playback>(iocContext());
     m_soundFontRepository = std::make_shared<SoundFontRepository>();
     m_registerAudioPluginsScenario = std::make_shared<RegisterAudioPluginsScenario>();
 
-#if defined(JACK_AUDIO)
+#if defined(MUSE_MODULE_AUDIO_JACK)
     m_audioDriver = std::shared_ptr<IAudioDriver>(new JackAudioDriver());
 #else
 
@@ -133,7 +134,7 @@ void AudioModule::registerExports()
     m_audioDriver = std::shared_ptr<IAudioDriver>(new WebAudioDriver());
 #endif
 
-#endif // JACK_AUDIO
+#endif // MUSE_MODULE_AUDIO_JACK
 
     ioc()->registerExport<IAudioConfiguration>(moduleName(), m_configuration);
     ioc()->registerExport<IAudioThreadSecurer>(moduleName(), std::make_shared<AudioThreadSecurer>());
@@ -158,7 +159,7 @@ void AudioModule::registerResources()
 
 void AudioModule::registerUiTypes()
 {
-    ioc()->resolve<ui::IUiEngine>(moduleName())->addSourceImportPath(audio_QML_IMPORT);
+    ioc()->resolve<ui::IUiEngine>(moduleName())->addSourceImportPath(muse_audio_QML_IMPORT);
 }
 
 void AudioModule::resolveImports()
@@ -217,7 +218,7 @@ void AudioModule::onInit(const IApplication::RunMode& mode)
     setupAudioDriver(mode);
 
     //! --- Diagnostics ---
-    auto pr = ioc()->resolve<diagnostics::IDiagnosticsPathsRegister>(moduleName());
+    auto pr = ioc()->resolve<muse::diagnostics::IDiagnosticsPathsRegister>(moduleName());
     if (pr) {
         std::vector<io::path_t> paths = m_configuration->soundFontDirectories();
         for (const io::path_t& p : paths) {

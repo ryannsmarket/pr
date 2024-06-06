@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,195 +20,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <QTextCodec>
-
 #include <csignal>
 
-#include "runtime.h"
+#include <QTextCodec>
+#include <QApplication>
+#include <QStyleHints>
+#include <QQuickWindow>
+
+#include "appfactory.h"
+#include "internal/commandlineparser.h"
+#include "global/iapplication.h"
+
+#include "muse_framework_config.h"
+
 #include "log.h"
-
-#include "app.h"
-
-#include "framework/global/globalmodule.h"
-
-#ifdef MUE_BUILD_ACCESSIBILITY_MODULE
-#include "framework/accessibility/accessibilitymodule.h"
-#else
-#include "stubs/framework/accessibility/accessibilitystubmodule.h"
-#endif
-
-#include "framework/actions/actionsmodule.h"
-
-#ifdef MUE_BUILD_AUDIO_MODULE
-#include "framework/audio/audiomodule.h"
-#else
-#include "stubs/framework/audio/audiostubmodule.h"
-#endif
-
-#include "framework/draw/drawmodule.h"
-
-#ifdef MUE_BUILD_MIDI_MODULE
-#include "framework/midi/midimodule.h"
-#else
-#include "stubs/framework/midi/midistubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_MPE_MODULE
-#include "framework/mpe/mpemodule.h"
-#else
-#include "stubs/framework/mpe/mpestubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_MUSESAMPLER_MODULE
-#include "framework/musesampler/musesamplermodule.h"
-#endif
-
-#ifdef MUE_BUILD_NETWORK_MODULE
-#include "framework/network/networkmodule.h"
-#else
-#include "stubs/framework/network/networkstubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_SHORTCUTS_MODULE
-#include "framework/shortcuts/shortcutsmodule.h"
-#else
-#include "stubs/framework/shortcuts/shortcutsstubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_UI_MODULE
-#include "framework/ui/uimodule.h"
-#include "framework/uicomponents/uicomponentsmodule.h"
-#endif
-
-#ifdef MUE_BUILD_VST_MODULE
-#include "framework/vst/vstmodule.h"
-#else
-#include "stubs/framework/vst/vststubmodule.h"
-#endif
-
-// Modules
-#include "appshell/appshellmodule.h"
-
-#ifdef MUE_BUILD_AUTOBOT_MODULE
-#include "autobot/autobotmodule.h"
-#endif
-
-#ifdef MUE_BUILD_BRAILLE_MODULE
-#include "braille/braillemodule.h"
-#else
-#include "stubs/braille/braillestubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_CLOUD_MODULE
-#include "cloud/cloudmodule.h"
-#else
-#include "stubs/cloud/cloudstubmodule.h"
-#endif
-
-#include "commonscene/commonscenemodule.h"
-#include "context/contextmodule.h"
-
-#ifdef MUE_BUILD_CONVERTER_MODULE
-#include "converter/convertermodule.h"
-#endif
-
-#include "diagnostics/diagnosticsmodule.h"
-#include "engraving/engravingmodule.h"
-
-#ifdef MUE_BUILD_IMPORTEXPORT_MODULE
-#include "importexport/musicxml/musicxmlmodule.h"
-#include "importexport/bb/bbmodule.h"
-#include "importexport/bww/bwwmodule.h"
-#include "importexport/capella/capellamodule.h"
-#include "importexport/guitarpro/guitarpromodule.h"
-#include "importexport/midi/midimodule.h"
-#include "importexport/musedata/musedatamodule.h"
-#include "importexport/ove/ovemodule.h"
-#include "importexport/audioexport/audioexportmodule.h"
-#include "importexport/imagesexport/imagesexportmodule.h"
-#include "importexport/mei/meimodule.h"
-#ifdef MUE_BUILD_VIDEOEXPORT_MODULE
-#include "importexport/videoexport/videoexportmodule.h"
-#endif
-#else
-#ifdef MUE_BUILD_IMAGESEXPORT_MODULE
-#include "importexport/imagesexport/imagesexportmodule.h"
-#endif
-#endif
-
-#include "inspector/inspectormodule.h"
-
-#ifdef MUE_BUILD_INSTRUMENTSSCENE_MODULE
-#include "instrumentsscene/instrumentsscenemodule.h"
-#else
-#include "stubs/instrumentsscene/instrumentsscenestubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_LANGUAGES_MODULE
-#include "languages/languagesmodule.h"
-#else
-#include "stubs/languages/languagesstubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_LEARN_MODULE
-#include "learn/learnmodule.h"
-#else
-#include "stubs/learn/learnmodule.h"
-#endif
-
-#ifdef MUE_BUILD_MULTIINSTANCES_MODULE
-#include "multiinstances/multiinstancesmodule.h"
-#else
-#include "stubs/multiinstances/multiinstancesstubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_NOTATION_MODULE
-#include "notation/notationmodule.h"
-#else
-#include "stubs/notation/notationstubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_PALETTE_MODULE
-#include "palette/palettemodule.h"
-#else
-#include "stubs/palette/palettestubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_PLAYBACK_MODULE
-#include "playback/playbackmodule.h"
-#else
-#include "stubs/playback/playbackstubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_EXTENSIONS_MODULE
-#include "extensions/extensionsmodule.h"
-#endif
-
-#include "print/printmodule.h"
-
-#ifdef MUE_BUILD_PROJECT_MODULE
-#include "project/projectmodule.h"
-#else
-#include "stubs/project/projectstubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_UPDATE_MODULE
-#include "update/updatemodule.h"
-#else
-#include "stubs/update/updatestubmodule.h"
-#endif
-
-#ifdef MUE_BUILD_WORKSPACE_MODULE
-#include "workspace/workspacemodule.h"
-#include "workspacescene/workspacescenemodule.h"
-#else
-#include "stubs/workspace/workspacestubmodule.h"
-#include "stubs/workspacescene/workspacescenestubmodule.h"
-#endif
-
-#ifdef Q_OS_WASM
-#include "wasmtest/wasmtestmodule.h"
-#endif
 
 #if (defined (_MSCVER) || defined (_MSC_VER))
 #include <vector>
@@ -217,9 +42,7 @@
 #include <shellapi.h>
 #endif
 
-#include <iostream>
-
-#ifndef MUE_BUILD_CRASHPAD_CLIENT
+#ifndef MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT
 static void crashCallback(int signum)
 {
     const char* signame = "UNKNOWN SIGNAME";
@@ -240,103 +63,84 @@ static void crashCallback(int signum)
 
 #endif
 
+static void app_init_qrc()
+{
+    Q_INIT_RESOURCE(app);
+}
+
 int main(int argc, char** argv)
 {
-#ifndef MUE_BUILD_CRASHPAD_CLIENT
+#ifndef MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT
     signal(SIGSEGV, crashCallback);
     signal(SIGILL, crashCallback);
     signal(SIGFPE, crashCallback);
 #endif
 
+    // ====================================================
+    // Setup global Qt application variables
+    // ====================================================
+
     // Force the 8-bit text encoding to UTF-8. This is the default encoding on all supported platforms except for MSVC under Windows, which
     // would otherwise default to the local ANSI code page and cause corruption of any non-ANSI Unicode characters in command-line arguments.
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
 
-    mu::app::App app;
+    app_init_qrc();
 
-    //! NOTE `diagnostics` must be first, because it installs the crash handler.
-    //! For other modules, the order is (an should be) unimportant.
-    app.addModule(new mu::diagnostics::DiagnosticsModule());
+    qputenv("QT_STYLE_OVERRIDE", "Fusion");
+    qputenv("QML_DISABLE_DISK_CACHE", "true");
 
-    // framework
-    app.addModule(new mu::accessibility::AccessibilityModule());
-    app.addModule(new mu::actions::ActionsModule());
-    app.addModule(new mu::audio::AudioModule());
-    app.addModule(new mu::draw::DrawModule());
-    app.addModule(new mu::midi::MidiModule());
-    app.addModule(new mu::mpe::MpeModule());
-#ifdef MUE_BUILD_MUSESAMPLER_MODULE
-    app.addModule(new mu::musesampler::MuseSamplerModule());
-#endif
-    app.addModule(new mu::network::NetworkModule());
-    app.addModule(new mu::shortcuts::ShortcutsModule());
-#ifdef MUE_BUILD_UI_MODULE
-    app.addModule(new mu::ui::UiModule());
-    app.addModule(new mu::uicomponents::UiComponentsModule());
-#endif
-    app.addModule(new mu::vst::VSTModule());
-
-    // modules
-#ifdef MUE_BUILD_APPSHELL_MODULE
-    app.addModule(new mu::appshell::AppShellModule());
+#ifdef Q_OS_LINUX
+    if (qEnvironmentVariable("QT_QPA_PLATFORM") != "offscreen") {
+        qputenv("QT_QPA_PLATFORMTHEME", "gtk3");
+    }
 #endif
 
-#ifdef MUE_BUILD_AUTOBOT_MODULE
-    app.addModule(new mu::autobot::AutobotModule());
+#ifdef Q_OS_WIN
+    // NOTE: There are some problems with rendering the application window on some integrated graphics processors
+    //       see https://github.com/musescore/MuseScore/issues/8270
+    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+
+    if (!qEnvironmentVariableIsSet("QT_OPENGL_BUGLIST")) {
+        qputenv("QT_OPENGL_BUGLIST", ":/resources/win_opengl_buglist.json");
+    }
 #endif
 
-    app.addModule(new mu::braille::BrailleModule());
-
-    app.addModule(new mu::cloud::CloudModule());
-    app.addModule(new mu::commonscene::CommonSceneModule());
-    app.addModule(new mu::context::ContextModule());
-
-#ifdef MUE_BUILD_CONVERTER_MODULE
-    app.addModule(new mu::converter::ConverterModule());
+//! NOTE: For unknown reasons, Linux scaling for 1 is defined as 1.003 in fractional scaling.
+//!       Because of this, some elements are drawn with a shift on the score.
+//!       Let's make a Linux hack and round values above 0.75(see RoundPreferFloor)
+#ifdef Q_OS_LINUX
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::RoundPreferFloor);
+#elif defined(Q_OS_WIN)
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 #endif
 
-    app.addModule(new mu::engraving::EngravingModule());
+    QGuiApplication::styleHints()->setMousePressAndHoldInterval(250);
 
-#ifdef MUE_BUILD_IMPORTEXPORT_MODULE
-    app.addModule(new mu::iex::bb::BBModule());
-    app.addModule(new mu::iex::bww::BwwModule());
-    app.addModule(new mu::iex::musicxml::MusicXmlModule());
-    app.addModule(new mu::iex::capella::CapellaModule());
-    app.addModule(new mu::iex::guitarpro::GuitarProModule());
-    app.addModule(new mu::iex::midi::MidiModule());
-    app.addModule(new mu::iex::musedata::MuseDataModule());
-    app.addModule(new mu::iex::ove::OveModule());
-    app.addModule(new mu::iex::audioexport::AudioExportModule());
-    app.addModule(new mu::iex::imagesexport::ImagesExportModule());
-    app.addModule(new mu::iex::mei::MeiModule());
-#ifdef MUE_BUILD_VIDEOEXPORT_MODULE
-    app.addModule(new mu::iex::videoexport::VideoExportModule());
-#endif
+    // Necessary for QQuickWidget, but potentially suboptimal for performance.
+    // Remove as soon as possible.
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+
+    //! Needs to be set because we use transparent windows for PopupView.
+    //! Needs to be called before any QQuickWindows are shown.
+    QQuickWindow::setDefaultAlphaBuffer(true);
+
+    // Can't use MUSE_APP_TITLE until next major release, because this "application name" is used to determine
+    // where user settings are stored. Changing it would result in all user settings being lost.
+#ifdef MUSE_APP_UNSTABLE
+    QCoreApplication::setApplicationName("MuseScore4Development");
 #else
-#ifdef MUE_BUILD_IMAGESEXPORT_MODULE
-    app.addModule(new mu::iex::imagesexport::ImagesExportModule());
+    QCoreApplication::setApplicationName("MuseScore4");
 #endif
-#endif
+    QCoreApplication::setOrganizationName("MuseScore");
+    QCoreApplication::setOrganizationDomain("musescore.org");
+    QCoreApplication::setApplicationVersion(MUSE_APP_VERSION);
 
-    app.addModule(new mu::inspector::InspectorModule());
-    app.addModule(new mu::instrumentsscene::InstrumentsSceneModule());
-    app.addModule(new mu::languages::LanguagesModule());
-    app.addModule(new mu::learn::LearnModule());
-    app.addModule(new mu::mi::MultiInstancesModule());
-    app.addModule(new mu::notation::NotationModule());
-    app.addModule(new mu::palette::PaletteModule());
-    app.addModule(new mu::playback::PlaybackModule());
-#ifdef MUE_BUILD_EXTENSIONS_MODULE
-    app.addModule(new mu::extensions::ExtensionsModule());
+#if !defined(Q_OS_WIN) && !defined(Q_OS_DARWIN) && !defined(Q_OS_WASM)
+    // Any OS that uses Freedesktop.org Desktop Entry Specification (e.g. Linux, BSD)
+#ifndef MUSE_APP_INSTALL_SUFFIX
+#define MUSE_APP_INSTALL_SUFFIX ""
 #endif
-    app.addModule(new mu::print::PrintModule());
-    app.addModule(new mu::project::ProjectModule());
-    app.addModule(new mu::update::UpdateModule());
-    app.addModule(new mu::workspace::WorkspaceModule());
-    app.addModule(new mu::workspace::WorkspaceSceneModule());
-
-#ifdef Q_OS_WASM
-    app.addModule(new mu::wasmtest::WasmTestModule());
+    QGuiApplication::setDesktopFileName("org.musescore.MuseScore" + QString(MUSE_APP_INSTALL_SUFFIX) + ".desktop");
 #endif
 
 #if (defined (_MSCVER) || defined (_MSC_VER))
@@ -370,7 +174,45 @@ int main(int argc, char** argv)
 
 #endif
 
-    int code = app.run(argcFinal, argvFinal);
+    using namespace muse;
+    using namespace mu::app;
+
+    // ====================================================
+    // Parse command line options
+    // ====================================================
+    CommandLineParser commandLineParser;
+    commandLineParser.init();
+    commandLineParser.parse(argcFinal, argvFinal);
+
+    IApplication::RunMode runMode = commandLineParser.runMode();
+    QCoreApplication* qapp = nullptr;
+
+    if (runMode == IApplication::RunMode::AudioPluginRegistration) {
+        qapp = new QCoreApplication(argc, argv);
+    } else {
+        qapp = new QApplication(argc, argv);
+    }
+
+    commandLineParser.processBuiltinArgs(*qapp);
+
+    AppFactory f;
+    std::shared_ptr<muse::IApplication> app = f.newApp(commandLineParser.options());
+
+    app->perform();
+
+    // ====================================================
+    // Run main loop
+    // ====================================================
+    int code = qapp->exec();
+
+    // ====================================================
+    // Quit
+    // ====================================================
+
+    app->finish();
+
+    delete qapp;
+
     LOGI() << "Goodbye!! code: " << code;
     return code;
 }

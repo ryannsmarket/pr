@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# MuseScore-CLA-applies
+# MuseScore-Studio-CLA-applies
 #
-# MuseScore
+# MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore BVBA and others
+# Copyright (C) 2021 MuseScore Limited
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -25,6 +25,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/actionicon.h
     ${CMAKE_CURRENT_LIST_DIR}/ambitus.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ambitus.h
+    ${CMAKE_CURRENT_LIST_DIR}/anchors.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/anchors.h
     ${CMAKE_CURRENT_LIST_DIR}/arpeggio.cpp
     ${CMAKE_CURRENT_LIST_DIR}/arpeggio.h
     ${CMAKE_CURRENT_LIST_DIR}/articulation.cpp

@@ -23,8 +23,8 @@
 #include "bezier.h"
 #include "global/realfn.h"
 
-using namespace mu;
-using namespace mu::draw;
+using namespace muse;
+using namespace muse::draw;
 
 Bezier::Bezier(double x1, double y1,
                double x2, double y2,

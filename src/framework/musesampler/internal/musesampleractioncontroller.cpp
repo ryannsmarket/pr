@@ -23,7 +23,7 @@
 
 #include "translation.h"
 
-using namespace mu::musesampler;
+using namespace muse::musesampler;
 
 void MuseSamplerActionController::init()
 {
@@ -36,9 +36,9 @@ void MuseSamplerActionController::checkLibraryIsDetected()
     std::string status;
 
     if (libVersion.empty()) {
-        status = trc("musesampler", "Muse Sampler library is not found");
+        status = muse::trc("musesampler", "Muse Sampler library is not found");
     } else {
-        status = qtrc("musesampler", "Muse Sampler library is detected, version %1")
+        status = muse::qtrc("musesampler", "Muse Sampler library is detected, version %1")
                  .arg(QString::fromStdString(libVersion)).toStdString();
     }
 

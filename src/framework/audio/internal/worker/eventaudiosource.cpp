@@ -26,10 +26,10 @@
 
 #include "log.h"
 
-using namespace mu;
-using namespace mu::audio;
-using namespace mu::audio::synth;
-using namespace mu::mpe;
+using namespace muse;
+using namespace muse::audio;
+using namespace muse::audio::synth;
+using namespace muse::mpe;
 
 EventAudioSource::EventAudioSource(const TrackId trackId, const mpe::PlaybackData& playbackData,
                                    OnOffStreamEventsReceived onOffStreamReceived)
@@ -153,6 +153,10 @@ void EventAudioSource::applyInputParams(const AudioInputParams& requiredParams)
 
     if (!m_synth) {
         m_synth = synthResolver()->resolveDefaultSynth(m_trackId);
+        IF_ASSERT_FAILED(m_synth) {
+            LOGE() << "Default synth not found!";
+            return;
+        }
     }
 
     m_synth->paramsChanged().onReceive(this, [this](const AudioInputParams& params) {

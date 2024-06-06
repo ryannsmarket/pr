@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -66,7 +66,8 @@
 #include "ui/iinteractiveuriregister.h"
 
 using namespace mu::project;
-using namespace mu::modularity;
+using namespace muse;
+using namespace muse::modularity;
 
 static void project_init_qrc()
 {
@@ -81,7 +82,7 @@ std::string ProjectModule::moduleName() const
 void ProjectModule::registerExports()
 {
     m_configuration = std::make_shared<ProjectConfiguration>();
-    m_actionsController = std::make_shared<ProjectActionsController>();
+    m_actionsController = std::make_shared<ProjectActionsController>(iocContext());
     m_projectAutoSaver = std::make_shared<ProjectAutoSaver>();
 
 #ifdef Q_OS_MAC
@@ -111,12 +112,12 @@ void ProjectModule::registerExports()
 
 void ProjectModule::resolveImports()
 {
-    auto ar = ioc()->resolve<ui::IUiActionsRegister>(moduleName());
+    auto ar = ioc()->resolve<muse::ui::IUiActionsRegister>(moduleName());
     if (ar) {
         ar->reg(std::make_shared<ProjectUiActions>(m_actionsController));
     }
 
-    auto ir = ioc()->resolve<ui::IInteractiveUriRegister>(moduleName());
+    auto ir = ioc()->resolve<muse::ui::IInteractiveUriRegister>(moduleName());
     if (ir) {
         ir->registerQmlUri(Uri("musescore://project/newscore"), "MuseScore/Project/NewScoreDialog.qml");
         ir->registerQmlUri(Uri("musescore://project/asksavelocationtype"), "MuseScore/Project/AskSaveLocationTypeDialog.qml");

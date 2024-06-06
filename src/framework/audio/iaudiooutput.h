@@ -20,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_AUDIO_IAUDIOOUTPUT_H
-#define MU_AUDIO_IAUDIOOUTPUT_H
+#ifndef MUSE_AUDIO_IAUDIOOUTPUT_H
+#define MUSE_AUDIO_IAUDIOOUTPUT_H
 
 #include <memory>
 
@@ -31,7 +31,7 @@
 
 #include "audiotypes.h"
 
-namespace mu::audio {
+namespace muse::audio {
 class IAudioOutput
 {
 public:
@@ -55,7 +55,7 @@ public:
                                                 const SoundTrackFormat& format) = 0;
     virtual void abortSavingAllSoundTracks() = 0;
 
-    virtual mu::Progress saveSoundTrackProgress(const TrackSequenceId sequenceId) = 0;
+    virtual Progress saveSoundTrackProgress(const TrackSequenceId sequenceId) = 0;
 
     virtual void clearAllFx() = 0;
 };
@@ -63,4 +63,4 @@ public:
 using IAudioOutputPtr = std::shared_ptr<IAudioOutput>;
 }
 
-#endif // MU_AUDIO_IAUDIOOUTPUT_H
+#endif // MUSE_AUDIO_IAUDIOOUTPUT_H

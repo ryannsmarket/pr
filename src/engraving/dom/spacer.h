@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -63,13 +63,13 @@ public:
     void setGap(Millimetre sp);
     Millimetre gap() const { return m_gap; }
 
-    const draw::PainterPath& path() const { return m_path; }
+    const muse::draw::PainterPath& path() const { return m_path; }
 
     bool needStartEditingAfterSelecting() const override { return true; }
     int gripsCount() const override { return 1; }
     Grip initialEditModeGrip() const override { return Grip::START; }
     Grip defaultGrip() const override { return Grip::START; }
-    std::vector<mu::PointF> gripsPositions(const EditData&) const override;
+    std::vector<PointF> gripsPositions(const EditData&) const override;
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -85,7 +85,7 @@ private:
 
     SpacerType m_spacerType = SpacerType::UP;
     Millimetre m_gap;
-    mu::draw::PainterPath m_path;
+    muse::draw::PainterPath m_path;
 };
 } // namespace mu::engraving
 #endif

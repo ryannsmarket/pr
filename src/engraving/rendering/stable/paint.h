@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,9 +38,9 @@ class Paint
 {
 public:
 
-    static void paintScore(draw::Painter* painter, Score* score, const IScoreRenderer::PaintOptions& opt);
-    static void paintItem(draw::Painter& painter, const EngravingItem* item);
-    static void paintItems(draw::Painter& painter, const std::vector<EngravingItem*>& items);
+    static void paintScore(muse::draw::Painter* painter, Score* score, const IScoreRenderer::PaintOptions& opt);
+    static void paintItem(muse::draw::Painter& painter, const EngravingItem* item);
+    static void paintItems(muse::draw::Painter& painter, const std::vector<EngravingItem*>& items);
 
     static SizeF pageSizeInch(const Score* score);
     static SizeF pageSizeInch(const Score* score, const IScoreRenderer::PaintOptions& opt);

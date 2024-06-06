@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -35,11 +35,14 @@
 #include "io/fileinfo.h"
 
 //! NOTE Different platforms have different font metrics, which is why some tests fail
-#ifndef Q_OS_LINUX
-#define DISABLED_SOME_TESTS
+#ifdef Q_OS_LINUX
+#define DISABLED_EXCEPT_ON_LINUX(testName) testName
+#else
+#define DISABLED_EXCEPT_ON_LINUX(testName) DISABLED_##testName
 #endif
 
 using namespace mu;
+using namespace muse;
 using namespace mu::iex::musicxml;
 using namespace mu::engraving;
 
@@ -55,6 +58,7 @@ static const std::string MODULE_NAME("iex_musicxml");
 
 static const std::string PREF_EXPORT_MUSICXML_EXPORTBREAKS("export/musicXML/exportBreaks");
 static const std::string PREF_IMPORT_MUSICXML_IMPORTBREAKS("import/musicXML/importBreaks");
+static const std::string PREF_IMPORT_MUSICXML_INFERTEXT("import/musicXML/importInferTextType");
 static const std::string PREF_EXPORT_MUSICXML_EXPORTLAYOUT("export/musicXML/exportLayout");
 static const std::string PREF_EXPORT_MUSICXML_EXPORTINVISIBLE("export/musicXML/exportInvisibleElements");
 
@@ -101,11 +105,11 @@ MasterScore* Musicxml_Tests::readScore(const String& fileName, bool isAbsolutePa
 {
     String suffix = io::FileInfo::suffix(fileName);
 
-    auto importXml = [](MasterScore* score, const io::path_t& path) -> engraving::Err {
+    auto importXml = [](MasterScore* score, const muse::io::path_t& path) -> engraving::Err {
         return mu::engraving::importMusicXml(score, path.toQString(), false);
     };
 
-    auto importMxl = [](MasterScore* score, const io::path_t& path) -> engraving::Err {
+    auto importMxl = [](MasterScore* score, const muse::io::path_t& path) -> engraving::Err {
         return mu::engraving::importCompressedMusicXml(score, path.toQString(), false);
     };
 
@@ -123,7 +127,7 @@ MasterScore* Musicxml_Tests::readScore(const String& fileName, bool isAbsolutePa
 bool Musicxml_Tests::saveCompareMusicXmlScore(MasterScore* score, const String& saveName, const String& compareWithLocalPath)
 {
     EXPECT_TRUE(saveXml(score, saveName));
-    return ScoreComp::compareFiles(saveName,  ScoreRW::rootPath() + u"/" + compareWithLocalPath);
+    return ScoreComp::compareFiles(ScoreRW::rootPath() + u"/" + compareWithLocalPath, saveName);
 }
 
 //---------------------------------------------------------
@@ -139,6 +143,7 @@ void Musicxml_Tests::mxmlIoTest(const char* file, bool exportLayout)
     setValue(PREF_IMPORT_MUSICXML_IMPORTBREAKS, Val(true));
     setValue(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, Val(exportLayout));
     setValue(PREF_EXPORT_MUSICXML_EXPORTINVISIBLE, Val(true));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".xml");
@@ -162,6 +167,7 @@ void Musicxml_Tests::mxmlIoTestRef(const char* file)
     setValue(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, Val(false));
     setValue(PREF_IMPORT_MUSICXML_IMPORTBREAKS, Val(true));
     setValue(PREF_EXPORT_MUSICXML_EXPORTINVISIBLE, Val(true));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".xml");
@@ -185,6 +191,7 @@ void Musicxml_Tests::mxmlIoTestRefBreaks(const char* file)
     setValue(PREF_IMPORT_MUSICXML_IMPORTBREAKS, Val(true));
     setValue(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, Val(false));
     setValue(PREF_EXPORT_MUSICXML_EXPORTINVISIBLE, Val(true));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".xml");
@@ -218,6 +225,7 @@ void Musicxml_Tests::mxmlMscxExportTestRef(const char* file, bool exportLayout)
     setValue(PREF_EXPORT_MUSICXML_EXPORTBREAKS, Val(IMusicXmlConfiguration::MusicxmlExportBreaksType::Manual));
     setValue(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, Val(exportLayout));
     setValue(PREF_EXPORT_MUSICXML_EXPORTINVISIBLE, Val(true));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".mscx");
@@ -242,6 +250,7 @@ void Musicxml_Tests::mxmlMscxExportTestRefBreaks(const char* file)
     setValue(PREF_EXPORT_MUSICXML_EXPORTBREAKS, Val(IMusicXmlConfiguration::MusicxmlExportBreaksType::Manual));
     setValue(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, Val(false));
     setValue(PREF_EXPORT_MUSICXML_EXPORTINVISIBLE, Val(true));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".mscx");
@@ -269,6 +278,7 @@ void Musicxml_Tests::mxmlMscxExportTestRefInvisibleElements(const char* file)
 
     setValue(PREF_EXPORT_MUSICXML_EXPORTBREAKS, Val(IMusicXmlConfiguration::MusicxmlExportBreaksType::Manual));
     setValue(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, Val(false));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".mscx");
@@ -299,6 +309,7 @@ void Musicxml_Tests::mxmlReadTestCompr(const char* file)
     setValue(PREF_EXPORT_MUSICXML_EXPORTBREAKS, Val(IMusicXmlConfiguration::MusicxmlExportBreaksType::Manual));
     setValue(PREF_IMPORT_MUSICXML_IMPORTBREAKS, Val(true));
     setValue(PREF_EXPORT_MUSICXML_EXPORTINVISIBLE, Val(true));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".mxl");
@@ -323,6 +334,7 @@ void Musicxml_Tests::mxmlReadWriteTestCompr(const char* file)
     setValue(PREF_EXPORT_MUSICXML_EXPORTBREAKS, Val(IMusicXmlConfiguration::MusicxmlExportBreaksType::Manual));
     setValue(PREF_IMPORT_MUSICXML_IMPORTBREAKS, Val(true));
     setValue(PREF_EXPORT_MUSICXML_EXPORTINVISIBLE, Val(true));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".xml");
@@ -353,6 +365,7 @@ void Musicxml_Tests::mxmlImportTestRef(const char* file)
     MScore::debugMode = false;
     setValue(PREF_EXPORT_MUSICXML_EXPORTBREAKS, Val(IMusicXmlConfiguration::MusicxmlExportBreaksType::Manual));
     setValue(PREF_EXPORT_MUSICXML_EXPORTLAYOUT, Val(false));
+    setValue(PREF_IMPORT_MUSICXML_INFERTEXT, Val(true));
 
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(XML_IO_DATA_DIR + fileName + u".xml");
@@ -392,6 +405,9 @@ TEST_F(Musicxml_Tests, articulationCombination) {
 }
 TEST_F(Musicxml_Tests, backupRoundingError) {
     mxmlImportTestRef("testBackupRoundingError");
+}
+TEST_F(Musicxml_Tests, barlineSpan) {
+    mxmlIoTest("testBarlineSpan");
 }
 TEST_F(Musicxml_Tests, barlineFermatas) {
     mxmlIoTest("testBarlineFermatas");
@@ -444,6 +460,12 @@ TEST_F(Musicxml_Tests, breaksSystem) {
 TEST_F(Musicxml_Tests, breathMarks) {
     mxmlIoTest("testBreathMarks");
 }
+TEST_F(Musicxml_Tests, buzzRoll) {
+    mxmlImportTestRef("testBuzzRoll");
+}
+TEST_F(Musicxml_Tests, buzzRoll2) {
+    mxmlIoTest("testBuzzRoll2");
+}
 TEST_F(Musicxml_Tests, changeTranspose) {
     mxmlIoTest("testChangeTranspose");
 }
@@ -458,6 +480,9 @@ TEST_F(Musicxml_Tests, chordNoVoice) {
 }
 TEST_F(Musicxml_Tests, chordSymbols) {
     mxmlMscxExportTestRef("testChordSymbols");
+}
+TEST_F(Musicxml_Tests, chordSymbols2) {
+    mxmlImportTestRef("testChordSymbols2");
 }
 TEST_F(Musicxml_Tests, clefs1) {
     mxmlIoTest("testClefs1");
@@ -660,6 +685,12 @@ TEST_F(Musicxml_Tests, helloReadWriteCompr) {
 TEST_F(Musicxml_Tests, implicitMeasure1) {
     mxmlIoTest("testImplicitMeasure1");
 }
+TEST_F(Musicxml_Tests, importDrums) {
+    mxmlImportTestRef("testImportDrums");
+}
+TEST_F(Musicxml_Tests, importDrums2) {
+    mxmlImportTestRef("testImportDrums2");
+}
 TEST_F(Musicxml_Tests, incompleteTuplet) {
     mxmlIoTestRef("testIncompleteTuplet");
 }
@@ -673,18 +704,38 @@ TEST_F(Musicxml_Tests, incorrectStaffNumber1) {
 TEST_F(Musicxml_Tests, incorrectStaffNumber2) {
     mxmlIoTestRef("testIncorrectStaffNumber2");
 }
-#ifndef DISABLED_SOME_TESTS
-#ifndef MU_QT5_COMPAT
-TEST_F(Musicxml_Tests, inferredCredits1) {
+TEST_F(Musicxml_Tests, DISABLED_EXCEPT_ON_LINUX(inferredCredits1)) {
     mxmlImportTestRef("testInferredCredits1");
 }
-TEST_F(Musicxml_Tests, inferredCredits2) {
+TEST_F(Musicxml_Tests, DISABLED_EXCEPT_ON_LINUX(inferredCredits2)) {
     mxmlImportTestRef("testInferredCredits2");
 }
-#endif
-#endif
+TEST_F(Musicxml_Tests, inferCodaII) {
+    mxmlImportTestRef("testInferCodaII");
+}
+TEST_F(Musicxml_Tests, inferSegnoII) {
+    mxmlImportTestRef("testInferSegnoII");
+}
 TEST_F(Musicxml_Tests, inferredFingerings) {
     mxmlImportTestRef("testInferredFingerings");
+}
+TEST_F(Musicxml_Tests, inferredCrescLines) {
+    mxmlImportTestRef("testInferredCrescLines");
+}
+TEST_F(Musicxml_Tests, inferredDynamicsExpression) {
+    mxmlImportTestRef("testInferredDynamicsExpression");
+}
+TEST_F(Musicxml_Tests, inferredTechnique) {
+    mxmlImportTestRef("testInferredTechnique");
+}
+TEST_F(Musicxml_Tests, inferredTempoText) {
+    mxmlImportTestRef("testInferredTempoText");
+}
+TEST_F(Musicxml_Tests, inferredTempoText2) {
+    mxmlImportTestRef("testInferredTempoText2");
+}
+TEST_F(Musicxml_Tests, inferredCrescLines2) {
+    mxmlImportTestRef("testInferredCrescLines2");
 }
 TEST_F(Musicxml_Tests, instrumentChangeMIDIportExport) {
     mxmlMscxExportTestRef("testInstrumentChangeMIDIportExport");
@@ -692,14 +743,23 @@ TEST_F(Musicxml_Tests, instrumentChangeMIDIportExport) {
 TEST_F(Musicxml_Tests, instrumentSound) {
     mxmlIoTestRef("testInstrumentSound");
 }
+TEST_F(Musicxml_Tests, instrImport) {
+    mxmlImportTestRef("testInstrImport");
+}
 TEST_F(Musicxml_Tests, invalidLayout) {
     mxmlMscxExportTestRef("testInvalidLayout");
 }
 TEST_F(Musicxml_Tests, invalidTimesig) {
     mxmlIoTestRef("testInvalidTimesig");
 }
+TEST_F(Musicxml_Tests, invisibleDirection) {
+    mxmlIoTest("testInvisibleDirection");
+}
 TEST_F(Musicxml_Tests, invisibleElements) {
     mxmlIoTest("testInvisibleElements");
+}
+TEST_F(Musicxml_Tests, invisibleNote) {
+    mxmlMscxExportTestRef("testInvisibleNote");
 }
 TEST_F(Musicxml_Tests, keysig1) {
     mxmlIoTest("testKeysig1");
@@ -707,11 +767,9 @@ TEST_F(Musicxml_Tests, keysig1) {
 TEST_F(Musicxml_Tests, keysig2) {
     mxmlIoTest("testKeysig2");
 }
-#ifndef DISABLED_SOME_TESTS
-TEST_F(Musicxml_Tests, layout) {
+TEST_F(Musicxml_Tests, DISABLED_EXCEPT_ON_LINUX(layout)) {
     mxmlIoTest("testLayout", true);
 }
-#endif
 TEST_F(Musicxml_Tests, lessWhiteSpace) {
     mxmlIoTestRef("testLessWhiteSpace");
 }
@@ -808,6 +866,9 @@ TEST_F(Musicxml_Tests, multiMeasureRest4) {
 TEST_F(Musicxml_Tests, multipleNotations) {
     mxmlIoTestRef("testMultipleNotations");
 }
+TEST_F(Musicxml_Tests, namedNoteheads) {
+    mxmlImportTestRef("testNamedNoteheads");
+}
 TEST_F(Musicxml_Tests, negativeOffset) {
     mxmlImportTestRef("testNegativeOffset");
 }
@@ -862,6 +923,15 @@ TEST_F(Musicxml_Tests, notesRests2) {
 TEST_F(Musicxml_Tests, numberedLyrics) {
     mxmlIoTestRef("testNumberedLyrics");
 }
+TEST_F(Musicxml_Tests, overlappingSpanners) {
+    mxmlIoTest("testOverlappingSpanners");
+}
+TEST_F(Musicxml_Tests, partNames) {
+    mxmlImportTestRef("testPartNames");
+}
+TEST_F(Musicxml_Tests, partNames2) {
+    mxmlIoTest("testPartNames2");
+}
 TEST_F(Musicxml_Tests, pedalChanges) {
     mxmlIoTest("testPedalChanges");
 }
@@ -873,12 +943,6 @@ TEST_F(Musicxml_Tests, pedalStyles) {
 }
 TEST_F(Musicxml_Tests, placementDefaults) {
     mxmlImportTestRef("testPlacementDefaults");
-}
-TEST_F(Musicxml_Tests, overlappingSpanners) {
-    mxmlIoTest("testOverlappingSpanners");
-}
-TEST_F(Musicxml_Tests, partNames) {
-    mxmlImportTestRef("testPartNames");
 }
 TEST_F(Musicxml_Tests, printSpacingNo) {
     mxmlIoTestRef("testPrintSpacingNo");
@@ -928,11 +992,17 @@ TEST_F(Musicxml_Tests, sound2) {
 TEST_F(Musicxml_Tests, specialCharacters) {
     mxmlIoTest("testSpecialCharacters");
 }
-TEST_F(Musicxml_Tests, testStaffEmptiness) {
+TEST_F(Musicxml_Tests, staffEmptiness) {
     mxmlImportTestRef("testStaffEmptiness");
+}
+TEST_F(Musicxml_Tests, staffSize) {
+    mxmlIoTest("testStaffSize");
 }
 TEST_F(Musicxml_Tests, staffTwoKeySigs) {
     mxmlIoTest("testStaffTwoKeySigs");
+}
+TEST_F(Musicxml_Tests, sticking) {
+    mxmlImportTestRef("testSticking");
 }
 TEST_F(Musicxml_Tests, stringData) {
     mxmlIoTest("testStringData");
@@ -958,14 +1028,15 @@ TEST_F(Musicxml_Tests, systemBrackets4) {
 TEST_F(Musicxml_Tests, systemBrackets5) {
     mxmlIoTest("testSystemBrackets1");
 }
-#ifndef DISABLED_SOME_TESTS
-TEST_F(Musicxml_Tests, systemDistance) {
+TEST_F(Musicxml_Tests, systemDirection) {
+    mxmlIoTest("testSystemDirection");
+}
+TEST_F(Musicxml_Tests, DISABLED_EXCEPT_ON_LINUX(systemDistance)) {
     mxmlMscxExportTestRef("testSystemDistance", true);
 }
-TEST_F(Musicxml_Tests, systemDividers) {
+TEST_F(Musicxml_Tests, DISABLED_EXCEPT_ON_LINUX(systemDividers)) {
     mxmlIoTest("testSystemDividers", true);
 }
-#endif
 TEST_F(Musicxml_Tests, tablature1) {
     mxmlIoTest("testTablature1");
 }
@@ -1047,6 +1118,9 @@ TEST_F(Musicxml_Tests, timesig1) {
 TEST_F(Musicxml_Tests, timesig3) {
     mxmlIoTest("testTimesig3");
 }
+TEST_F(Musicxml_Tests, timeTick) {
+    mxmlImportTestRef("testTimeTick");
+}
 TEST_F(Musicxml_Tests, trackHandling) {
     mxmlIoTest("testTrackHandling");
 }
@@ -1094,6 +1168,9 @@ TEST_F(Musicxml_Tests, unnecessaryBarlines) {
 }
 TEST_F(Musicxml_Tests, unusualDurations) {
     mxmlIoTestRef("testUnusualDurations");
+}
+TEST_F(Musicxml_Tests, unterminatedTies) {
+    mxmlImportTestRef("testUnterminatedTies");
 }
 TEST_F(Musicxml_Tests, virtualInstruments) {
     mxmlIoTestRef("testVirtualInstruments");

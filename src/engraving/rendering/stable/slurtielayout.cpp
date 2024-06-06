@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -48,12 +48,13 @@
 
 #include "draw/types/transform.h"
 
+using namespace muse::draw;
 using namespace mu::engraving;
 using namespace mu::engraving::rendering::stable;
 
 void SlurTieLayout::layout(Slur* item, LayoutContext& ctx)
 {
-    if (item->track2() == mu::nidx) {
+    if (item->track2() == muse::nidx) {
         item->setTrack2(item->track());
     }
 
@@ -226,7 +227,7 @@ SpannerSegment* SlurTieLayout::layoutSystem(Slur* item, System* system, LayoutCo
         // this is the first call to layoutSystem,
         // processing the first line segment
         //
-        if (item->track2() == mu::nidx) {
+        if (item->track2() == muse::nidx) {
             item->setTrack2(item->track());
         }
         if (item->startCR() == 0 || item->startCR()->measure() == 0) {
@@ -923,7 +924,7 @@ void SlurTieLayout::slurPos(Slur* item, SlurTiePos* sp, LayoutContext& ctx)
     }
 
     /// adding extra space above slurs for notes in circles
-    if (Slur::engravingConfiguration()->enableExperimentalFretCircle() && item->staff()->staffType()->isCommonTabStaff()) {
+    if (item->configuration()->enableExperimentalFretCircle() && item->staff()->staffType()->isCommonTabStaff()) {
         auto adjustSlur = [](Chord* ch, PointF& coord, bool up) {
             const Fraction halfFraction = Fraction(1, 2);
             if (ch && ch->ticks() >= halfFraction) {
@@ -1022,7 +1023,7 @@ void SlurTieLayout::adjustEndPoints(SlurSegment* slurSeg)
 }
 
 void SlurTieLayout::avoidCollisions(SlurSegment* slurSeg, PointF& pp1, PointF& p2, PointF& p3, PointF& p4,
-                                    mu::draw::Transform& toSystemCoordinates, double& slurAngle)
+                                    Transform& toSystemCoordinates, double& slurAngle)
 {
     TRACEFUNC;
     Slur* slur = slurSeg->slur();
@@ -1741,7 +1742,7 @@ void SlurTieLayout::adjustX(TieSegment* tieSegment, SlurTiePos& sPos, Grip start
         ElementType::LEDGER_LINE
     };
     chordShape.remove_if([&](ShapeElement& s) {
-        return !s.item() || s.item() == note || mu::contains(IGNORED_TYPES, s.item()->type()) || (s.item()->isNoteDot() && ignoreDot);
+        return !s.item() || s.item() == note || muse::contains(IGNORED_TYPES, s.item()->type()) || (s.item()->isNoteDot() && ignoreDot);
     });
 
     const double arcSideMargin = 0.3 * spatium;
@@ -2111,12 +2112,12 @@ void SlurTieLayout::computeBezier(TieSegment* tieSeg, PointF shoulderOffset)
     const PointF tieEnd = tieSeg->ups(Grip::END).p + tieSeg->ups(Grip::END).off;
 
     PointF tieEndNormalized = tieEnd - tieStart;  // normalize to zero
-    if (RealIsNull(tieEndNormalized.x())) {
+    if (muse::RealIsNull(tieEndNormalized.x())) {
         return;
     }
 
     const double tieAngle = atan(tieEndNormalized.y() / tieEndNormalized.x()); // angle required from tie start to tie end--zero if horizontal
-    mu::draw::Transform t;
+    Transform t;
     t.rotateRadians(-tieAngle);  // rotate so that we are working with horizontal ties regardless of endpoint height difference
     tieEndNormalized = t.map(tieEndNormalized);  // apply that rotation
     shoulderOffset = t.map(shoulderOffset);  // also apply to shoulderOffset
@@ -2164,7 +2165,7 @@ void SlurTieLayout::computeBezier(TieSegment* tieSeg, PointF shoulderOffset)
     const PointF tieShoulder = 0.5 * (bezier1Final + bezier2Final);
     //-----------------------------------
 
-    mu::draw::PainterPath path = PainterPath();
+    PainterPath path = PainterPath();
     path.moveTo(PointF());
     path.cubicTo(bezier1 + bezier1Offset - tieThickness, bezier2 + bezier2Offset - tieThickness, tieEndNormalized);
     if (tieSeg->tie()->styleType() == SlurStyleType::Solid) {
@@ -2230,12 +2231,12 @@ void SlurTieLayout::computeBezier(SlurSegment* slurSeg, PointF shoulderOffset)
     // CAUTION: transform operations are applies in reverse order to how
     // they are added to the transformation.
     double slurAngle = atan((pp2.y() - pp1.y()) / (pp2.x() - pp1.x()));
-    mu::draw::Transform rotate;
+    Transform rotate;
     rotate.rotateRadians(-slurAngle);
-    mu::draw::Transform toSlurCoordinates;
+    Transform toSlurCoordinates;
     toSlurCoordinates.rotateRadians(-slurAngle);
     toSlurCoordinates.translate(-pp1.x(), -pp1.y());
-    mu::draw::Transform toSystemCoordinates = toSlurCoordinates.inverted();
+    Transform toSystemCoordinates = toSlurCoordinates.inverted();
     // Transform p2 and shoulder offset
     PointF p2 = toSlurCoordinates.map(pp2);
     shoulderOffset = rotate.map(shoulderOffset);
@@ -2434,7 +2435,7 @@ void SlurTieLayout::computeMidThickness(SlurTieSegment* slurTieSeg, double slurT
     const double minTieThickness = mag * (0.15 * slurTieSeg->spatium() - slurTieSeg->style().styleMM(Sid::SlurEndWidth));
     const double normalThickness = mag * (slurTieSeg->style().styleMM(Sid::SlurMidWidth) - slurTieSeg->style().styleMM(Sid::SlurEndWidth));
 
-    bool invalid = RealIsEqualOrMore(minTieLength, shortTieLimit);
+    bool invalid = muse::RealIsEqualOrMore(minTieLength, shortTieLimit);
 
     double finalThickness;
     if (slurTieLengthInSp > shortTieLimit || invalid) {

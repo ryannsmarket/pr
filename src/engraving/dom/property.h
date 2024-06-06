@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -101,6 +101,7 @@ enum class Pid {
     MIRROR_HEAD,
     HEAD_HAS_PARENTHESES,
     DOT_POSITION,
+    COMBINE_VOICE,
     TUNING,
     PAUSE,
 
@@ -160,6 +161,7 @@ enum class Pid {
     TEMPO_FOLLOW_TEXT,
     ACCIDENTAL_BRACKET,
     ACCIDENTAL_TYPE,
+    ACCIDENTAL_STACKING_ORDER_OFFSET,
     NUMERATOR_STRING,
     DENOMINATOR_STRING,
     FBPREFIX,               // used for FiguredBassItem
@@ -362,6 +364,10 @@ enum class Pid {
     DYNAMICS_SIZE,
     CENTER_ON_NOTEHEAD,
     SNAP_TO_DYNAMICS,
+    ANCHOR_TO_END_OF_PREVIOUS,
+
+    APPLY_TO_VOICE,
+    CENTER_BETWEEN_STAVES,
 
     POS_ABOVE,
 
@@ -439,6 +445,8 @@ enum class Pid {
     SYMBOLS_SIZE,
     SYMBOL_ANGLE,
 
+    APPLY_TO_ALL_STAVES,
+
     END
 };
 
@@ -465,7 +473,7 @@ extern P_TYPE propertyType(Pid);
 extern const char* propertyName(Pid);
 extern bool propertyLink(Pid id);
 extern PropertyGroup propertyGroup(Pid id);
-extern Pid propertyId(const AsciiStringView& name);
+extern Pid propertyId(const muse::AsciiStringView& name);
 extern String propertyUserName(Pid);
 } // namespace mu::engraving
 

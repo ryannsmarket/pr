@@ -19,19 +19,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_DRAW_FONTFACEDU_H
-#define MU_DRAW_FONTFACEDU_H
+#ifndef MUSE_DRAW_FONTFACEDU_H
+#define MUSE_DRAW_FONTFACEDU_H
 
 #include "ifontface.h"
 
-namespace mu::draw {
+namespace muse::draw {
 class FontFaceDU : public IFontFace
 {
 public:
     FontFaceDU(IFontFace* origin);
     ~FontFaceDU();
 
-    bool load(const FaceKey& key, const mu::io::path_t& path, bool isSymbolMode) override;
+    bool load(const FaceKey& key, const io::path_t& path, bool isSymbolMode) override;
 
     const FaceKey& key() const override;
     bool isSymbolMode() const override;
@@ -56,4 +56,4 @@ private:
 };
 }
 
-#endif // MU_DRAW_FONTFACEDU_H
+#endif // MUSE_DRAW_FONTFACEDU_H

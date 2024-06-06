@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -80,8 +80,8 @@ public:
 
     BarLine* clone() const override { return new BarLine(*this); }
     Fraction playTick() const override;
-    mu::PointF canvasPos() const override;      ///< position in canvas coordinates
-    mu::PointF pagePos() const override;        ///< position in page coordinates
+    PointF canvasPos() const override;      ///< position in canvas coordinates
+    PointF pagePos() const override;        ///< position in page coordinates
 
     void scanElements(void* data, void (* func)(void*, EngravingItem*), bool all=true) override;
     void setTrack(track_idx_t t) override;
@@ -137,7 +137,7 @@ public:
     int gripsCount() const override { return 1; }
     Grip initialEditModeGrip() const override { return Grip::START; }
     Grip defaultGrip() const override { return Grip::START; }
-    std::vector<mu::PointF> gripsPositions(const EditData&) const override;
+    std::vector<PointF> gripsPositions(const EditData&) const override;
 
     static const std::vector<BarLineTableItem> barLineTable;
 
@@ -156,7 +156,7 @@ private:
     BarLine(Segment* parent);
     BarLine(const BarLine&);
 
-    void drawEditMode(mu::draw::Painter* painter, EditData& editData, double currentViewScaling) override;
+    void drawEditMode(muse::draw::Painter* painter, EditData& editData, double currentViewScaling) override;
 
     int m_spanStaff = 0;         // span barline to next staff if true, values > 1 are used for importing from 2.x
     int m_spanFrom = 0;         // line number on start and end staves

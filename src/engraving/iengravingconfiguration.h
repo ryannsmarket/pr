@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,7 +29,7 @@
 #include "async/notification.h"
 #include "engraving/types/types.h"
 
-namespace mu::draw {
+namespace muse::draw {
 class Color;
 }
 
@@ -40,42 +40,48 @@ class IEngravingConfiguration : MODULE_EXPORT_INTERFACE
 public:
     virtual ~IEngravingConfiguration() = default;
 
-    virtual io::path_t appDataPath() const = 0;
+    virtual muse::io::path_t appDataPath() const = 0;
 
-    virtual io::path_t defaultStyleFilePath() const = 0;
-    virtual void setDefaultStyleFilePath(const io::path_t& path) = 0;
+    virtual muse::io::path_t defaultStyleFilePath() const = 0;
+    virtual void setDefaultStyleFilePath(const muse::io::path_t& path) = 0;
 
-    virtual io::path_t partStyleFilePath() const = 0;
-    virtual void setPartStyleFilePath(const io::path_t& path) = 0;
+    virtual muse::io::path_t partStyleFilePath() const = 0;
+    virtual void setPartStyleFilePath(const muse::io::path_t& path) = 0;
 
     virtual SizeF defaultPageSize() const = 0;
 
     virtual String iconsFontFamily() const = 0;
 
-    virtual draw::Color defaultColor() const = 0;
-    virtual draw::Color scoreInversionColor() const = 0;
-    virtual draw::Color invisibleColor() const = 0;
-    virtual draw::Color lassoColor() const = 0;
-    virtual draw::Color warningColor() const = 0;
-    virtual draw::Color warningSelectedColor() const = 0;
-    virtual draw::Color criticalColor() const = 0;
-    virtual draw::Color criticalSelectedColor() const = 0;
-    virtual draw::Color formattingMarksColor() const = 0;
-    virtual draw::Color thumbnailBackgroundColor() const = 0;
-    virtual draw::Color noteBackgroundColor() const = 0;
-    virtual draw::Color fontPrimaryColor() const = 0;
+    virtual Color defaultColor() const = 0;
+    virtual Color scoreInversionColor() const = 0;
+    virtual Color invisibleColor() const = 0;
+    virtual Color lassoColor() const = 0;
+    virtual Color warningColor() const = 0;
+    virtual Color warningSelectedColor() const = 0;
+    virtual Color criticalColor() const = 0;
+    virtual Color criticalSelectedColor() const = 0;
+    virtual Color formattingMarksColor() const = 0;
+    virtual Color thumbnailBackgroundColor() const = 0;
+    virtual Color noteBackgroundColor() const = 0;
+    virtual Color fontPrimaryColor() const = 0;
+
+    virtual Color timeTickAnchorColorLighter() const = 0;
+    virtual Color timeTickAnchorColorDarker() const = 0;
 
     virtual double guiScaling() const = 0;
 
-    virtual draw::Color selectionColor(voice_idx_t voiceIndex = 0, bool itemVisible = true, bool itemIsUnlinkedFromScore = false) const = 0;
-    virtual void setSelectionColor(voice_idx_t voiceIndex, draw::Color color) = 0;
-    virtual async::Channel<voice_idx_t, draw::Color> selectionColorChanged() const = 0;
+    virtual Color selectionColor(voice_idx_t voiceIndex = 0, bool itemVisible = true, bool itemIsUnlinkedFromScore = false) const = 0;
+    virtual void setSelectionColor(voice_idx_t voiceIndex, Color color) = 0;
+    virtual muse::async::Channel<voice_idx_t, Color> selectionColorChanged() const = 0;
 
     virtual bool scoreInversionEnabled() const = 0;
     virtual void setScoreInversionEnabled(bool value) = 0;
-    virtual async::Notification scoreInversionChanged() const = 0;
+    virtual muse::async::Notification scoreInversionChanged() const = 0;
 
-    virtual draw::Color highlightSelectionColor(voice_idx_t voiceIndex = 0) const = 0;
+    virtual bool dynamicsApplyToAllVoices() const = 0;
+    virtual void setDynamicsApplyToAllVoices(bool v) = 0;
+
+    virtual Color highlightSelectionColor(voice_idx_t voiceIndex = 0) const = 0;
 
     struct DebuggingOptions {
         bool showElementBoundingRects = false;
@@ -103,7 +109,7 @@ public:
 
     virtual const DebuggingOptions& debuggingOptions() const = 0;
     virtual void setDebuggingOptions(const DebuggingOptions& options) = 0;
-    virtual async::Notification debuggingOptionsChanged() const = 0;
+    virtual muse::async::Notification debuggingOptionsChanged() const = 0;
 
     virtual bool isAccessibleEnabled() const = 0;
 

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,8 +24,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import MuseScore.Ui 1.0
-import MuseScore.UiComponents 1.0
+import Muse.Ui 1.0
+import Muse.UiComponents 1.0
 import MuseScore.Braille 1.0
 
 StyledFlickable {
@@ -76,6 +76,10 @@ StyledFlickable {
 
     TextArea.flickable: TextArea {
         id: brailleTextArea
+        color: ui.theme.fontPrimaryColor
+        font {
+            pixelSize: ui.theme.bodyFont.pixelSize
+        }
         text: brailleModel.brailleInfo
         wrapMode: Text.AlignLeft
 
@@ -134,7 +138,7 @@ StyledFlickable {
         cursorDelegate: Rectangle {
             id: brailleCursor
             visible: brailleTextArea.cursorVisible
-            color: brailleModel.cursorColor
+            color: ui.theme.isDark && brailleModel.cursorColor == "black" ? ui.theme.fontPrimaryColor : brailleModel.cursorColor
             width: brailleTextArea.cursorRectangle.width
 
             SequentialAnimation {

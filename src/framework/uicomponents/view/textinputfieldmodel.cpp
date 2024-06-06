@@ -26,11 +26,11 @@
 
 #include "shortcuts/shortcutstypes.h"
 
-using namespace mu::uicomponents;
-using namespace mu::shortcuts;
+using namespace muse::uicomponents;
+using namespace muse::shortcuts;
 
 TextInputFieldModel::TextInputFieldModel(QObject* parent)
-    : QObject(parent)
+    : QObject(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
 {
 }
 

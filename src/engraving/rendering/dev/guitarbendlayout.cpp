@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,7 +36,7 @@
 #include "../draw/types/transform.h"
 
 using namespace mu::engraving;
-using namespace mu::draw;
+using namespace muse::draw;
 using namespace mu::engraving::rendering::dev;
 
 void GuitarBendLayout::updateSegmentsAndLayout(SLine* item, LayoutContext& ctx)
@@ -497,7 +497,7 @@ void GuitarBendLayout::layoutTabStaff(GuitarBendSegment* item, LayoutContext& ct
     ldata->setPath(path);
 
     RectF r;
-    if (RealIsNull(item->pos2().x())) {
+    if (muse::RealIsNull(item->pos2().x())) {
         r = RectF(-0.5 * lineWidth, 0.0, lineWidth, arrow.front().y());
     } else {
         r = RectF(PointF(), PointF(arrow[1].x(), arrow[0].y()));

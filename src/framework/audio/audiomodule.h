@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_AUDIO_AUDIOMODULE_H
-#define MU_AUDIO_AUDIOMODULE_H
+#ifndef MUSE_AUDIO_AUDIOMODULE_H
+#define MUSE_AUDIO_AUDIOMODULE_H
 
 #include <memory>
 
@@ -29,15 +29,15 @@
 
 #include "iaudiodriver.h"
 
-namespace mu::audio::fx {
+namespace muse::audio::fx {
 class FxResolver;
 }
 
-namespace mu::audio::synth  {
+namespace muse::audio::synth  {
 class SynthResolver;
 }
 
-namespace mu::audio {
+namespace muse::audio {
 class AudioConfiguration;
 class AudioThread;
 class AudioBuffer;
@@ -81,27 +81,8 @@ private:
     std::shared_ptr<KnownAudioPluginsRegister> m_knownAudioPluginsRegister;
     std::shared_ptr<RegisterAudioPluginsScenario> m_registerAudioPluginsScenario;
 
-    #ifdef Q_OS_LINUX
     std::shared_ptr<IAudioDriver> m_audioDriver;
-    #endif
-    #ifdef Q_OS_FREEBSD
-    std::shared_ptr<IAudioDriver> m_audioDriver;
-    #endif
-
-    #ifdef Q_OS_WIN
-    //std::shared_ptr<IAudioDriver> m_audioDriver;
-    //std::shared_ptr<IAudioDriver> m_audioDriver;
-    std::shared_ptr<IAudioDriver> m_audioDriver;
-    #endif
-
-    #ifdef Q_OS_MACOS
-    std::shared_ptr<IAudioDriver> m_audioDriver;
-    #endif
-
-    #ifdef Q_OS_WASM
-    std::shared_ptr<IAudioDriver> m_audioDriver;
-    #endif
 };
 }
 
-#endif // MU_AUDIO_AUDIOMODULE_H
+#endif // MUSE_AUDIO_AUDIOMODULE_H

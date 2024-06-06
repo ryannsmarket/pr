@@ -38,7 +38,7 @@
 
 #include "log.h"
 
-using namespace mu::draw;
+using namespace muse::draw;
 
 static const hb_tag_t KernTag = HB_TAG('k', 'e', 'r', 'n'); // kerning operations
 static const hb_tag_t LigaTag = HB_TAG('l', 'i', 'g', 'a'); // standard ligature substitution
@@ -72,20 +72,20 @@ static bool _init_ft()
 #define TRUNC(x)    ((x) >> 6)
 #define ROUND(x)    (((x) + 32) & -64)
 
-struct mu::draw::GlyphMetrics
+struct muse::draw::GlyphMetrics
 {
     FBBox bbox;
     FT_Fixed linearAdvance = 0;
 };
 
-struct mu::draw::SymbolMetrics
+struct muse::draw::SymbolMetrics
 {
     glyph_idx_t idx = 0;
     FT_BBox bbox;
     FT_Fixed linearAdvance = 0;
 };
 
-struct mu::draw::FData
+struct muse::draw::FData
 {
     mu::ByteArray fontData;
     FT_Face face = nullptr;
@@ -109,7 +109,7 @@ FontFaceFT::~FontFaceFT()
     delete m_data;
 }
 
-bool FontFaceFT::load(const FaceKey& key, const mu::io::path_t& path, bool isSymbolMode)
+bool FontFaceFT::load(const FaceKey& key, const io::path_t& path, bool isSymbolMode)
 {
     if (!_init_ft()) {
         return false;
@@ -119,8 +119,8 @@ bool FontFaceFT::load(const FaceKey& key, const mu::io::path_t& path, bool isSym
     m_isSymbolMode = isSymbolMode;
 
     {
-        mu::io::File file(path);
-        if (!file.open(mu::io::IODevice::ReadOnly)) {
+        io::File file(path);
+        if (!file.open(io::IODevice::ReadOnly)) {
             return false;
         }
 

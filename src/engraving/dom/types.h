@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -409,6 +409,9 @@ enum class SegmentType {
     EndBarLine         = 0x400,
     KeySigAnnounce     = 0x800,
     TimeSigAnnounce    = 0x1000,
+    //--
+    TimeTick           = 0x2000,
+    //--
     All                = -1,   ///< Includes all barline types
     /// Alias for `BeginBarLine | StartRepeatBarLine | BarLine | EndBarLine`
     BarLineType        = BeginBarLine | StartRepeatBarLine | BarLine | EndBarLine,
@@ -511,8 +514,8 @@ enum class GuitarBendShowHoldLine {
 struct ScoreChangesRange {
     int tickFrom = -1;
     int tickTo = -1;
-    staff_idx_t staffIdxFrom = mu::nidx;
-    staff_idx_t staffIdxTo = mu::nidx;
+    staff_idx_t staffIdxFrom = muse::nidx;
+    staff_idx_t staffIdxTo = muse::nidx;
 
     std::set<const EngravingItem*> changedItems;
     ElementTypeSet changedTypes;
@@ -522,7 +525,7 @@ struct ScoreChangesRange {
     bool isValidBoundary() const
     {
         bool tickRangeValid = (tickFrom != -1 && tickTo != -1);
-        bool staffRangeValid = (staffIdxFrom != mu::nidx && staffIdxTo != mu::nidx);
+        bool staffRangeValid = (staffIdxFrom != muse::nidx && staffIdxTo != muse::nidx);
 
         return tickRangeValid && staffRangeValid;
     }

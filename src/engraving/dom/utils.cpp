@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -206,7 +206,7 @@ Segment* Score::tick2segment(const Fraction& tick, bool first) const
 /// the first segment *before* this tick position
 //---------------------------------------------------------
 
-Segment* Score::tick2leftSegment(const Fraction& tick, bool useMMrest, SegmentType segmentType) const
+Segment* Score::tick2leftSegment(const Fraction& tick, bool useMMrest, SegmentType segType) const
 {
     Measure* m = useMMrest ? tick2measureMM(tick) : tick2measure(tick);
     if (m == 0) {
@@ -216,7 +216,7 @@ Segment* Score::tick2leftSegment(const Fraction& tick, bool useMMrest, SegmentTy
 
     // loop over all segments
     Segment* ps = 0;
-    for (Segment* s = m->first(segmentType); s; s = s->next(segmentType)) {
+    for (Segment* s = m->first(segType); s; s = s->next(segType)) {
         if (tick < s->tick()) {
             return ps;
         } else if (tick == s->tick()) {
@@ -233,7 +233,7 @@ Segment* Score::tick2leftSegment(const Fraction& tick, bool useMMrest, SegmentTy
 /// the first segment *after* this tick position
 //---------------------------------------------------------
 
-Segment* Score::tick2rightSegment(const Fraction& tick, bool useMMrest) const
+Segment* Score::tick2rightSegment(const Fraction& tick, bool useMMrest, SegmentType segType) const
 {
     Measure* m = useMMrest ? tick2measureMM(tick) : tick2measure(tick);
     if (m == 0) {
@@ -241,7 +241,7 @@ Segment* Score::tick2rightSegment(const Fraction& tick, bool useMMrest) const
         return 0;
     }
     // loop over all segments
-    for (Segment* s = m->first(SegmentType::ChordRest); s; s = s->next1(SegmentType::ChordRest)) {
+    for (Segment* s = m->first(segType); s; s = s->next1(segType)) {
         if (tick <= s->tick()) {
             return s;
         }
@@ -268,6 +268,11 @@ BeatType Score::tick2beatType(const Fraction& tick) const
     return timeSig.rtick2beatType(rtick);
 }
 
+void Score::checkChordList()
+{
+    m_chordList.checkChordList(configuration()->appDataPath(), style());
+}
+
 //---------------------------------------------------------
 //   nextSeg
 //---------------------------------------------------------
@@ -291,40 +296,26 @@ Fraction Score::nextSeg(const Fraction& tick, int track)
 //   nextSeg1
 //---------------------------------------------------------
 
-Segment* nextSeg1(Segment* seg, track_idx_t& track)
+Segment* nextSeg1(Segment* seg)
 {
-    staff_idx_t staffIdx   = track / VOICES;
-    track_idx_t startTrack = staffIdx * VOICES;
-    track_idx_t endTrack   = startTrack + VOICES;
-    while ((seg = seg->next1(SegmentType::ChordRest))) {
-        for (track_idx_t t = startTrack; t < endTrack; ++t) {
-            if (seg->element(t)) {
-                track = t;
-                return seg;
-            }
-        }
+    Segment* nextSeg = seg;
+    while (nextSeg && nextSeg->rtick() == seg->rtick()) {
+        nextSeg = nextSeg->next1(SegmentType::ChordRest | SegmentType::TimeTick);
     }
-    return 0;
+    return nextSeg;
 }
 
 //---------------------------------------------------------
 //   prevSeg1
 //---------------------------------------------------------
 
-Segment* prevSeg1(Segment* seg, track_idx_t& track)
+Segment* prevSeg1(Segment* seg)
 {
-    staff_idx_t staffIdx = track / VOICES;
-    track_idx_t startTrack = staffIdx * VOICES;
-    track_idx_t endTrack   = startTrack + VOICES;
-    while ((seg = seg->prev1(SegmentType::ChordRest))) {
-        for (track_idx_t t = startTrack; t < endTrack; ++t) {
-            if (seg->element(t)) {
-                track = t;
-                return seg;
-            }
-        }
+    Segment* prevSeg = seg;
+    while (prevSeg && prevSeg->rtick() == seg->rtick()) {
+        prevSeg = prevSeg->prev1(SegmentType::ChordRest | SegmentType::TimeTick);
     }
-    return 0;
+    return prevSeg;
 }
 
 //---------------------------------------------------------
@@ -1176,7 +1167,7 @@ SymIdList timeSigSymIdsFromString(const String& string)
 
     SymIdList list;
     for (size_t i = 0; i < string.size(); ++i) {
-        SymId sym = mu::value(dict, string.at(i), SymId::noSym);
+        SymId sym = muse::value(dict, string.at(i), SymId::noSym);
         if (sym != SymId::noSym) {
             list.push_back(sym);
         }
@@ -1213,7 +1204,7 @@ double yStaffDifference(const System* system1, staff_idx_t staffIdx1, const Syst
 bool allowRemoveWhenRemovingStaves(EngravingItem* item, staff_idx_t startStaff, staff_idx_t endStaff)
 {
     // Sanity checks
-    if (!item || item->staffIdx() == mu::nidx || startStaff == mu::nidx || endStaff == mu::nidx) {
+    if (!item || item->staffIdx() == muse::nidx || startStaff == muse::nidx || endStaff == muse::nidx) {
         return false;
     }
 
@@ -1243,7 +1234,7 @@ bool allowRemoveWhenRemovingStaves(EngravingItem* item, staff_idx_t startStaff, 
 bool moveDownWhenAddingStaves(EngravingItem* item, staff_idx_t startStaff, staff_idx_t endStaff)
 {
     // Sanity checks
-    if (!item || item->staffIdx() == mu::nidx || startStaff == mu::nidx || endStaff == mu::nidx) {
+    if (!item || item->staffIdx() == muse::nidx || startStaff == muse::nidx || endStaff == muse::nidx) {
         return false;
     }
 

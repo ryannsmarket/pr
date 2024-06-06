@@ -19,14 +19,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_GLOBAL_AUDIOPLUGINSSCANNERMOCK_H
-#define MU_GLOBAL_AUDIOPLUGINSSCANNERMOCK_H
+#ifndef MUSE_AUDIO_AUDIOPLUGINSSCANNERMOCK_H
+#define MUSE_AUDIO_AUDIOPLUGINSSCANNERMOCK_H
 
 #include <gmock/gmock.h>
 
 #include "audio/iaudiopluginsscanner.h"
 
-namespace mu::audio {
+namespace muse::audio {
 class AudioPluginsScannerMock : public IAudioPluginsScanner
 {
 public:
@@ -34,4 +34,4 @@ public:
 };
 }
 
-#endif // MU_GLOBAL_AUDIOPLUGINSSCANNERMOCK_H
+#endif // MUSE_AUDIO_AUDIOPLUGINSSCANNERMOCK_H

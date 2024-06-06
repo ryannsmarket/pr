@@ -20,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_MUSESAMPLER_APITYPES_H
-#define MU_MUSESAMPLER_APITYPES_H
+#ifndef MUSE_MUSESAMPLER_APITYPES_H
+#define MUSE_MUSESAMPLER_APITYPES_H
 
 #include <stdint.h>
 #include <memory>
@@ -119,11 +119,9 @@ enum ms_NoteArticulation : uint64_t
     ms_NoteArticulation_Fall = 1LL << 28,
     ms_NoteArticulation_Appoggiatura = 1LL << 29, // Duration is ignored
     ms_NoteArticulation_Acciaccatura = 1LL << 30, // Duration is ignored
-    ms_NoteArticulation_XNote = 1LL << 31,
-    ms_NoteArticulation_Ghost = 1LL << 32,
-    ms_NoteArticulation_Circle = 1LL << 33,
-    ms_NoteArticulation_Triangle = 1LL << 34,
-    ms_NoteArticulation_Diamond = 1LL << 35,
+
+    ms_NoteArticulation_Open = 1LL << 31,
+
     ms_NoteArticulation_Portamento = 1LL << 36,
     ms_NoteArticulation_Pizzicato = 1LL << 37,
     ms_NoteArticulation_Glissando = 1LL << 39,
@@ -139,15 +137,31 @@ enum ms_NoteArticulation : uint64_t
     ms_NoteArticulation_PinchHarmonic = 1LL << 49,
     ms_NoteArticulation_BuzzTremolo = 1LL << 50,
 
-    // More noteheads:
-    ms_NoteArticulation_OrnateXNote = 1LL << 51,
-    ms_NoteArticulation_CircleXNote = 1LL << 52,
-    ms_NoteArticulation_SlashRightFilled = 1LL << 53,
-    ms_NoteArticulation_SlashLeftFilled = 1LL << 54,
-    ms_NoteArticulation_Plus = 1LL << 55,
-    ms_NoteArticulation_Slash = 1LL << 56,
-    ms_NoteArticulation_TriangleRoundDown = 1LL << 57,
-    ms_NoteArticulation_CircleDot = 1LL << 58,
+    ms_NoteArticulation_LetRing = 1LL << 59,
+};
+
+enum ms_NoteHead : int16_t
+{
+    ms_NoteHead_Normal,
+    ms_NoteHead_XNote,
+    ms_NoteHead_LargeX,
+    ms_NoteHead_OrnateXNote,
+    ms_NoteHead_CircleXNote,
+    ms_NoteHead_CircleDot,
+    ms_NoteHead_Ghost,
+    ms_NoteHead_Circle,
+    ms_NoteHead_Diamond,
+    ms_NoteHead_Triangle,
+    ms_NoteHead_TriangleUp,
+    ms_NoteHead_TriangleDown,
+    ms_NoteHead_TriangleRight,
+    ms_NoteHead_TriangleRoundDown,
+    ms_NoteHead_FlatTop,
+    ms_NoteHead_Square,
+    ms_NoteHead_Slash,
+    ms_NoteHead_SlashRightFilled,
+    ms_NoteHead_SlashLeftFilled,
+    ms_NoteHead_Plus,
 };
 
 typedef struct ms_NoteEvent
@@ -184,6 +198,19 @@ typedef struct ms_NoteEvent_3
     ms_NoteArticulation _articulation;
 } ms_NoteEvent_3;
 
+// Added in v0.6 -> added Notehead enum
+typedef struct ms_NoteEvent_4
+{
+    int _voice; // 0-3
+    long long _location_us;
+    long long _duration_us;
+    int _pitch;      // MIDI pitch
+    double _tempo;   // BPM
+    int _offset_cents; // pitch offset in cents: -50 would be a quarter tone flat
+    ms_NoteArticulation _articulation;
+    ms_NoteHead _notehead;
+} ms_NoteEvent_4;
+
 typedef struct ms_AuditionStartNoteEvent
 {
     int _pitch; // MIDI pitch
@@ -200,12 +227,13 @@ typedef struct ms_AuditionStartNoteEvent_2
     double _dynamics;
 } ms_AuditionStartNoteEvent_2;
 
-// Added in v0.6
+// Added in v0.6 -> changed from ms_AuditionStartNoteEvent2 by adding "_active_presets" and "_notehead"
 typedef struct ms_AuditionStartNoteEvent_3
 {
     int _pitch; // MIDI pitch
     int _offset_cents;
     ms_NoteArticulation _articulation;
+    ms_NoteHead _notehead;
     double _dynamics;
     const char* _active_presets; // presets that are selected for this note. list is separated by "|"
     const char* _active_text_articulation; // text articulation that is active for this note. Can be empty
@@ -304,6 +332,8 @@ typedef ms_Result (* ms_MuseSampler_add_track_note_event_3)(ms_MuseSampler ms, m
 typedef ms_Result (* ms_MuseSampler_add_track_dynamics_event)(ms_MuseSampler ms, ms_Track track, ms_DynamicsEvent evt);
 // Added in 0.5
 typedef ms_Result (* ms_MuseSampler_add_track_note_event_4)(ms_MuseSampler ms, ms_Track track, ms_NoteEvent_3 evt, long long& event_id);
+// Added in 0.6
+typedef ms_Result (* ms_MuseSampler_add_track_note_event_5)(ms_MuseSampler ms, ms_Track track, ms_NoteEvent_4 evt, long long& event_id);
 // Added in 0.4
 typedef ms_Result (* ms_MuseSampler_add_track_dynamics_event_2)(ms_MuseSampler ms, ms_Track track, ms_DynamicsEvent_2 evt);
 typedef ms_Result (* ms_MuseSampler_add_track_pedal_event)(ms_MuseSampler ms, ms_Track track, ms_PedalEvent evt);
@@ -347,6 +377,7 @@ typedef ms_Result (* ms_MuseSampler_all_notes_off)(ms_MuseSampler);
 // Added in 0.6
 typedef const char*(* ms_Instrument_get_pack_name)(ms_InstrumentInfo);
 typedef const char*(* ms_Instrument_get_vendor_name)(ms_InstrumentInfo);
+typedef const char*(* ms_Instrument_get_info_json)(ms_InstrumentInfo);
 
 typedef ms_PresetChange (* ms_MuseSampler_create_preset_change)(ms_MuseSampler ms, ms_Track track, long long location_us);
 typedef ms_Result (* ms_MuseSampler_add_preset)(ms_MuseSampler ms, ms_Track track, ms_PresetChange preset_change, const char* preset_name);
@@ -357,7 +388,7 @@ typedef ms_Result (* ms_MuseSampler_add_track_text_articulation_event)(ms_MuseSa
 typedef const char*(* ms_get_drum_mapping)(int instrument_id);
 // ------------------------------------------------------------
 
-namespace mu::musesampler {
+namespace muse::musesampler {
 using track_idx_t = size_t;
 using TrackList = std::vector<ms_Track>;
 
@@ -380,6 +411,8 @@ struct AuditionStopNoteEvent {
     ms_AuditionStopNoteEvent msEvent;
     ms_Track msTrack = nullptr;
 };
+
+using NoteEvent = ms_NoteEvent_4;
 }
 
-#endif // MU_MUSESAMPLER_APITYPES_H
+#endif // MUSE_MUSESAMPLER_APITYPES_H

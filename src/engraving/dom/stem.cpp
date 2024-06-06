@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,7 +31,7 @@
 #include "log.h"
 
 using namespace mu;
-using namespace mu::draw;
+using namespace muse::draw;
 using namespace mu::engraving;
 
 static const ElementStyle stemStyle {
@@ -77,7 +77,7 @@ PointF Stem::flagPosition() const
     return pos() + PointF(ldata()->bbox().left(), up() ? -length() : length());
 }
 
-std::vector<mu::PointF> Stem::gripsPositions(const EditData&) const
+std::vector<PointF> Stem::gripsPositions(const EditData&) const
 {
     return { pagePos() + ldata()->line.p2() };
 }

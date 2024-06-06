@@ -19,14 +19,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_GLOBAL_AUDIOPLUGINMETAREADERREGISTERMOCK_H
-#define MU_GLOBAL_AUDIOPLUGINMETAREADERREGISTERMOCK_H
+#ifndef MUSE_AUDIO_AUDIOPLUGINMETAREADERREGISTERMOCK_H
+#define MUSE_AUDIO_AUDIOPLUGINMETAREADERREGISTERMOCK_H
 
 #include <gmock/gmock.h>
 
 #include "audio/iaudiopluginmetareaderregister.h"
 
-namespace mu::audio {
+namespace muse::audio {
 class AudioPluginMetaReaderRegisterMock : public IAudioPluginMetaReaderRegister
 {
 public:
@@ -35,4 +35,4 @@ public:
 };
 }
 
-#endif // MU_GLOBAL_AUDIOPLUGINMETAREADERREGISTERMOCK_H
+#endif // MUSE_AUDIO_AUDIOPLUGINMETAREADERREGISTERMOCK_H

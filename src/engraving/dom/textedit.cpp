@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -727,6 +727,21 @@ void TextBase::movePosition(EditData& ed, TextCursor::MoveOperation op)
     score()->update();
 }
 
+void TextBase::startEditNonTextual(EditData& ed)
+{
+    EngravingItem::startEdit(ed);
+}
+
+bool TextBase::editNonTextual(EditData& ed)
+{
+    return EngravingItem::edit(ed);
+}
+
+void TextBase::endEditNonTextual(EditData& ed)
+{
+    EngravingItem::endEdit(ed);
+}
+
 //---------------------------------------------------------
 //  ChangeText::insertText
 //---------------------------------------------------------
@@ -783,7 +798,7 @@ void SplitJoinText::join(EditData* ed)
     if (fragmentsList.size() > 0) {
         ldata->textBlock(static_cast<int>(line) - 1).removeEmptyFragment();
     }
-    mu::join(ldata->textBlock(static_cast<int>(line) - 1).fragments(), fragmentsList);
+    muse::join(ldata->textBlock(static_cast<int>(line) - 1).fragments(), fragmentsList);
 
     ldata->blocks.erase(ldata->blocks.begin() + line);
 
@@ -1058,7 +1073,7 @@ void ChangeTextProperties::undo(EditData*)
     cursor().text()->resetFormatting();
     cursor().text()->setXmlText(m_xmlText);
     restoreSelection();
-    EngravingItem::renderer()->layoutText1(cursor().text());
+    cursor().text()->renderer()->layoutText1(cursor().text());
 }
 
 void ChangeTextProperties::redo(EditData*)

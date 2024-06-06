@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -39,7 +39,7 @@ enum class Grip;
 class Note;
 }
 
-namespace mu::draw {
+namespace muse::draw {
 class Transform;
 }
 
@@ -66,7 +66,7 @@ private:
     static void fixArticulations(Slur* item, PointF& pt, Chord* c, double up, bool stemSide);
     static void adjustEndPoints(SlurSegment* slurSeg);
     static void avoidCollisions(SlurSegment* slurSeg, PointF& pp1, PointF& p2, PointF& p3, PointF& p4,
-                                mu::draw::Transform& toSystemCoordinates, double& slurAngle);
+                                muse::draw::Transform& toSystemCoordinates, double& slurAngle);
     static Shape getSegmentShape(SlurSegment* slurSeg, Segment* seg, ChordRest* startCR, ChordRest* endCR);
 
     static void computeStartAndEndSystem(Tie* item, SlurTiePos& slurTiePos);

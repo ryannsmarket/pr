@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_DRAW_GEOMETRY_H
-#define MU_DRAW_GEOMETRY_H
+#ifndef MUSE_DRAW_GEOMETRY_H
+#define MUSE_DRAW_GEOMETRY_H
 
 #include <vector>
 #include <cmath>
@@ -41,7 +41,7 @@
 #include <QPolygonF>
 #endif
 
-namespace mu {
+namespace muse {
 template<typename T>
 inline bool isEqual(T a1, T a2)
 {
@@ -762,17 +762,17 @@ RectX<T> RectX<T>::normalized() const
 }
 
 template<typename T>
-inline mu::logger::Stream& operator<<(mu::logger::Stream& s, const mu::RectX<T>& r)
+inline muse::logger::Stream& operator<<(muse::logger::Stream& s, const muse::RectX<T>& r)
 {
-    s << mu::dump(r);
+    s << muse::dump(r);
     return s;
 }
 
 template<typename T>
-inline mu::logger::Stream& operator<<(mu::logger::Stream& s, const mu::PointX<T>& p)
+inline muse::logger::Stream& operator<<(muse::logger::Stream& s, const muse::PointX<T>& p)
 {
-    s << mu::dump(p);
+    s << muse::dump(p);
     return s;
 }
 
-#endif // MU_DRAW_GEOMETRY_H
+#endif // MUSE_DRAW_GEOMETRY_H

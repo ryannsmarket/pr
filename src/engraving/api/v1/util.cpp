@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -191,9 +191,9 @@ void ScoreView::setScore(mu::engraving::Score* s)
 
 void ScoreView::paint(QPainter* qp)
 {
-    mu::draw::Painter p(qp, "plugins_scoreview");
+    muse::draw::Painter p(qp, "plugins_scoreview");
     p.setAntialiasing(true);
-    p.fillRect(mu::RectF(0.0, 0.0, width(), height()), _color);
+    p.fillRect(RectF(0.0, 0.0, width(), height()), _color);
     if (!score) {
         return;
     }

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -72,9 +72,16 @@ public:
     double customTextOffset() const;
 
     bool isEditable() const override { return true; }
+    bool isEditAllowed(EditData&) const override;
     void startEdit(EditData&) override;
+    bool edit(EditData&) override;
+    bool editNonTextual(EditData&) override;
+    void editDrag(EditData&) override;
     void endEdit(EditData&) override;
     void reset() override;
+    bool needStartEditingAfterSelecting() const override { return true; }
+
+    bool allowTimeAnchor() const override { return true; }
 
     void setVelocity(int v) { m_velocity = v; }
     int velocity() const;
@@ -114,7 +121,13 @@ public:
     bool acceptDrop(EditData& ed) const override;
     EngravingItem* drop(EditData& ed) override;
 
+    static int dynamicVelocity(DynamicType t);
     static const std::vector<Dyn>& dynamicList() { return DYN_LIST; }
+
+    bool anchorToEndOfPrevious() const { return m_anchorToEndOfPrevious; }
+    void setAnchorToEndOfPrevious(bool v) { m_anchorToEndOfPrevious = v; }
+
+    bool hasVoiceApplicationProperties() const override { return true; }
 
 private:
 
@@ -122,20 +135,24 @@ private:
     M_PROPERTY(double, dynamicsSize, setDynamicsSize)
     M_PROPERTY(bool, centerOnNotehead, setCenterOnNotehead)
 
+    bool changeTimeAnchorType(const EditData& ed);
+    bool moveSegment(const EditData& ed);
+    bool nudge(const EditData& ed);
+
     DynamicType m_dynamicType = DynamicType::OTHER;
     Expression* m_snappedExpression = nullptr;
     bool m_playDynamic = true;
 
-    mutable mu::PointF m_dragOffset;
+    mutable PointF m_dragOffset;
     int m_velocity = -1;           // associated midi velocity 0-127
     DynamicRange m_dynRange = DynamicRange::PART; // STAFF, PART, SYSTEM
 
     int m_changeInVelocity = 128;
     DynamicSpeed m_velChangeSpeed = DynamicSpeed::NORMAL;
 
-    mu::RectF drag(EditData&) override;
-
     static const std::vector<Dyn> DYN_LIST;
+
+    bool m_anchorToEndOfPrevious = false;
 };
 } // namespace mu::engraving
 

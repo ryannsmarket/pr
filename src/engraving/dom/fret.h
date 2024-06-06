@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -157,8 +157,8 @@ public:
 
     static std::shared_ptr<FretDiagram> createFromString(Score* score, const String& s);
 
-    std::vector<mu::LineF> dragAnchorLines() const override;
-    mu::PointF pagePos() const override;
+    std::vector<LineF> dragAnchorLines() const override;
+    PointF pagePos() const override;
     double centerX() const;
     double rightX() const;
 
@@ -201,7 +201,7 @@ public:
     const DotMap& dots() const { return m_dots; }
     const MarkerMap& markers() const { return m_markers; }
 
-    const mu::draw::Font& font() const { return m_font; }
+    const muse::draw::Font& font() const { return m_font; }
 
     void init(StringData*, Chord*);
     void add(EngravingItem*) override;
@@ -261,7 +261,7 @@ private:
 
     Harmony* m_harmony = nullptr;
 
-    mu::draw::Font m_font;
+    muse::draw::Font m_font;
     double m_userMag = 1.0;                 // allowed 0.1 - 10.0
     int m_numPos = 0;
 };

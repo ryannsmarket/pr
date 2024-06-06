@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -254,9 +254,9 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
 
     Fraction fr = f * Fraction(1, _ratio.denominator());
     if (!TDuration::isValid(fr)) {
-        MessageBox::warning(mtrc("engraving", "Cannot create tuplet with ratio %1 for duration %2")
-                            .arg(_ratio.toString(), f.toString()).toStdString(),
-                            std::string(), { MessageBox::Ok });
+        MessageBox(iocContext()).warning(muse::mtrc("engraving", "Cannot create tuplet with ratio %1 for duration %2")
+                                         .arg(_ratio.toString(), f.toString()).toStdString(),
+                                         std::string(), { MessageBox::Ok });
         return nullptr;
     }
 
@@ -370,6 +370,7 @@ Chord* Score::addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie
     chord->setTrack(oc->track());
     chord->setDurationType(d);
     chord->setTicks(d.fraction());
+    chord->setStemDirection(oc->stemDirection());
 
     for (Note* n : oc->notes()) {
         Note* nn = Factory::createNote(chord);
@@ -801,7 +802,7 @@ TextBase* Score::addText(TextStyleType type, EngravingItem* destinationElement)
     case TextStyleType::HARMONY_A:
     case TextStyleType::HARMONY_ROMAN:
     case TextStyleType::HARMONY_NASHVILLE: {
-        track_idx_t track = mu::nidx;
+        track_idx_t track = muse::nidx;
         Segment* newParent = nullptr;
         if (destinationElement && destinationElement->isFretDiagram()) {
             FretDiagram* fretDiagram = toFretDiagram(destinationElement);
@@ -815,7 +816,7 @@ TextBase* Score::addText(TextStyleType type, EngravingItem* destinationElement)
             }
         }
 
-        if (track == mu::nidx || !newParent) {
+        if (track == muse::nidx || !newParent) {
             break;
         }
 
@@ -925,6 +926,7 @@ TextBase* Score::addText(TextStyleType type, EngravingItem* destinationElement)
         tempoText->setTrack(0);
         tempoText->setXmlText(text);
         tempoText->setFollowText(true);
+        tempoText->updateTempo();
 
         textBox = tempoText;
         undoAddElement(textBox);
@@ -956,7 +958,7 @@ TextBase* Score::addText(TextStyleType type, EngravingItem* destinationElement)
 
 bool Score::rewriteMeasures(Measure* fm, Measure* lm, const Fraction& ns, staff_idx_t staffIdx)
 {
-    if (staffIdx != mu::nidx) {
+    if (staffIdx != muse::nidx) {
         // local timesig
         // don't actually rewrite, just update measure rest durations
         // abort if there is anything other than measure rests in range
@@ -989,7 +991,7 @@ bool Score::rewriteMeasures(Measure* fm, Measure* lm, const Fraction& ns, staff_
     std::vector<std::tuple<Fraction, Fraction, TremoloTwoChord*, track_idx_t> > tremoloChordTicks;
 
     track_idx_t strack, etrack;
-    if (staffIdx == mu::nidx) {
+    if (staffIdx == muse::nidx) {
         strack = 0;
         etrack = ntracks();
     } else {
@@ -1162,7 +1164,7 @@ bool Score::rewriteMeasures(Measure* fm, const Fraction& ns, staff_idx_t staffId
     LayoutBreak* sectionBreak = nullptr;
 
     // disable local time sig modifications in linked staves
-    if (staffIdx != mu::nidx && masterScore()->excerpts().size() > 0) {
+    if (staffIdx != muse::nidx && masterScore()->excerpts().size() > 0) {
         MScore::setError(MsError::CANNOT_CHANGE_LOCAL_TIMESIG_HAS_EXCERPTS);
         return false;
     }
@@ -1181,7 +1183,7 @@ bool Score::rewriteMeasures(Measure* fm, const Fraction& ns, staff_idx_t staffId
             }
 
             if (!rewriteMeasures(fm1, lm, ns, staffIdx)) {
-                if (staffIdx != mu::nidx) {
+                if (staffIdx != muse::nidx) {
                     MScore::setError(MsError::CANNOT_CHANGE_LOCAL_TIMESIG_MEASURE_NOT_EMPTY);
                     // restore measure rests that were prematurely modified
                     Fraction fr(staff(staffIdx)->timeSig(fm->tick())->sig());
@@ -1426,7 +1428,7 @@ void Score::cmdAddTimeSig(Measure* fm, staff_idx_t staffIdx, TimeSig* ts, bool l
         // we will only add time signatures if this succeeds
         // this means, however, that the rewrite cannot depend on the time signatures being in place
         if (mf) {
-            if (!mScore->rewriteMeasures(mf, ns, local ? staffIdx : mu::nidx)) {
+            if (!mScore->rewriteMeasures(mf, ns, local ? staffIdx : muse::nidx)) {
                 undoStack()->current()->unwind();
                 return;
             }
@@ -1449,7 +1451,7 @@ void Score::cmdAddTimeSig(Measure* fm, staff_idx_t staffIdx, TimeSig* ts, bool l
                     nsig->setParent(seg);
                     undoAddElement(nsig);
                     if (score->excerpt()) {
-                        const track_idx_t masterTrack = mu::key(score->excerpt()->tracksMapping(), nsig->track());
+                        const track_idx_t masterTrack = muse::key(score->excerpt()->tracksMapping(), nsig->track());
                         TimeSig* masterTimeSig = masterTimeSigs[masterTrack];
                         if (masterTimeSig) {
                             undo(new Link(masterTimeSig, nsig));
@@ -1518,7 +1520,7 @@ void Score::cmdRemoveTimeSig(TimeSig* ts)
     Measure* pm = m->prevMeasure();
     Fraction ns(pm ? pm->timesig() : Fraction(4, 4));
 
-    if (!rScore->rewriteMeasures(rm, ns, mu::nidx)) {
+    if (!rScore->rewriteMeasures(rm, ns, muse::nidx)) {
         undoStack()->current()->unwind();
     } else {
         m = tick2measure(tick);           // old m may have been replaced
@@ -2238,10 +2240,20 @@ void Score::cmdFlip()
         }
 
         if (e->isBeam()) {
-            auto beam = toBeam(e);
+            Beam* beam = toBeam(e);
             flipOnce(beam, [beam]() {
-                DirectionV dir = beam->up() ? DirectionV::DOWN : DirectionV::UP;
-                beam->undoChangeProperty(Pid::STEM_DIRECTION, dir);
+                if (beam->cross()) {
+                    int newCrossStaffMove = beam->crossStaffMove() + 1;
+                    if (beam->acceptCrossStaffMove(newCrossStaffMove)) {
+                        beam->undoChangeProperty(Pid::BEAM_CROSS_STAFF_MOVE, newCrossStaffMove);
+                    } else {
+                        beam->undoChangeProperty(Pid::BEAM_CROSS_STAFF_MOVE,
+                                                 beam->minCRMove() - beam->defaultCrossStaffIdx());
+                    }
+                } else {
+                    DirectionV dir = beam->up() ? DirectionV::DOWN : DirectionV::UP;
+                    beam->undoChangeProperty(Pid::STEM_DIRECTION, dir);
+                }
             });
         } else if (e->isType(ElementType::TREMOLO_TWOCHORD)) {
             TremoloTwoChord* tremolo = item_cast<TremoloTwoChord*>(e);
@@ -2389,9 +2401,21 @@ void Score::deleteItem(EngravingItem* el)
     if (!el) {
         return;
     }
-    // cannot remove generated elements
-    if (el->generated() && !(el->isBracket() || el->isBarLine() || el->isClef() || el->isMeasureNumber() || el->isKeySig())) {
-        return;
+
+    if (el->generated()) {
+        switch (el->type()) {
+        // These types can be removed, even if generated
+        case ElementType::BAR_LINE:
+        case ElementType::BRACKET:
+        case ElementType::CLEF:
+        case ElementType::INSTRUMENT_NAME:
+        case ElementType::KEYSIG:
+        case ElementType::MEASURE_NUMBER:
+            break;
+        // All other types cannot be removed if generated
+        default:
+            return;
+        }
     }
 //      LOGD("%s", el->typeName());
 
@@ -2954,7 +2978,7 @@ void Score::deleteMeasures(MeasureBase* mbStart, MeasureBase* mbEnd, bool preser
 
             if (sts) {
                 for (staff_idx_t staffIdx = 0; staffIdx < nstaves(); ++staffIdx) {
-                    if (!mu::contains(lastDeletedTimeSigs, staffIdx)) {
+                    if (!muse::contains(lastDeletedTimeSigs, staffIdx)) {
                         if (TimeSig* ts = toTimeSig(sts->element(staffIdx * VOICES))) {
                             lastDeletedTimeSigs.insert({ staffIdx, ts });
                         }
@@ -3004,7 +3028,7 @@ void Score::deleteMeasures(MeasureBase* mbStart, MeasureBase* mbEnd, bool preser
                     continue;
                 }
 
-                TimeSig* lastDeletedForThisStaff = mu::value(lastDeletedTimeSigs, staffIdx, nullptr);
+                TimeSig* lastDeletedForThisStaff = muse::value(lastDeletedTimeSigs, staffIdx, nullptr);
                 if (!lastDeletedForThisStaff) {
                     continue;
                 }
@@ -3459,7 +3483,7 @@ void Score::cmdDeleteSelection()
             // get tick of element itself if that is valid
             // or of spanner or parent if that is more valid
             Fraction tick  = { -1, 1 };
-            track_idx_t track = mu::nidx;
+            track_idx_t track = muse::nidx;
             if (e->isNote()) {
                 tick = toNote(e)->chord()->tick();
             } else if (e->isRest() || e->isMMRest()) {
@@ -3577,8 +3601,8 @@ void Score::cmdFullMeasureRest()
     Segment* s2     = nullptr;
     Fraction stick1 = { -1, 1 };
     Fraction stick2 = { -1, 1 };
-    track_idx_t track1 = mu::nidx;
-    track_idx_t track2 = mu::nidx;
+    track_idx_t track1 = muse::nidx;
+    track_idx_t track2 = muse::nidx;
     Rest* r = nullptr;
 
     if (noteEntryMode()) {
@@ -3861,7 +3885,7 @@ void Score::cmdExchangeVoice(int s, int d)
 
 void Score::cmdEnterRest(const TDuration& d)
 {
-    if (m_is.track() == mu::nidx) {
+    if (m_is.track() == muse::nidx) {
         LOGD("cmdEnterRest: track invalid");
         return;
     }
@@ -3908,6 +3932,14 @@ void Score::removeChordRest(ChordRest* cr, bool clearSegment)
 {
     std::set<Segment*> segments;
     for (EngravingObject* e : cr->linkList()) {
+        if (cr->isChord()) {
+            std::set<Spanner*> startingSpanners = toChord(e)->startingSpanners();
+            for (Spanner* spanner : startingSpanners) {
+                if (spanner->isTrill() || spanner->isSlur()) {
+                    doUndoRemoveElement(spanner);
+                }
+            }
+        }
         doUndoRemoveElement(static_cast<EngravingItem*>(e));
         if (clearSegment) {
             Segment* s = cr->segment();
@@ -3928,13 +3960,6 @@ void Score::removeChordRest(ChordRest* cr, bool clearSegment)
             delete beam;
         } else {
             undoRemoveElement(beam);
-        }
-    }
-    if (cr->isChord()) {
-        for (Spanner* spanner : toChord(cr)->startingSpanners()) {
-            if (spanner->isTrill()) {
-                doUndoRemoveElement(spanner);
-            }
         }
     }
 }
@@ -5118,7 +5143,7 @@ void Score::undoChangeClef(Staff* ostaff, EngravingItem* e, ClefType ct, bool fo
 
         StaffType* staffType = staff->staffType(e->tick());
         StaffGroup staffGroup = staffType->group();
-        if (ClefInfo::staffGroup(ct) != staffGroup) {
+        if (ClefInfo::staffGroup(ct) != staffGroup && !forInstrumentChange) {
             continue;
         }
 
@@ -5202,12 +5227,12 @@ static Chord* findLinkedChord(Chord* c, Staff* nstaff)
     track_idx_t strack = c->track();
 
     if (se) {
-        strack = mu::key(se->tracksMapping(), strack);
+        strack = muse::key(se->tracksMapping(), strack);
     }
     track_idx_t dtrack = nstaff->idx() * VOICES + strack % VOICES;
 
     if (de) {
-        std::vector<track_idx_t> l = mu::values(de->tracksMapping(), strack);
+        std::vector<track_idx_t> l = muse::values(de->tracksMapping(), strack);
         if (l.empty()) {
             // simply return the first linked chord whose staff is equal to nstaff
             for (EngravingObject* ee : c->linkList()) {
@@ -5233,7 +5258,7 @@ static Chord* findLinkedChord(Chord* c, Staff* nstaff)
     Measure* nm = nstaff->score()->tick2measure(s->tick());
     Segment* ns = nm->findSegment(s->segmentType(), s->tick());
     EngravingItem* ne = ns->element(dtrack);
-    if (!ne->isChord()) {
+    if (!ne || !ne->isChord()) {
         return 0;
     }
     Chord* nc = toChord(ne);
@@ -5301,8 +5326,8 @@ void Score::undoExchangeVoice(Measure* measure, voice_idx_t srcVoice, voice_idx_
 
             if (ex) {
                 const TracksMap& tracks = ex->tracksMapping();
-                std::vector<track_idx_t> srcTrackList = mu::values(tracks, srcTrack);
-                std::vector<track_idx_t> dstTrackList = mu::values(tracks, dstTrack);
+                std::vector<track_idx_t> srcTrackList = muse::values(tracks, srcTrack);
+                std::vector<track_idx_t> dstTrackList = muse::values(tracks, dstTrack);
 
                 for (track_idx_t srcTrack2 : srcTrackList) {
                     // don't care about other linked staves
@@ -5311,10 +5336,10 @@ void Score::undoExchangeVoice(Measure* measure, voice_idx_t srcVoice, voice_idx_
                     }
 
                     track_idx_t tempTrack = srcTrack;
-                    std::vector<track_idx_t> testTracks = mu::values(tracks, tempTrack + trackDiff);
+                    std::vector<track_idx_t> testTracks = muse::values(tracks, tempTrack + trackDiff);
                     bool hasVoice = false;
                     for (track_idx_t testTrack : testTracks) {
-                        if (staffTrack <= testTrack && testTrack < staffTrack + VOICES && mu::contains(dstTrackList, testTrack)) {
+                        if (staffTrack <= testTrack && testTrack < staffTrack + VOICES && muse::contains(dstTrackList, testTrack)) {
                             hasVoice = true;
                             // voice is simply exchangeable now (deal directly)
                             undo(new ExchangeVoice(measure2, srcTrack2, testTrack, staffTrack / 4));
@@ -5325,7 +5350,7 @@ void Score::undoExchangeVoice(Measure* measure, voice_idx_t srcVoice, voice_idx_
                     if (!hasVoice) {
                         undo(new CloneVoice(measure->first(), measure2->endTick(), measure2->first(), tempTrack, srcTrack2,
                                             tempTrack + trackDiff));
-                        mu::remove(srcTrackList, srcTrack2);
+                        muse::remove(srcTrackList, srcTrack2);
                     }
                 }
 
@@ -5336,10 +5361,10 @@ void Score::undoExchangeVoice(Measure* measure, voice_idx_t srcVoice, voice_idx_
                     }
 
                     track_idx_t tempTrack = dstTrack;
-                    std::vector<track_idx_t> testTracks = mu::values(tracks, tempTrack - trackDiff);
+                    std::vector<track_idx_t> testTracks = muse::values(tracks, tempTrack - trackDiff);
                     bool hasVoice = false;
                     for (track_idx_t testTrack : testTracks) {
-                        if (staffTrack <= testTrack && testTrack < staffTrack + VOICES && mu::contains(srcTrackList, testTrack)) {
+                        if (staffTrack <= testTrack && testTrack < staffTrack + VOICES && muse::contains(srcTrackList, testTrack)) {
                             hasVoice = true;
                         }
                     }
@@ -5348,7 +5373,7 @@ void Score::undoExchangeVoice(Measure* measure, voice_idx_t srcVoice, voice_idx_
                     if (!hasVoice) {
                         undo(new CloneVoice(measure->first(), measure2->endTick(), measure2->first(), tempTrack, dstTrack2,
                                             tempTrack - trackDiff));
-                        mu::remove(dstTrackList, dstTrack2);
+                        muse::remove(dstTrackList, dstTrack2);
                     }
                 }
             } else if (srcStaffTrack != staffTrack) {
@@ -5415,7 +5440,7 @@ void Score::undoInsertPart(Part* part, size_t targetPartIndex)
 void Score::undoRemoveStaff(Staff* staff)
 {
     const staff_idx_t staffIndex = staff->idx();
-    assert(staffIndex != mu::nidx);
+    assert(staffIndex != muse::nidx);
 
     std::vector<Spanner*> spannersToRemove;
 
@@ -5545,7 +5570,7 @@ static void undoChangeNoteVisibility(Note* note, bool visible)
         for (EngravingObject* child : chord->scanChildren()) {
             ElementType type = child->type();
 
-            if (mu::contains(IGNORED_TYPES, type)) {
+            if (muse::contains(IGNORED_TYPES, type)) {
                 continue;
             }
 
@@ -5614,15 +5639,15 @@ void Score::undoChangeVisible(EngravingItem* item, bool visible)
 void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool ctrlModifier, EngravingItem* elementToRelink)
 {
     Staff* ostaff = element->staff();
-    track_idx_t strack = mu::nidx;
+    track_idx_t strack = muse::nidx;
     if (ostaff) {
         strack = ostaff->idx() * VOICES + element->track() % VOICES;
 
         if (mu::engraving::Excerpt* excerpt = ostaff->score()->excerpt()) {
             const TracksMap& tracks = excerpt->tracksMapping();
 
-            if (!tracks.empty() && strack != mu::nidx) {
-                strack = mu::key(tracks, strack, mu::nidx);
+            if (!tracks.empty() && strack != muse::nidx) {
+                strack = muse::key(tracks, strack, muse::nidx);
             }
         }
     }
@@ -5655,7 +5680,7 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             for (Score* s : scoreList()) {
                 staffList.push_back(s->staff(0)); // system objects always appear on the top staff
                 for (Staff* staff : s->systemObjectStaves()) {
-                    IF_ASSERT_FAILED(staff->idx() != mu::nidx) {
+                    IF_ASSERT_FAILED(staff->idx() != muse::nidx) {
                         continue;
                     }
 
@@ -5895,12 +5920,12 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                 // TODO solve this in read302.cpp.
                 tr.push_back(strack);
             } else {
-                std::vector<track_idx_t> mappedTracks = mu::values(mapping, strack);
+                std::vector<track_idx_t> mappedTracks = muse::values(mapping, strack);
                 if (mappedTracks.empty()) {
                     // This is a linked staff in a part and the element has been added to a linked staff in the main score
                     track_idx_t track = staffIdx * VOICES + (strack % VOICES);
-                    track_idx_t mappedTrack = mu::value(mapping, track, mu::nidx);
-                    mappedTrack = (mappedTrack != mu::nidx) ? mappedTrack : track;
+                    track_idx_t mappedTrack = muse::value(mapping, track, muse::nidx);
+                    mappedTrack = (mappedTrack != muse::nidx) ? mappedTrack : track;
                     if (staff->isVoiceVisible(strack % VOICES)) {
                         mappedTracks.push_back(mappedTrack);
                     }
@@ -5911,8 +5936,8 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                     const bool linkedPart  = linked && (staff != ostaff) && (staff->score() == ostaff->score());
                     const bool linkedScore = linked && (staff != ostaff) && (staff->score() != ostaff->score());
                     if (linkedPart && !linkedScore) {
-                        track_idx_t mappedTrack = mu::value(mapping, track, mu::nidx);
-                        if (mappedTrack == mu::nidx) {
+                        track_idx_t mappedTrack = muse::value(mapping, track, muse::nidx);
+                        if (mappedTrack == muse::nidx) {
                             continue;
                         }
                         track_idx_t linkedTrack = staff->idx() * VOICES + mappedTrack % VOICES;
@@ -5962,7 +5987,7 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             ElementType::LYRICS
         };
         voice_idx_t voice = track2voice(strack);
-        if (staff->isVoiceVisible(voice) && tr.empty() && mu::contains(VOICE1_COPY_TYPES, et)) {
+        if (staff->isVoiceVisible(voice) && tr.empty() && muse::contains(VOICE1_COPY_TYPES, et)) {
             tr.push_back(staffIdx * VOICES);
         }
 
@@ -6191,6 +6216,10 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                     if (parent && parent->isNote()) {
                         nsp->setParent(parent->findLinkedInStaff(staff));
                     }
+                    EngravingItem* endEl = sp->endElement();
+                    if (endEl && endEl->isNote()) {
+                        nsp->setEndElement(endEl->findLinkedInStaff(staff));
+                    }
                 }
 
                 doUndoAddElement(nsp);
@@ -6244,6 +6273,11 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                 }
                 Chord* c1 = findLinkedChord(cr1, score->staff(staffIdx));
                 Chord* c2 = findLinkedChord(cr2, score->staff(staffIdx + sm));
+
+                IF_ASSERT_FAILED(c1) {
+                    return;
+                }
+
                 Note* nn1 = c1->findNote(n1->pitch(), n1->unisonIndex());
                 Note* nn2 = c2 ? c2->findNote(n2->pitch(), n2->unisonIndex()) : 0;
 
@@ -6335,7 +6369,7 @@ void Score::undoAddCR(ChordRest* cr, Measure* measure, const Fraction& tick)
     if (mu::engraving::Excerpt* excerpt = ostaff->score()->excerpt()) {
         const TracksMap& tracks = excerpt->tracksMapping();
         if (!tracks.empty()) {
-            strack = mu::key(tracks, strack, mu::nidx);
+            strack = muse::key(tracks, strack, muse::nidx);
         }
     }
 
@@ -6362,9 +6396,9 @@ void Score::undoAddCR(ChordRest* cr, Measure* measure, const Fraction& tick)
                 // linkedScore: linked staves over different scores via excerpts.
                 const bool linkedPart  = linked && (staff != ostaff) && (staff->score() == ostaff->score());
                 const bool linkedScore = linked && (staff != ostaff) && (staff->score() != ostaff->score());
-                for (track_idx_t track : mu::values(mapping, strack)) {
+                for (track_idx_t track : muse::values(mapping, strack)) {
                     if (linkedPart && !linkedScore) {
-                        tracks.push_back(staff->idx() * VOICES + mu::value(mapping, track) % VOICES);
+                        tracks.push_back(staff->idx() * VOICES + muse::value(mapping, track) % VOICES);
                     } else if (!linkedPart && linkedScore) {
                         if ((track >> 2) != staff->idx()) {
                             track += (staff->idx() - (track >> 2)) * VOICES;
@@ -6457,7 +6491,7 @@ void Score::undoRemoveElement(EngravingItem* element, bool removeLinked)
 
             if (e->explicitParent() && (e->explicitParent()->isSegment())) {
                 Segment* s = toSegment(e->explicitParent());
-                if (!mu::contains(segments, s)) {
+                if (!muse::contains(segments, s)) {
                     segments.push_back(s);
                 }
             }
@@ -6652,7 +6686,7 @@ void Score::undoInsertTime(const Fraction& tick, const Fraction& len)
             }
         }
         for (Spanner* ss : sl) {
-            if (mu::contains(ss->linkList(), static_cast<EngravingObject*>(s))) {
+            if (muse::contains(ss->linkList(), static_cast<EngravingObject*>(s))) {
                 append = false;
                 break;
             }

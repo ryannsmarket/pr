@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,8 +22,8 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 
-import MuseScore.Ui 1.0
-import MuseScore.UiComponents 1.0
+import Muse.Ui 1.0
+import Muse.UiComponents 1.0
 import MuseScore.Inspector 1.0
 
 import "../../common"
@@ -80,6 +80,8 @@ Column {
 
                 switch (modelType) {
                 case Inspector.TYPE_HAIRPIN: return hairpinStyleSettings
+                case Inspector.TYPE_CRESCENDO: return crescendoDiminuendoSettings
+                case Inspector.TYPE_DIMINUENDO: return crescendoDiminuendoSettings
                 case Inspector.TYPE_VOLTA: return voltaStyleSettings
                 case Inspector.TYPE_OTTAVA: return ottavaStyleSettings
                 case Inspector.TYPE_PEDAL: return pedalStyleSettings
@@ -103,6 +105,17 @@ Column {
         id: hairpinStyleSettings
 
         HairpinStyleSettings {
+            model: root.model
+
+            navigationPanel: root.navigationPanel
+            navigationRowStart: root.navigationRowStart + 1000
+        }
+    }
+
+    Component {
+        id: crescendoDiminuendoSettings
+
+        CrescDimLineStyleSettings {
             model: root.model
 
             navigationPanel: root.navigationPanel

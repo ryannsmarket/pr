@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_UI_UIACTIONSREGISTER_H
-#define MU_UI_UIACTIONSREGISTER_H
+#ifndef MUSE_UI_UIACTIONSREGISTER_H
+#define MUSE_UI_UIACTIONSREGISTER_H
 
 #include <vector>
 #include <unordered_map>
@@ -31,13 +31,15 @@
 #include "iuicontextresolver.h"
 #include "async/asyncable.h"
 
-namespace mu::ui {
-class UiActionsRegister : public IUiActionsRegister, public async::Asyncable
+namespace muse::ui {
+class UiActionsRegister : public IUiActionsRegister, public Injectable, public async::Asyncable
 {
-    INJECT(IUiContextResolver, uicontextResolver)
-    INJECT(shortcuts::IShortcutsRegister, shortcutsRegister)
+    Inject<IUiContextResolver> uicontextResolver = { this };
+    Inject<shortcuts::IShortcutsRegister> shortcutsRegister = { this };
+
 public:
-    UiActionsRegister() = default;
+    UiActionsRegister(const modularity::ContextPtr& iocCtx)
+        : Injectable(iocCtx) {}
 
     void init();
 
@@ -80,4 +82,4 @@ private:
 };
 }
 
-#endif // MU_UI_UIACTIONSREGISTER_H
+#endif // MUSE_UI_UIACTIONSREGISTER_H

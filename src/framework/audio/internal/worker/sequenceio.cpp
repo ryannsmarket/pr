@@ -27,9 +27,9 @@
 
 #include "log.h"
 
-using namespace mu;
-using namespace mu::audio;
-using namespace mu::async;
+using namespace muse;
+using namespace muse::audio;
+using namespace muse::async;
 
 SequenceIO::SequenceIO(IGetTracks* getTracks)
     : m_getTracks(getTracks)

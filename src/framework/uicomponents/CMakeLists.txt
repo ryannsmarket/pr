@@ -18,13 +18,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE uicomponents)
+declare_module(muse_uicomponents)
+set(MODULE_ALIAS muse::uicomponents)
 
-if (MUE_COMPILE_QT5_COMPAT)
-    set(MODULE_QRC uicomponents.qrc graphicaleffects_qt5.qrc)
-else()
-    set(MODULE_QRC uicomponents.qrc graphicaleffects.qrc)
-endif()
+set(MODULE_QRC uicomponents.qrc graphicaleffects.qrc)
 
 set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml )
 set(MODULE_QMLAPI_IMPORT ${CMAKE_CURRENT_LIST_DIR}/api )
@@ -78,6 +75,10 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractmenumodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/menuitem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/menuitem.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/abstracttoolbarmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/abstracttoolbarmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/toolbaritem.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/toolbaritem.h
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/popupviewclosecontroller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/popupviewclosecontroller.h
     ${CMAKE_CURRENT_LIST_DIR}/view/widgets/radiobuttongroupbox.cpp
@@ -114,11 +115,11 @@ if (OS_IS_WIN)
         )
 endif(OS_IS_WIN)
 
-if (MUE_DISABLE_UI_MODALITY)
-    set(MODULE_DEF ${MODULE_DEF} -DMUE_DISABLE_UI_MODALITY)
+if (MUSE_MODULE_UI_DISABLE_MODALITY)
+    set(MODULE_DEF ${MODULE_DEF} -DMUSE_MODULE_UI_DISABLE_MODALITY)
 endif()
 
 set(MODULE_USE_UNITY_NONE ON)
-include(SetupModule)
+setup_module()
 
 

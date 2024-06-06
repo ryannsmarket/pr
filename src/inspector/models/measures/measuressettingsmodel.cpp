@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,12 +25,13 @@
 
 using namespace mu::inspector;
 using namespace mu::notation;
+using namespace muse::actions;
 
 MeasuresSettingsModel::MeasuresSettingsModel(QObject* parent, IElementRepositoryService* repository)
     : AbstractInspectorModel(parent, repository)
 {
     setSectionType(InspectorSectionType::SECTION_MEASURES);
-    setTitle(qtrc("inspector", "Measure"));
+    setTitle(muse::qtrc("inspector", "Measure"));
 }
 
 bool MeasuresSettingsModel::isEmpty() const
@@ -41,7 +42,7 @@ bool MeasuresSettingsModel::isEmpty() const
 
 void MeasuresSettingsModel::insertMeasures(int numberOfMeasures, InsertMeasuresTarget target)
 {
-    actions::ActionData actionData = actions::ActionData::make_arg1(numberOfMeasures);
+    ActionData actionData = ActionData::make_arg1(numberOfMeasures);
 
     switch (target) {
     case InsertMeasuresTarget::AfterSelection:

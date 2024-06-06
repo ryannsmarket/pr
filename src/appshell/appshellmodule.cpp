@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -43,6 +43,7 @@
 #include "view/aboutmodel.h"
 #include "view/firstlaunchsetup/firstlaunchsetupmodel.h"
 #include "view/firstlaunchsetup/themespagemodel.h"
+#include "view/firstlaunchsetup/tutorialspagemodel.h"
 #include "view/preferences/preferencesmodel.h"
 #include "view/preferences/generalpreferencesmodel.h"
 #include "view/preferences/updatepreferencesmodel.h"
@@ -59,10 +60,7 @@
 #include "view/preferences/braillepreferencesmodel.h"
 #include "view/framelesswindow/framelesswindowmodel.h"
 #include "view/publish/publishtoolbarmodel.h"
-#include "view/windowdroparea.h"
 #include "view/internal/maintoolbarmodel.h"
-
-#include "view/dockwindow/docksetup.h"
 
 #ifdef Q_OS_MAC
 #include "view/appmenumodel.h"
@@ -73,17 +71,14 @@
 #endif
 
 using namespace mu::appshell;
-using namespace mu::modularity;
-using namespace mu::ui;
-using namespace mu::dock;
+using namespace muse;
+using namespace muse::modularity;
+using namespace muse::ui;
+using namespace muse::dock;
 
 static void appshell_init_qrc()
 {
     Q_INIT_RESOURCE(appshell);
-}
-
-AppShellModule::AppShellModule()
-{
 }
 
 std::string AppShellModule::moduleName() const
@@ -102,10 +97,7 @@ void AppShellModule::registerExports()
     m_scrollingHook = std::make_shared<MacOSScrollingHook>();
     #endif
 
-    DockSetup::registerExports();
-
     ioc()->registerExport<IAppShellConfiguration>(moduleName(), m_appShellConfiguration);
-    ioc()->registerExport<IApplicationActionController>(moduleName(), m_applicationActionController);
     ioc()->registerExport<IStartupScenario>(moduleName(), new StartupScenario());
     ioc()->registerExport<ISessionsManager>(moduleName(), m_sessionsManager);
 
@@ -118,7 +110,7 @@ void AppShellModule::registerExports()
 
 void AppShellModule::resolveImports()
 {
-    auto ar = ioc()->resolve<ui::IUiActionsRegister>(moduleName());
+    auto ar = ioc()->resolve<muse::ui::IUiActionsRegister>(moduleName());
     if (ar) {
         ar->reg(m_applicationUiActions);
     }
@@ -134,7 +126,7 @@ void AppShellModule::resolveImports()
         ir->registerUri(Uri("musescore://about/musicxml"), ContainerMeta(ContainerType::QmlDialog, "AboutMusicXMLDialog.qml"));
         ir->registerUri(Uri("musescore://firstLaunchSetup"),
                         ContainerMeta(ContainerType::QmlDialog, "FirstLaunchSetup/FirstLaunchSetupDialog.qml"));
-        ir->registerUri(Uri("musescore://preferences"), ContainerMeta(ContainerType::QmlDialog, "Preferences/PreferencesDialog.qml"));
+        ir->registerUri(Uri("muse://preferences"), ContainerMeta(ContainerType::QmlDialog, "Preferences/PreferencesDialog.qml"));
     }
 }
 
@@ -145,8 +137,6 @@ void AppShellModule::registerResources()
 
 void AppShellModule::registerUiTypes()
 {
-    DockSetup::registerQmlTypes();
-
     qmlRegisterType<SettingListModel>("MuseScore.Preferences", 1, 0, "SettingListModel");
     qmlRegisterType<PreferencesModel>("MuseScore.Preferences", 1, 0, "PreferencesModel");
     qmlRegisterType<GeneralPreferencesModel>("MuseScore.Preferences", 1, 0, "GeneralPreferencesModel");
@@ -178,11 +168,10 @@ void AppShellModule::registerUiTypes()
     qmlRegisterType<AboutModel>("MuseScore.AppShell", 1, 0, "AboutModel");
     qmlRegisterType<FirstLaunchSetupModel>("MuseScore.AppShell", 1, 0, "FirstLaunchSetupModel");
     qmlRegisterType<ThemesPageModel>("MuseScore.AppShell", 1, 0, "ThemesPageModel");
+    qmlRegisterType<TutorialsPageModel>("MuseScore.AppShell", 1, 0, "TutorialsPageModel");
     qmlRegisterType<FramelessWindowModel>("MuseScore.AppShell", 1, 0, "FramelessWindowModel");
     qmlRegisterType<PublishToolBarModel>("MuseScore.AppShell", 1, 0, "PublishToolBarModel");
     qmlRegisterType<MainToolBarModel>("MuseScore.AppShell", 1, 0, "MainToolBarModel");
-
-    qmlRegisterType<WindowDropArea>("MuseScore.Ui", 1, 0, "WindowDropArea");
 }
 
 void AppShellModule::onPreInit(const IApplication::RunMode& mode)
@@ -199,8 +188,6 @@ void AppShellModule::onInit(const IApplication::RunMode& mode)
     if (mode == IApplication::RunMode::AudioPluginRegistration) {
         return;
     }
-
-    DockSetup::onInit();
 
     m_appShellConfiguration->init();
     m_applicationActionController->init();

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,7 +30,8 @@
 #include "log.h"
 
 using namespace mu;
-using namespace mu::draw;
+using namespace muse;
+using namespace muse::draw;
 using namespace mu::engraving;
 
 Shape::Shape(const std::vector<RectF>& rects, const EngravingItem* p)
@@ -121,6 +122,25 @@ Shape Shape::scaled(const SizeF& mag) const
     for (const ShapeElement& r : m_elements) {
         s.add(r.scaled(mag), r.item());
     }
+    return s;
+}
+
+Shape& Shape::adjust(double xp1, double yp1, double xp2, double yp2)
+{
+    for (ShapeElement& element : m_elements) {
+        element.adjust(xp1, yp1, xp2, yp2);
+    }
+    return *this;
+}
+
+Shape Shape::adjusted(double xp1, double yp1, double xp2, double yp2) const
+{
+    Shape s;
+    s.m_elements.reserve(m_elements.size());
+    for (const ShapeElement& element : m_elements) {
+        s.add(element.adjusted(xp1, yp1, xp2, yp2));
+    }
+
     return s;
 }
 
@@ -271,7 +291,7 @@ double Shape::left() const
 {
     double dist = DBL_MAX;
     for (const ShapeElement& r : m_elements) {
-        if (r.height() != 0.0 && !(r.item() && r.item()->isTextBase()) && r.left() < dist) {
+        if (!RealIsNull(r.height()) && !(r.item() && r.item()->isTextBase()) && r.left() < dist) {
             // if (r.left() < dist)
             dist = r.left();
         }
@@ -388,7 +408,7 @@ double Shape::bottomDistance(const PointF& p) const
     return dist;
 }
 
-void Shape::setBBox(const mu::RectF& r, const EngravingItem* p)
+void Shape::setBBox(const RectF& r, const EngravingItem* p)
 {
     IF_ASSERT_FAILED(type() == Type::Fixed) {
         return;
@@ -401,14 +421,14 @@ void Shape::setBBox(const mu::RectF& r, const EngravingItem* p)
     }
 }
 
-void Shape::addBBox(const mu::RectF& r)
+void Shape::addBBox(const RectF& r)
 {
 //    IF_ASSERT_FAILED(type() == Type::Fixed) {
 //        return;
 //    }
 
     if (m_elements.empty()) {
-        m_elements.push_back(mu::RectF());
+        m_elements.push_back(RectF());
     }
 
     m_elements[0].unite(r);
@@ -461,7 +481,7 @@ void Shape::remove(const Shape& s)
 
 void Shape::removeInvisibles()
 {
-    mu::remove_if(m_elements, [](ShapeElement& shapeElement) {
+    muse::remove_if(m_elements, [](ShapeElement& shapeElement) {
         return !shapeElement.item() || !shapeElement.item()->visible();
     });
     invalidateBBox();
@@ -469,8 +489,8 @@ void Shape::removeInvisibles()
 
 void Shape::removeTypes(const std::set<ElementType>& types)
 {
-    mu::remove_if(m_elements, [&types](ShapeElement& shapeElement) {
-        return shapeElement.item() && mu::contains(types, shapeElement.item()->type());
+    muse::remove_if(m_elements, [&types](ShapeElement& shapeElement) {
+        return shapeElement.item() && muse::contains(types, shapeElement.item()->type());
     });
     invalidateBBox();
 }
@@ -526,9 +546,9 @@ void Shape::paint(Painter& painter) const
 
 void mu::engraving::dump(const ShapeElement& se, std::stringstream& ss)
 {
-    const mu::RectF* r = &se;
+    const RectF* r = &se;
     ss << "item: " << (se.item() ? se.item()->typeName() : "no") << " rect: ";
-    mu::dump(*r, ss);
+    muse::dump(*r, ss);
 }
 
 void mu::engraving::dump(const Shape& sh, std::stringstream& ss)

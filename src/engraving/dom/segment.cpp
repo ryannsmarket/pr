@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -95,6 +95,7 @@ const char* Segment::subTypeName(SegmentType t)
     case SegmentType::EndBarLine:           return "EndBarLine";
     case SegmentType::KeySigAnnounce:       return "Key Sig Precaution";
     case SegmentType::TimeSigAnnounce:      return "Time Sig Precaution";
+    case SegmentType::TimeTick:             return "Time tick";
     default:
         return "??";
     }
@@ -233,7 +234,7 @@ Segment::~Segment()
         delete e;
     }
 
-    DeleteAll(m_annotations);
+    muse::DeleteAll(m_annotations);
 }
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
@@ -317,6 +318,41 @@ Segment* Segment::next1(SegmentType types) const
     return 0;
 }
 
+Segment* Segment::next1ChordRestOrTimeTick() const
+{
+    Segment* nextSeg = next1(SegmentType::ChordRest | SegmentType::TimeTick);
+    while (nextSeg && nextSeg->tick() == tick()) {
+        nextSeg = nextSeg->next1(SegmentType::ChordRest | SegmentType::TimeTick);
+    }
+    if (!nextSeg) {
+        return nullptr;
+    }
+
+    Segment* nextNextSeg = nextSeg->next1(SegmentType::ChordRest | SegmentType::TimeTick);
+    if (!nextNextSeg) {
+        return nextSeg;
+    }
+
+    if (nextSeg->tick() == nextNextSeg->tick()) {
+        return nextSeg->isChordRestType() ? nextSeg : nextNextSeg;
+    }
+
+    return nextSeg;
+}
+
+Segment* Segment::next1WithElemsOnStaff(staff_idx_t staffIdx, SegmentType segType)
+{
+    Segment* next = next1(segType);
+
+    track_idx_t startTrack = staffIdx * VOICES;
+    track_idx_t endTrack = startTrack + VOICES - 1;
+    while (next && !next->hasElements(startTrack, endTrack)) {
+        next = next->next1(segType);
+    }
+
+    return next;
+}
+
 Segment* Segment::next1MM(SegmentType types) const
 {
     for (Segment* s = next1MM(); s; s = s->next1MM()) {
@@ -397,6 +433,41 @@ Segment* Segment::prev1() const
     return m ? m->last() : 0;
 }
 
+Segment* Segment::prev1ChordRestOrTimeTick() const
+{
+    Segment* prevSeg = prev1(SegmentType::ChordRest | SegmentType::TimeTick);
+    while (prevSeg && prevSeg->tick() == tick()) {
+        prevSeg = prevSeg->prev1(SegmentType::ChordRest | SegmentType::TimeTick);
+    }
+    if (!prevSeg) {
+        return nullptr;
+    }
+
+    Segment* prevPrevSeg = prevSeg->prev1(SegmentType::ChordRest | SegmentType::TimeTick);
+    if (!prevPrevSeg) {
+        return prevSeg;
+    }
+
+    if (prevSeg->tick() == prevPrevSeg->tick()) {
+        return prevSeg->isChordRestType() ? prevSeg : prevPrevSeg;
+    }
+
+    return prevSeg;
+}
+
+Segment* Segment::prev1WithElemsOnStaff(staff_idx_t staffIdx, SegmentType segType)
+{
+    Segment* prev = prev1(segType);
+
+    track_idx_t startTrack = staffIdx * VOICES;
+    track_idx_t endTrack = startTrack + VOICES - 1;
+    while (prev && !prev->hasElements(startTrack, endTrack)) {
+        prev = prev->prev1(segType);
+    }
+
+    return prev;
+}
+
 Segment* Segment::prev1enabled() const
 {
     Segment* s = prev1();
@@ -461,7 +532,7 @@ Segment* Segment::nextCR(track_idx_t track, bool sameStaff) const
     }
     for (Segment* seg = next1(); seg; seg = seg->next1()) {
         if (seg->isChordRestType()) {
-            if (track == mu::nidx) {
+            if (track == muse::nidx) {
                 return seg;
             }
             for (track_idx_t t = strack; t < etrack; ++t) {
@@ -576,7 +647,7 @@ void Segment::add(EngravingItem* el)
     }
 
     track_idx_t track = el->track();
-    assert(track != mu::nidx);
+    assert(track != muse::nidx);
     assert(el->score() == score());
     assert(score()->nstaves() * VOICES == m_elist.size());
     // make sure offset is correct for staff
@@ -718,6 +789,12 @@ void Segment::add(EngravingItem* el)
         setEmpty(false);
         break;
 
+    case ElementType::TIME_TICK_ANCHOR:
+        assert(m_segmentType == SegmentType::TimeTick);
+        m_elist[track] = el;
+        setEmpty(false);
+        break;
+
     default:
         ASSERT_X(String(u"Segment::add() unknown %1").arg(String::fromAscii(el->typeName())));
         return;
@@ -766,6 +843,7 @@ void Segment::remove(EngravingItem* el)
 
     case ElementType::MMREST:
     case ElementType::MEASURE_REPEAT:
+    case ElementType::TIME_TICK_ANCHOR:
         m_elist[track] = 0;
         break;
 
@@ -1175,6 +1253,13 @@ bool Segment::hasElements(track_idx_t minTrack, track_idx_t maxTrack) const
     return false;
 }
 
+bool Segment::hasElements(staff_idx_t staffIdx) const
+{
+    track_idx_t startTrack = staffIdx * VOICES;
+    track_idx_t endTrack = startTrack + VOICES - 1;
+    return hasElements(startTrack, endTrack);
+}
+
 //---------------------------------------------------------
 //   allElementsInvisible
 ///  return true if all elements in the segment are invisible
@@ -1198,7 +1283,7 @@ bool Segment::allElementsInvisible() const
         track_idx_t endTrack = staffIdx * VOICES + VOICES;
         for (track_idx_t track = staffIdx * VOICES; track < endTrack; ++track) {
             EngravingItem* e = m_elist[track];
-            if (e && e->visible() && !RealIsEqual(e->width(), 0.0)) {
+            if (e && e->visible() && !muse::RealIsEqual(e->width(), 0.0)) {
                 return false;
             }
         }
@@ -1359,7 +1444,7 @@ RectF Segment::contentRect() const
 //   segment, or a barline if it spanns in the staff
 //---------------------------------------------------------
 
-EngravingItem* Segment::firstElement(staff_idx_t staff)
+EngravingItem* Segment::firstElementForNavigation(staff_idx_t staff)
 {
     if (isChordRestType()) {
         track_idx_t strack = staff * VOICES;
@@ -1383,7 +1468,7 @@ EngravingItem* Segment::firstElement(staff_idx_t staff)
 //   segment, or a barline if it spanns in the staff
 //---------------------------------------------------------
 
-EngravingItem* Segment::lastElement(staff_idx_t staff)
+EngravingItem* Segment::lastElementForNavigation(staff_idx_t staff)
 {
     if (segmentType() == SegmentType::ChordRest) {
         for (int voice = static_cast<int>(staff * VOICES + (VOICES - 1)); voice / static_cast<int>(VOICES) == static_cast<int>(staff);
@@ -1418,7 +1503,7 @@ EngravingItem* Segment::getElement(staff_idx_t staff)
 {
     segmentType();
     if (segmentType() == SegmentType::ChordRest) {
-        return firstElement(staff);
+        return firstElementForNavigation(staff);
     } else if (segmentType() & (SegmentType::EndBarLine | SegmentType::BarLine | SegmentType::StartRepeatBarLine)) {
         for (int i = static_cast<int>(staff); i >= 0; i--) {
             if (!element(i * VOICES)) {
@@ -1532,7 +1617,7 @@ EngravingItem* Segment::firstInNextSegments(staff_idx_t activeStaff)
             break;
         }
 
-        re = seg->firstElement(activeStaff);
+        re = seg->firstElementForNavigation(activeStaff);
     }
 
     if (re) {
@@ -2166,6 +2251,18 @@ EngravingItem* Segment::prevElement(staff_idx_t activeStaff)
     }
 }
 
+EngravingItem* Segment::firstElement(staff_idx_t staffIdx) const
+{
+    track_idx_t startTrack = staffIdx * VOICES;
+    track_idx_t endTrack = startTrack + VOICES;
+    for (track_idx_t track =  startTrack; track < endTrack; ++track) {
+        if (EngravingItem* item = m_elist[track]) {
+            return item;
+        }
+    }
+    return nullptr;
+}
+
 //--------------------------------------------------------
 //   lastInPrevSegments
 //   Searches for the previous segment that has elements on
@@ -2204,7 +2301,7 @@ EngravingItem* Segment::lastInPrevSegments(staff_idx_t activeStaff)
             //if (seg->segmentType() == SegmentType::EndBarLine)
             //      score()->inputState().setTrack((activeStaff - 1) * VOICES ); //correction
 
-            if ((re = seg->lastElement(activeStaff - 1)) != 0) {
+            if ((re = seg->lastElementForNavigation(activeStaff - 1)) != 0) {
                 return re;
             }
 
@@ -2237,7 +2334,7 @@ String Segment::accessibleExtraInfo() const
             }
         }
         if (!temp.isEmpty()) {
-            rez = rez + mtrc("engraving", "Annotations:") + temp;
+            rez = rez + muse::mtrc("engraving", "Annotations:") + temp;
         }
     }
 
@@ -2263,7 +2360,7 @@ String Segment::accessibleExtraInfo() const
         }
 
         if (s->tick() == tick()) {
-            startSpanners += u" " + mtrc("engraving", "Start of %1").arg(s->accessibleInfo());
+            startSpanners += u" " + muse::mtrc("engraving", "Start of %1").arg(s->accessibleInfo());
         }
 
         const Segment* seg = 0;
@@ -2278,7 +2375,7 @@ String Segment::accessibleExtraInfo() const
         }
 
         if (seg && s->tick2() == seg->tick()) {
-            endSpanners += u" " + mtrc("engraving", "End of %1").arg(s->accessibleInfo());
+            endSpanners += u" " + muse::mtrc("engraving", "End of %1").arg(s->accessibleInfo());
         }
     }
 
@@ -2462,6 +2559,24 @@ double Segment::spacing() const
     return m_spacing;
 }
 
+bool Segment::canWriteSpannerStartEnd(track_idx_t track, const Spanner* spanner) const
+{
+    staff_idx_t staffIdx = track2staff(track);
+    if (isChordRestType() && (elementAt(track) || (!spanner->isVoiceSpecific() && hasElements(staffIdx)))) {
+        return true;
+    }
+
+    if (isTimeTickType()) {
+        Segment* crSegAtSameTick
+            = score()->tick2segment(tick(), true, SegmentType::ChordRest, style().styleB(Sid::createMultiMeasureRests));
+        if (!crSegAtSameTick || !crSegAtSameTick->canWriteSpannerStartEnd(track, spanner)) {
+            return true;
+        }
+    }
+
+    return score()->lastMeasure()->last() == this;
+}
+
 double Segment::elementsTopOffsetFromSkyline(staff_idx_t staffIndex) const
 {
     System* segmentSystem = measure()->system();
@@ -2473,18 +2588,18 @@ double Segment::elementsTopOffsetFromSkyline(staff_idx_t staffIndex) const
 
     SkylineLine north = staffSystem->skyline().north();
     int topOffset = INT_MAX;
-    for (SkylineSegment segment: north) {
+    for (const ShapeElement& element : north.elements()) {
         Segment* seg = prev1enabled();
         if (!seg) {
             continue;
         }
-        bool ok = seg->pagePos().x() <= segment.x && segment.x <= pagePos().x();
+        bool ok = seg->pagePos().x() <= element.left() && element.left() <= pagePos().x();
         if (!ok) {
             continue;
         }
 
-        if (segment.y < topOffset) {
-            topOffset = segment.y;
+        if (element.top() < topOffset) {
+            topOffset = element.top();
         }
     }
 
@@ -2506,18 +2621,18 @@ double Segment::elementsBottomOffsetFromSkyline(staff_idx_t staffIndex) const
 
     SkylineLine south = staffSystem->skyline().south();
     int bottomOffset = INT_MIN;
-    for (SkylineSegment segment: south) {
+    for (const ShapeElement& element : south.elements()) {
         Segment* seg = prev1enabled();
         if (!seg) {
             continue;
         }
-        bool ok = seg->pagePos().x() <= segment.x && segment.x <= pagePos().x();
+        bool ok = seg->pagePos().x() <= element.left() && element.left() <= pagePos().x();
         if (!ok) {
             continue;
         }
 
-        if (segment.y > bottomOffset) {
-            bottomOffset = segment.y;
+        if (element.bottom() > bottomOffset) {
+            bottomOffset = element.bottom();
         }
     }
 
@@ -2546,6 +2661,7 @@ Fraction Segment::shortestChordRest() const
             continue;
         }
         cur = toChordRest(elem)->actualTicks();
+        assert(cur.isNotZero());
         if (cur < shortest) {
             shortest = cur;
         }
@@ -2646,7 +2762,7 @@ void Segment::computeCrossBeamType(Segment* nextSeg)
 
 void Segment::stretchSegmentsToWidth(std::vector<Spring>& springs, double width)
 {
-    if (springs.empty() || RealIsEqualOrLess(width, 0.0)) {
+    if (springs.empty() || muse::RealIsEqualOrLess(width, 0.0)) {
         return;
     }
 
@@ -2690,12 +2806,12 @@ double Segment::computeDurationStretch(const Segment* prevSeg, Fraction minTicks
         static constexpr double maxRatio = 32.0;
         double dMinTicks = minTicks.toDouble();
         double dMaxTicks = maxTicks.toDouble();
-        double maxSysRatio = dMaxTicks / dMinTicks;
-        if (RealIsEqualOrMore(dMaxTicks / dMinTicks, 2.0) && dMinTicks < longNoteThreshold) {
+        if (muse::RealIsEqualOrMore(dMaxTicks / dMinTicks, 2.0) && dMinTicks < longNoteThreshold) {
             /* HACK: we trick the system to ignore the shortest note and use the "next"
              * shortest. For example, if the shortest is a 32nd, we make it a 16th. */
             dMinTicks *= 2.0;
         }
+        double maxSysRatio = dMaxTicks / dMinTicks;
         double ratio = curTicks.toDouble() / dMinTicks;
         if (maxSysRatio > maxRatio) {
             double A = (dMinTicks * (maxRatio - 1)) / (dMaxTicks - dMinTicks);

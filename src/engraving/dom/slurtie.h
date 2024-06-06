@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -118,11 +118,11 @@ public:
     Grip defaultGrip() const override { return Grip::DRAG; }
     std::vector<PointF> gripsPositions(const EditData& = EditData()) const override;
 
-    virtual void drawEditMode(mu::draw::Painter* painter, EditData& editData, double currentViewScaling) override;
+    virtual void drawEditMode(muse::draw::Painter* painter, EditData& editData, double currentViewScaling) override;
 
     struct LayoutData : public SpannerSegment::LayoutData
     {
-        ld_field<mu::draw::PainterPath> path = "path";
+        ld_field<muse::draw::PainterPath> path = "path";
         ld_field<double> midThickness = "midThickness";
     };
     DECLARE_LAYOUTDATA_METHODS(SlurTieSegment)
@@ -132,7 +132,7 @@ protected:
     SlurTieSegment(const SlurTieSegment&);
 
     virtual void changeAnchor(EditData&, EngravingItem*) = 0;
-    std::vector<mu::LineF> gripAnchorLines(Grip grip) const override;
+    std::vector<LineF> gripAnchorLines(Grip grip) const override;
 
     struct UP m_ups[int(Grip::GRIPS)];
 };

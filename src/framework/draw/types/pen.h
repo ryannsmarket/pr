@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_DRAW_PEN_H
-#define MU_DRAW_PEN_H
+#ifndef MUSE_DRAW_PEN_H
+#define MUSE_DRAW_PEN_H
 
 #ifndef NO_QT_SUPPORT
 #include <QPen>
@@ -31,7 +31,7 @@
 #include "color.h"
 #include "drawtypes.h"
 
-namespace mu::draw {
+namespace muse::draw {
 class Pen
 {
 public:
@@ -185,6 +185,6 @@ private:
     PenJoinStyle m_joinStyle = PenJoinStyle::BevelJoin;
     mutable std::vector<double> m_dashPattern;
 };
-} // namespace mu::draw
+} // namespace muse::draw
 
-#endif // MU_DRAW_PEN_H
+#endif // MUSE_DRAW_PEN_H

@@ -26,9 +26,9 @@
 
 #include "log.h"
 
-using namespace mu::async;
-using namespace mu::audio;
-using namespace mu::audio::synth;
+using namespace muse::async;
+using namespace muse::audio;
+using namespace muse::audio::synth;
 
 void SynthResolver::init(const AudioInputParams& defaultInputParams)
 {

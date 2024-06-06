@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -76,7 +76,6 @@ public:
     virtual Segment* segment() const { return (Segment*)explicitParent(); }
 
     void setBeamMode(BeamMode m) { m_beamMode = m; }
-    void undoSetBeamMode(BeamMode m);
     BeamMode beamMode() const { return m_beamMode; }
 
     void setBeam(Beam* b);
@@ -92,9 +91,9 @@ public:
     int line() const { return ldata()->up ? upLine() : downLine(); }
     virtual int upLine() const = 0;
     virtual int downLine() const = 0;
-    virtual mu::PointF stemPos() const = 0;
+    virtual PointF stemPos() const = 0;
     virtual double stemPosX() const = 0;
-    virtual mu::PointF stemPosBeam() const = 0;
+    virtual PointF stemPosBeam() const = 0;
     virtual double rightEdge() const = 0;
 
     bool isSmall() const { return m_isSmall; }
@@ -164,6 +163,7 @@ public:
     TDuration crossMeasureDurationType() const { return m_crossMeasureTDur; }
     void setCrossMeasureDurationType(TDuration v) { m_crossMeasureTDur = v; }
 
+    void undoChangeProperty(Pid id, const PropertyValue& newValue, PropertyFlags ps = PropertyFlags::NOSTYLE) override;
     void localSpatiumChanged(double oldValue, double newValue) override;
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;

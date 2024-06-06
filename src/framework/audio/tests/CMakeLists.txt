@@ -18,9 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE_TEST audio_test)
+set(MODULE_TEST muse_audio_test)
 
-if (NOT MUE_ENABLE_AUDIO_JACK)
+if (NOT MUSE_MODULE_AUDIO_JACK)
 
 if(OS_IS_FBSD)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /usr/local/lib/libasound.so")
@@ -38,8 +38,8 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/audioutilstest.cpp
 )
 
-set(MODULE_TEST_LINK audio)
+set(MODULE_TEST_LINK muse_audio)
 
-include(${PROJECT_SOURCE_DIR}/src/framework/testing/gtest.cmake)
+include(SetupGTest)
 
 endif()

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,7 +36,8 @@
 #include "log.h"
 
 using namespace mu;
-using namespace mu::draw;
+using namespace muse;
+using namespace muse::draw;
 using namespace mu::engraving;
 
 static const Settings::Key DEFAULT_STYLE_FILE_PATH("engraving", "engraving/style/defaultStyleFile");
@@ -44,22 +45,25 @@ static const Settings::Key PART_STYLE_FILE_PATH("engraving", "engraving/style/pa
 
 static const Settings::Key INVERT_SCORE_COLOR("engraving", "engraving/scoreColorInversion");
 
+static const Settings::Key DYNAMICS_APPLY_TO_ALL_VOICES("engraving", "score/dynamicsApplyToAllVoices");
+
 struct VoiceColor {
     Settings::Key key;
     Color color;
 };
 
-static VoiceColor VOICE_COLORS[VOICES];
+static VoiceColor VOICE_COLORS[VOICES + 1];
 
 static const Color UNLINKED_ITEM_COLOR = "#FF9300";
 
 void EngravingConfiguration::init()
 {
-    static const Color DEFAULT_VOICE_COLORS[VOICES] {
+    static const Color DEFAULT_VOICE_COLORS[VOICES + 1] {
         "#0065BF",
         "#007F00",
         "#C53F00",
-        "#C31989"
+        "#C31989",
+        "#6038FC", // "all voices"
     };
 
     settings()->setDefaultValue(INVERT_SCORE_COLOR, Val(false));
@@ -71,7 +75,7 @@ void EngravingConfiguration::init()
         Settings::Key key("engraving", "engraving/colors/voice" + std::to_string(voice + 1));
 
         settings()->setDefaultValue(key, Val(DEFAULT_VOICE_COLORS[voice].toQColor()));
-        settings()->setDescription(key, qtrc("engraving", "Voice %1 color").arg(voice + 1).toStdString());
+        settings()->setDescription(key, muse::qtrc("engraving", "Voice %1 color").arg(voice + 1).toStdString());
         settings()->setCanBeManuallyEdited(key, true);
         settings()->valueChanged(key).onReceive(this, [this, voice](const Val& val) {
             Color color = val.toQColor();
@@ -82,29 +86,44 @@ void EngravingConfiguration::init()
         Color currentColor = settings()->value(key).toQColor();
         VOICE_COLORS[voice] = VoiceColor { std::move(key), currentColor };
     }
+
+    static constexpr int ALL_VOICES_IDX = VOICES;
+    Settings::Key key("engraving", "engraving/colors/voiceAll");
+    settings()->setDefaultValue(key, Val(DEFAULT_VOICE_COLORS[ALL_VOICES_IDX].toQColor()));
+    settings()->setDescription(key, muse::qtrc("engraving", "All voices color").toStdString());
+    settings()->setCanBeManuallyEdited(key, true);
+    settings()->valueChanged(key).onReceive(this, [&](const Val& val) {
+        Color color = val.toQColor();
+        VOICE_COLORS[ALL_VOICES_IDX].color = color;
+        m_voiceColorChanged.send(ALL_VOICES_IDX, color);
+    });
+    Color currentColor = settings()->value(key).toQColor();
+    VOICE_COLORS[ALL_VOICES_IDX] = VoiceColor { std::move(key), currentColor };
+
+    settings()->setDefaultValue(DYNAMICS_APPLY_TO_ALL_VOICES, Val(true));
 }
 
-mu::io::path_t EngravingConfiguration::appDataPath() const
+muse::io::path_t EngravingConfiguration::appDataPath() const
 {
     return globalConfiguration()->appDataPath();
 }
 
-mu::io::path_t EngravingConfiguration::defaultStyleFilePath() const
+muse::io::path_t EngravingConfiguration::defaultStyleFilePath() const
 {
     return settings()->value(DEFAULT_STYLE_FILE_PATH).toPath();
 }
 
-void EngravingConfiguration::setDefaultStyleFilePath(const io::path_t& path)
+void EngravingConfiguration::setDefaultStyleFilePath(const muse::io::path_t& path)
 {
     settings()->setSharedValue(DEFAULT_STYLE_FILE_PATH, Val(path.toStdString()));
 }
 
-mu::io::path_t EngravingConfiguration::partStyleFilePath() const
+muse::io::path_t EngravingConfiguration::partStyleFilePath() const
 {
     return settings()->value(PART_STYLE_FILE_PATH).toPath();
 }
 
-void EngravingConfiguration::setPartStyleFilePath(const io::path_t& path)
+void EngravingConfiguration::setPartStyleFilePath(const muse::io::path_t& path)
 {
     settings()->setSharedValue(PART_STYLE_FILE_PATH, Val(path.toStdString()));
 }
@@ -118,11 +137,7 @@ static bool defaultPageSizeIsLetter()
     }
 #ifndef NO_QT_SUPPORT
     // try locale
-#ifdef MU_QT5_COMPAT
-    switch (QLocale::system().country()) {
-#else
     switch (QLocale::system().territory()) {
-#endif
     case QLocale::UnitedStates:
     case QLocale::Canada:
     case QLocale::Mexico:
@@ -151,7 +166,7 @@ SizeF EngravingConfiguration::defaultPageSize() const
     return size;
 }
 
-mu::String EngravingConfiguration::iconsFontFamily() const
+muse::String EngravingConfiguration::iconsFontFamily() const
 {
     return String::fromStdString(uiConfiguration()->iconsFontFamily());
 }
@@ -214,7 +229,17 @@ Color EngravingConfiguration::noteBackgroundColor() const
 
 Color EngravingConfiguration::fontPrimaryColor() const
 {
-    return Color(uiConfiguration()->currentTheme().values[ui::ThemeStyleKey::FONT_PRIMARY_COLOR].toString());
+    return Color(uiConfiguration()->currentTheme().values[muse::ui::ThemeStyleKey::FONT_PRIMARY_COLOR].toString());
+}
+
+Color EngravingConfiguration::timeTickAnchorColorLighter() const
+{
+    return Color(204, 234, 255);
+}
+
+Color EngravingConfiguration::timeTickAnchorColorDarker() const
+{
+    return Color(153, 213, 255);
 }
 
 double EngravingConfiguration::guiScaling() const
@@ -244,7 +269,7 @@ void EngravingConfiguration::setSelectionColor(voice_idx_t voiceIndex, Color col
     settings()->setSharedValue(VOICE_COLORS[voiceIndex].key, Val(color.toQColor()));
 }
 
-mu::async::Channel<voice_idx_t, Color> EngravingConfiguration::selectionColorChanged() const
+muse::async::Channel<voice_idx_t, Color> EngravingConfiguration::selectionColorChanged() const
 {
     return m_voiceColorChanged;
 }
@@ -264,7 +289,17 @@ void EngravingConfiguration::setScoreInversionEnabled(bool value)
     settings()->setSharedValue(INVERT_SCORE_COLOR, Val(value));
 }
 
-mu::async::Notification EngravingConfiguration::scoreInversionChanged() const
+bool EngravingConfiguration::dynamicsApplyToAllVoices() const
+{
+    return settings()->value(DYNAMICS_APPLY_TO_ALL_VOICES).toBool();
+}
+
+void EngravingConfiguration::setDynamicsApplyToAllVoices(bool v)
+{
+    settings()->setSharedValue(DYNAMICS_APPLY_TO_ALL_VOICES, Val(v));
+}
+
+muse::async::Notification EngravingConfiguration::scoreInversionChanged() const
 {
     return m_scoreInversionChanged;
 }
@@ -279,7 +314,7 @@ void EngravingConfiguration::setDebuggingOptions(const DebuggingOptions& options
     m_debuggingOptions.set(options);
 }
 
-mu::async::Notification EngravingConfiguration::debuggingOptionsChanged() const
+muse::async::Notification EngravingConfiguration::debuggingOptionsChanged() const
 {
     return m_debuggingOptions.notification;
 }

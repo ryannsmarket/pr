@@ -19,22 +19,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_EXTENSIONS_EXTENSIONSPROVIDER_H
-#define MU_EXTENSIONS_EXTENSIONSPROVIDER_H
+#ifndef MUSE_EXTENSIONS_EXTENSIONSPROVIDER_H
+#define MUSE_EXTENSIONS_EXTENSIONSPROVIDER_H
 
 #include "modularity/ioc.h"
 #include "../iextensionsconfiguration.h"
 #include "../iextensionsprovider.h"
 #include "global/iinteractive.h"
 
-namespace mu::extensions {
-class ExtensionsProvider : public IExtensionsProvider
+namespace muse::extensions {
+class ExtensionsProvider : public IExtensionsProvider, public Injectable
 {
     Inject<IExtensionsConfiguration> configuration;
     Inject<IInteractive> interactive;
 
 public:
-    ExtensionsProvider() = default;
+    ExtensionsProvider(const modularity::ContextPtr& iocCtx)
+        : Injectable(iocCtx) {}
 
     void reloadPlugins() override;
 
@@ -62,4 +63,4 @@ private:
 };
 }
 
-#endif // MU_EXTENSIONS_EXTENSIONSPROVIDER_H
+#endif // MUSE_EXTENSIONS_EXTENSIONSPROVIDER_H

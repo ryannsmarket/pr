@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -34,7 +34,7 @@
 using namespace mu;
 using namespace mu::notation;
 using namespace mu::engraving;
-using namespace mu::actions;
+using namespace muse::actions;
 using namespace mu::commonscene;
 
 static constexpr int PIXELSSTEPSFACTOR = 5;
@@ -53,7 +53,7 @@ static bool seekAllowed(const mu::engraving::EngravingItem* element)
         ElementType::BAR_LINE
     };
 
-    return contains(playableTypes, element->type());
+    return muse::contains(playableTypes, element->type());
 }
 
 NotationViewInputController::NotationViewInputController(IControlledView* view)
@@ -335,7 +335,7 @@ void NotationViewInputController::doZoomToTwoPages()
     qreal pageHeightScale = 0.0;
     qreal pageWidthScale = 0.0;
 
-    if (configuration()->canvasOrientation().val == mu::Orientation::Vertical) {
+    if (configuration()->canvasOrientation().val == muse::Orientation::Vertical) {
         constexpr qreal VERTICAL_PAGE_GAP = 5.0;
         pageHeightScale = viewHeight / (pageHeight * 2.0 + VERTICAL_PAGE_GAP);
         pageWidthScale = viewWidth / pageWidth;
@@ -409,7 +409,7 @@ constexpr qreal notationScreenPadding = 25.0;
 void NotationViewInputController::moveScreen(int direction)
 {
     auto notation = currentNotation();
-    if (!notation || m_view->width() == 0.0) {
+    if (!notation || muse::RealIsNull(m_view->width())) {
         return;
     }
     auto scale = m_view->currentScaling();
@@ -445,7 +445,7 @@ void NotationViewInputController::movePage(int direction)
         return;
     }
     Page* page = notation->elements()->msScore()->pages().back();
-    if (configuration()->canvasOrientation().val == mu::Orientation::Vertical) {
+    if (configuration()->canvasOrientation().val == muse::Orientation::Vertical) {
         qreal offset = std::min((page->height() + notationScreenPadding) * direction, m_view->toLogical(
                                     QPoint()).y() + notationScreenPadding);
         m_view->moveCanvasVertical(offset);
@@ -568,7 +568,7 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
     }
 
     EngravingItem* hitElement = nullptr;
-    staff_idx_t hitStaffIndex = mu::nidx;
+    staff_idx_t hitStaffIndex = muse::nidx;
 
     if (!m_readonly) {
         m_prevHitElement = hitElementContext().element;
@@ -579,7 +579,7 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
         viewInteraction()->setHitElementContext(context);
 
         hitElement = context.element;
-        hitStaffIndex = context.staff ? context.staff->idx() : mu::nidx;
+        hitStaffIndex = context.staff ? context.staff->idx() : muse::nidx;
     }
 
     // note enter mode
@@ -667,7 +667,7 @@ bool NotationViewInputController::needSelect(const ClickContext& ctx) const
     if (ctx.event->button() == Qt::LeftButton && ctx.event->modifiers() & Qt::ControlModifier) {
         return true;
     } else if (ctx.event->button() == Qt::RightButton && selection->isRange()) {
-        return !selection->range()->containsPoint(ctx.logicClickPos);
+        return !selection->range()->containsItem(ctx.hitElement);
     } else if (!ctx.hitElement->selected()) {
         return true;
     }
@@ -688,7 +688,7 @@ void NotationViewInputController::handleLeftClick(const ClickContext& ctx)
 
     if (!selection->isRange()) {
         if (ctx.hitElement && ctx.hitElement->needStartEditingAfterSelecting()) {
-            viewInteraction()->startEditElement(ctx.hitElement);
+            viewInteraction()->startEditElement(ctx.hitElement, false);
             return;
         }
     }
@@ -748,6 +748,9 @@ void NotationViewInputController::mouseMoveEvent(QMouseEvent* event)
             return;
         }
     }
+
+    m_view->hideContextMenu();
+    m_view->hideElementPopup();
 
     PointF logicPos = m_view->toLogical(event->pos());
 
@@ -861,7 +864,7 @@ void NotationViewInputController::handleLeftClickRelease(const QPointF& releaseP
         return;
     }
 
-    engraving::staff_idx_t staffIndex = ctx.staff ? ctx.staff->idx() : mu::nidx;
+    engraving::staff_idx_t staffIndex = ctx.staff ? ctx.staff->idx() : muse::nidx;
 
     INotationInteractionPtr interaction = viewInteraction();
     interaction->select({ ctx.element }, SelectType::SINGLE, staffIndex);
@@ -900,9 +903,12 @@ void NotationViewInputController::mouseDoubleClickEvent(QMouseEvent* event)
 
     m_tripleClickPending = true;
 
+    const INotationInteraction::HitElementContext& ctx = hitElementContext();
     if (viewInteraction()->isTextEditingStarted()) {
         viewInteraction()->selectText(mu::engraving::SelectTextType::Word);
         return;
+    } else if (viewInteraction()->textEditingAllowed(ctx.element)) {
+        viewInteraction()->startEditText(ctx.element, m_logicalBeginPoint);
     }
 
     PointF logicPos = m_view->toLogical(event->pos());
@@ -932,12 +938,7 @@ void NotationViewInputController::hoverMoveEvent(QHoverEvent* event)
     }
 
     PointF oldPos = m_view->toLogical(event->oldPosF());
-
-#ifdef MU_QT5_COMPAT
-    PointF pos = m_view->toLogical(event->posF());
-#else
     PointF pos = m_view->toLogical(event->position());
-#endif
 
     if (oldPos == pos) {
         return;
@@ -968,6 +969,13 @@ void NotationViewInputController::keyPressEvent(QKeyEvent* event)
             dispatcher()->dispatch("edit-text");
             event->accept();
         }
+    }
+}
+
+void NotationViewInputController::keyReleaseEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Shift) {
+        viewInteraction()->editElement(event);
     }
 }
 
@@ -1072,13 +1080,8 @@ void NotationViewInputController::dragMoveEvent(QDragMoveEvent* event)
         }
     }
 
-#ifdef MU_QT5_COMPAT
-    PointF pos = m_view->toLogical(event->pos());
-    Qt::KeyboardModifiers modifiers = event->keyboardModifiers();
-#else
     PointF pos = m_view->toLogical(event->position());
     Qt::KeyboardModifiers modifiers = event->modifiers();
-#endif
 
     bool isAccepted = viewInteraction()->isDropAccepted(pos, modifiers);
     if (isAccepted) {
@@ -1095,13 +1098,8 @@ void NotationViewInputController::dragLeaveEvent(QDragLeaveEvent*)
 
 void NotationViewInputController::dropEvent(QDropEvent* event)
 {
-#ifdef MU_QT5_COMPAT
-    PointF pos = m_view->toLogical(event->pos());
-    Qt::KeyboardModifiers modifiers = event->keyboardModifiers();
-#else
     PointF pos = m_view->toLogical(event->position());
     Qt::KeyboardModifiers modifiers = event->modifiers();
-#endif
 
     bool isAccepted = viewInteraction()->drop(pos, modifiers);
     if (isAccepted) {
@@ -1136,11 +1134,11 @@ ElementType NotationViewInputController::selectionType() const
     return ElementType::PAGE;
 }
 
-mu::PointF NotationViewInputController::selectionElementPos() const
+muse::PointF NotationViewInputController::selectionElementPos() const
 {
     auto selection = viewInteraction()->selection();
     if (!selection) {
-        return mu::PointF();
+        return muse::PointF();
     }
 
     if (auto hitElement = hitElementContext().element) {
@@ -1152,7 +1150,7 @@ mu::PointF NotationViewInputController::selectionElementPos() const
         return selectedElement->canvasBoundingRect().center();
     }
 
-    return mu::PointF();
+    return muse::PointF();
 }
 
 void NotationViewInputController::togglePopupForItemIfSupports(const EngravingItem* item)

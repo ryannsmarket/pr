@@ -20,8 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_AUDIO_FLUIDSEQUENCER_H
-#define MU_AUDIO_FLUIDSEQUENCER_H
+#ifndef MUSE_AUDIO_FLUIDSEQUENCER_H
+#define MUSE_AUDIO_FLUIDSEQUENCER_H
 
 #include "global/async/channel.h"
 #include "midi/midievent.h"
@@ -30,13 +30,14 @@
 #include "../../abstracteventsequencer.h"
 #include "soundmapping.h"
 
-namespace mu::audio {
+namespace muse::audio {
 class FluidSequencer : public AbstractEventSequencer<midi::Event>
 {
 public:
     void init(const mpe::PlaybackSetupData& setupData, const std::optional<midi::Program>& programOverride);
 
     int currentExpressionLevel() const;
+    int naturalExpressionLevel() const;
 
     void updateOffStreamEvents(const mpe::PlaybackEventsMap& events, const mpe::PlaybackParamMap& params) override;
     void updateMainStreamEvents(const mpe::PlaybackEventsMap& events, const mpe::DynamicLevelMap& dynamics,
@@ -67,4 +68,4 @@ private:
 };
 }
 
-#endif // MU_AUDIO_FLUIDSEQUENCER_H
+#endif // MUSE_AUDIO_FLUIDSEQUENCER_H

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -141,6 +141,7 @@ class ShadowNote;
 
 struct Interval;
 struct NoteVal;
+struct ShowAnchors;
 
 enum class BeatType : char;
 enum class Key;
@@ -196,10 +197,10 @@ struct MidiInputEvent {
 
 struct Position {
     Segment* segment = nullptr;
-    staff_idx_t staffIdx = mu::nidx;
+    staff_idx_t staffIdx = muse::nidx;
     int line = 0;
     int fret = INVALID_FRET_INDEX;
-    mu::PointF pos;
+    PointF pos;
 };
 
 //---------------------------------------------------------
@@ -209,6 +210,19 @@ struct Position {
 enum class PlayMode : char {
     SYNTHESIZER,
     AUDIO
+};
+
+struct ShowAnchors {
+    staff_idx_t staffIdx;
+    Fraction startTick;
+    Fraction endTick;
+
+    void reset()
+    {
+        staffIdx = muse::nidx;
+        startTick = Fraction(-1, 1);
+        endTick = Fraction(-1, 1);
+    }
 };
 
 //---------------------------------------------------------------------------------------
@@ -237,18 +251,19 @@ enum class PlayMode : char {
 //    a Score has always an associated MasterScore
 //---------------------------------------------------------------------------------------
 
-class Score : public EngravingObject
+class Score : public EngravingObject, public muse::Injectable
 {
     OBJECT_ALLOCATOR(engraving, Score)
     DECLARE_CLASSOF(ElementType::SCORE)
 
-    Inject<draw::IImageProvider> imageProvider;
-    Inject<IEngravingConfiguration> configuration;
-    Inject<IEngravingFontsProvider> engravingFonts;
-    Inject<IApplication> application;
+    muse::Inject<muse::draw::IImageProvider> imageProvider = { this };
+    muse::Inject<IEngravingConfiguration> configuration = { this };
+    muse::Inject<IEngravingFontsProvider> engravingFonts = { this };
+    muse::Inject<muse::IApplication> application = { this };
+    muse::Inject<IEngravingElementsProvider> elementsProvider = { this };
 
     // internal
-    Inject<rendering::IScoreRenderer> renderer;
+    muse::Inject<rendering::IScoreRenderer> renderer = { this };
 
 public:
     Score(const Score&) = delete;
@@ -276,10 +291,10 @@ public:
 
     ShadowNote* shadowNote() const;
 
-    mu::async::Channel<LoopBoundaryType, unsigned> loopBoundaryTickChanged() const;
+    muse::async::Channel<LoopBoundaryType, unsigned> loopBoundaryTickChanged() const;
     void notifyLoopBoundaryTickChanged(LoopBoundaryType type, unsigned ticks);
 
-    mu::async::Channel<EngravingItem*> elementDestroyed();
+    muse::async::Channel<EngravingItem*> elementDestroyed();
 
     void rebuildBspTree();
     bool noStaves() const { return m_staves.empty(); }
@@ -293,12 +308,14 @@ public:
     void addMeasure(MeasureBase*, MeasureBase*);
     void linkMeasures(Score* score);
     void setResetAutoplace() { m_resetAutoplace = true; }
+    void setResetCrossBeams() { m_resetCrossBeams = true; }
 
     Excerpt* excerpt() { return m_excerpt; }
     void setExcerpt(Excerpt* e) { m_excerpt = e; }
 
     // methods for resetting elements for pre-4.0 score migration
     void resetAutoplace();
+    void resetCrossBeams();
 
     void cmdAddBracket();
     void cmdAddParentheses();
@@ -370,16 +387,16 @@ public:
     staff_idx_t staffIdx(const Staff*) const;
     staff_idx_t staffIdx(const Part*) const;
     Staff* staff(size_t n) const { return (n < m_staves.size()) ? m_staves.at(n) : nullptr; }
-    Staff* staffById(const ID& staffId) const;
-    Part* partById(const ID& partId) const;
+    Staff* staffById(const muse::ID& staffId) const;
+    Part* partById(const muse::ID& partId) const;
 
     void clearSystemObjectStaves();
     void addSystemObjectStaff(Staff* staff);
     const std::vector<Staff*>& systemObjectStaves() const { return m_systemObjectStaves; }
     bool isSystemObjectStaff(Staff* staff) const;
 
-    Measure* pos2measure(const mu::PointF&, staff_idx_t* staffIdx, int* pitch, Segment**, mu::PointF* offset) const;
-    void dragPosition(const mu::PointF&, staff_idx_t* staffIdx, Segment**, double spacingFactor = 0.5) const;
+    Measure* pos2measure(const PointF&, staff_idx_t* staffIdx, int* pitch, Segment**, PointF* offset) const;
+    void dragPosition(const PointF&, staff_idx_t* staffIdx, Segment**, double spacingFactor = 0.5, bool allowTimeAnchor = false) const;
 
     void undoAddElement(EngravingItem* element, bool addToLinkedStaves = true, bool ctrlModifier = false,
                         EngravingItem* elementToRelink = nullptr);
@@ -394,7 +411,7 @@ public:
     void undoChangeChordRestLen(ChordRest* cr, const TDuration&);
     void undoTransposeHarmony(Harmony*, int, int);
     void undoExchangeVoice(Measure* measure, voice_idx_t val1, voice_idx_t val2, staff_idx_t staff1, staff_idx_t staff2);
-    void undoRemovePart(Part* part, size_t partIdx = mu::nidx);
+    void undoRemovePart(Part* part, size_t partIdx = muse::nidx);
     void undoInsertPart(Part* part, size_t targetPartIndex);
     void undoRemoveStaff(Staff* staff);
     void undoInsertStaff(Staff* staff, staff_idx_t idx, bool createRests=true);
@@ -484,12 +501,12 @@ public:
     void cmdDeleteSelection();
     void cmdFullMeasureRest();
 
-    Ret putNote(const mu::PointF&, bool replace, bool insert);
-    Ret insertChordByInsertingTime(const Position&);
+    muse::Ret putNote(const PointF&, bool replace, bool insert);
+    muse::Ret insertChordByInsertingTime(const Position&);
 
     void cloneVoice(track_idx_t strack, track_idx_t dtrack, Segment* sf, const Fraction& lTick, bool link = true, bool spanner = true);
 
-    Ret repitchNote(const Position& pos, bool replace);
+    muse::Ret repitchNote(const Position& pos, bool replace);
     void regroupNotesAndRests(const Fraction& startTick, const Fraction& endTick, track_idx_t track);
 
     void startCmd();                    // start undoable command
@@ -498,20 +515,20 @@ public:
     void lockUpdates(bool locked);
     void undoRedo(bool undo, EditData*);
 
-    virtual mu::async::Channel<ScoreChangesRange> changesChannel() const;
+    virtual muse::async::Channel<ScoreChangesRange> changesChannel() const;
 
     void cmdRemoveTimeSig(TimeSig*);
     void cmdAddTimeSig(Measure*, staff_idx_t staffIdx, TimeSig*, bool local);
 
     virtual void setUpdateAll();
-    void setLayoutAll(staff_idx_t staff = mu::nidx, const EngravingItem* e = nullptr);
+    void setLayoutAll(staff_idx_t staff = muse::nidx, const EngravingItem* e = nullptr);
     void setLayout(const Fraction& tick, staff_idx_t staff, const EngravingItem* e = nullptr);
     void setLayout(const Fraction& tick1, const Fraction& tick2, staff_idx_t staff1, staff_idx_t staff2, const EngravingItem* e = nullptr);
     virtual CmdState& cmdState();
     virtual const CmdState& cmdState() const;
     virtual void addLayoutFlags(LayoutFlags);
     virtual void setInstrumentsChanged(bool);
-    void addRefresh(const mu::RectF&);
+    void addRefresh(const RectF&);
 
     void cmdToggleAutoplace(bool all);
 
@@ -554,7 +571,11 @@ public:
     void setMarkIrregularMeasures(bool v);
     void setShowInstrumentNames(bool v) { m_showInstrumentNames = v; }
 
-    void print(mu::draw::Painter* printer, int page);
+    void hideAnchors() { m_showAnchors.reset(); }
+    void updateShowAnchors(staff_idx_t staffIdx, const Fraction& startTick, const Fraction& endTick);
+    const ShowAnchors& showAnchors() const { return m_showAnchors; }
+
+    void print(muse::draw::Painter* printer, int page);
     ChordRest* getSelectedChordRest() const;
     std::set<ChordRest*> getSelectedChordRests() const;
     void getSelectedChordRest2(ChordRest** cr1, ChordRest** cr2) const;
@@ -584,8 +605,8 @@ public:
     Segment* tick2segmentMM(const Fraction& tick, bool first, SegmentType st) const;
     Segment* tick2segmentMM(const Fraction& tick) const;
     Segment* tick2segmentMM(const Fraction& tick, bool first) const;
-    Segment* tick2leftSegment(const Fraction& tick, bool useMMrest = false, SegmentType st = SegmentType::ChordRest) const;
-    Segment* tick2rightSegment(const Fraction& tick, bool useMMrest = false) const;
+    Segment* tick2leftSegment(const Fraction& tick, bool useMMrest = false, SegmentType segType = SegmentType::ChordRest) const;
+    Segment* tick2rightSegment(const Fraction& tick, bool useMMrest = false, SegmentType segType = SegmentType::ChordRest) const;
     Segment* tick2leftSegmentMM(const Fraction& tick) { return tick2leftSegment(tick, /* useMMRest */ true); }
 
     void setUpTempoMapLater();
@@ -622,7 +643,7 @@ public:
 
     ChordList* chordList() { return &m_chordList; }
     const ChordList* chordList() const { return &m_chordList; }
-    void checkChordList() { m_chordList.checkChordList(style()); }
+    void checkChordList();
 
     MStyle& style() { return m_style; }
     const MStyle& style() const { return m_style; }
@@ -699,16 +720,16 @@ public:
     void setBracketsAndBarlines();
     void remapBracketsAndBarlines();
 
-    void lassoSelect(const mu::RectF&);
+    void lassoSelect(const RectF&);
     void lassoSelectEnd();
 
-    Page* searchPage(const mu::PointF&) const;
-    std::vector<System*> searchSystem(const mu::PointF& p, const System* preferredSystem = nullptr, double spacingFactor = 0.5,
+    Page* searchPage(const PointF&) const;
+    std::vector<System*> searchSystem(const PointF& p, const System* preferredSystem = nullptr, double spacingFactor = 0.5,
                                       double preferredSpacingFactor = 1.0) const;
-    Measure* searchMeasure(const mu::PointF& p, const System* preferredSystem = nullptr, double spacingFactor = 0.5,
+    Measure* searchMeasure(const PointF& p, const System* preferredSystem = nullptr, double spacingFactor = 0.5,
                            double preferredSpacingFactor = 1.0) const;
 
-    bool getPosition(Position* pos, const mu::PointF&, voice_idx_t voice) const;
+    bool getPosition(Position* pos, const PointF&, voice_idx_t voice) const;
 
     void cmdDeleteTuplet(Tuplet*, bool replaceWithRest);
     Measure* getCreateMeasure(const Fraction& tick);
@@ -732,7 +753,7 @@ public:
     void cmdMirrorNoteHead();
 
     virtual size_t npages() const { return m_pages.size(); }
-    virtual page_idx_t pageIdx(const Page* page) const { return mu::indexOf(m_pages, page); }
+    virtual page_idx_t pageIdx(const Page* page) const { return muse::indexOf(m_pages, page); }
     virtual const std::vector<Page*>& pages() const { return m_pages; }
     virtual std::vector<Page*>& pages() { return m_pages; }
 
@@ -866,18 +887,22 @@ public:
     bool isSpannerStartEnd(const Fraction& tick, track_idx_t track) const;
     void removeSpanner(Spanner*);
     void addSpanner(Spanner*, bool computeStartEnd = true);
-    void cmdAddSpanner(Spanner* spanner, const mu::PointF& pos, bool systemStavesOnly = false);
+    void cmdAddSpanner(Spanner* spanner, const PointF& pos, bool systemStavesOnly = false);
     void cmdAddSpanner(Spanner* spanner, staff_idx_t staffIdx, Segment* startSegment, Segment* endSegment, bool ctrlModifier = false);
     void checkSpanner(const Fraction& startTick, const Fraction& lastTick, bool removeOrphans = true);
     const std::set<Spanner*>& unmanagedSpanners() const { return m_unmanagedSpanner; }
     void addUnmanagedSpanner(Spanner*);
     void removeUnmanagedSpanner(Spanner*);
 
+    void addHairpinToChordRest(Hairpin* hairpin, ChordRest* chordRest);
+    void addHairpinToDynamic(Hairpin* hairpin, Dynamic* dynamic);
+
     Hairpin* addHairpin(HairpinType, const Fraction& tickStart, const Fraction& tickEnd, track_idx_t track);
     Hairpin* addHairpin(HairpinType, ChordRest* cr1, ChordRest* cr2 = nullptr);
 
     ChordRest* findCR(Fraction tick, track_idx_t track) const;
-    ChordRest* findCRinStaff(const Fraction& tick, staff_idx_t staffIdx) const;
+    ChordRest* findChordRestEndingBeforeTickInStaff(const Fraction& tick, staff_idx_t staffIdx) const;
+    ChordRest* findChordRestEndingBeforeTickInTrack(const Fraction& tick, track_idx_t trackIdx) const;
     void insertTime(const Fraction& tickPos, const Fraction& tickLen);
 
     std::shared_ptr<IEngravingFont> engravingFont() const { return m_engravingFont; }
@@ -922,11 +947,11 @@ public:
     Measure* firstTrailingMeasure(ChordRest** cr = nullptr);
     ChordRest* cmdTopStaff(ChordRest* cr = nullptr);
 
-    std::shared_ptr<mu::draw::Pixmap> createThumbnail();
+    std::shared_ptr<muse::draw::Pixmap> createThumbnail();
     String createRehearsalMarkText(RehearsalMark* current) const;
     String nextRehearsalMarkText(RehearsalMark* previous, RehearsalMark* current) const;
 
-    Ret sanityCheckLocal();
+    muse::Ret sanityCheckLocal();
 
     bool checkKeys();
 
@@ -967,7 +992,7 @@ public:
 protected:
 
     friend class MasterScore;
-    Score();
+    Score(const muse::modularity::ContextPtr& iocCtx);
     Score(MasterScore*, bool forcePartStyle = true);
     Score(MasterScore*, const MStyle&);
 
@@ -1011,7 +1036,7 @@ private:
     void selectAdd(EngravingItem* e);
     void selectRange(EngravingItem* e, staff_idx_t staffIdx);
 
-    Ret putNote(const Position&, bool replace);
+    muse::Ret putNote(const Position&, bool replace);
 
     void resetTempo();
     void resetTempoRange(const Fraction& tick1, const Fraction& tick2);
@@ -1026,8 +1051,8 @@ private:
 
     void update(bool resetCmdState, bool layoutAllParts = false);
 
-    ID newStaffId() const;
-    ID newPartId() const;
+    muse::ID newStaffId() const;
+    muse::ID newPartId() const;
 
     void assignIdIfNeed(Staff& staff) const;
     void assignIdIfNeed(Part& part) const;
@@ -1079,8 +1104,11 @@ private:
     bool m_printing = false;                // True if we are drawing to a printer
     bool m_savedCapture = false;            // True if we saved an image capture
 
+    ShowAnchors m_showAnchors;
+
     ScoreOrder m_scoreOrder;                 // used for score ordering
     bool m_resetAutoplace = false;
+    bool m_resetCrossBeams = false;
     int m_mscVersion = Constants::MSC_VERSION;     // version of current loading *.msc file
 
     bool m_isOpen = false;
@@ -1096,11 +1124,11 @@ private:
     RootItem* m_rootItem = nullptr;
     LayoutOptions m_layoutOptions;
 
-    mu::async::Channel<EngravingItem*> m_elementDestroyed;
+    muse::async::Channel<EngravingItem*> m_elementDestroyed;
 
     ShadowNote* m_shadowNote = nullptr;
 
-    mu::async::Channel<LoopBoundaryType, unsigned> m_loopBoundaryTickChanged;
+    muse::async::Channel<LoopBoundaryType, unsigned> m_loopBoundaryTickChanged;
 
     PaddingTable m_paddingTable;
     double m_minimumPaddingUnit = 0.0;

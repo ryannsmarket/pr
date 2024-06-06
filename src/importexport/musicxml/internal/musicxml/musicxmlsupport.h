@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,8 +26,9 @@
 #include "engraving/types/fraction.h"
 #include "engraving/dom/mscore.h"
 #include "engraving/dom/note.h"
+#include "engraving/dom/fret.h"
 
-namespace mu {
+namespace muse {
 class XmlStreamReader;
 }
 
@@ -73,6 +74,27 @@ struct MusicXmlArpeggioDesc {
         : arp(arp), no(no) {}
 };
 typedef std::multimap<int, MusicXmlArpeggioDesc> ArpeggioMap;
+
+/**
+ The description of a chord symbol with or without a fret diagram
+ */
+
+struct HarmonyDesc
+{
+    track_idx_t m_track;
+    bool fretDiagramVisible() const { return m_fretDiagram ? m_fretDiagram->visible() : false; }
+    Harmony* m_harmony;
+    FretDiagram* m_fretDiagram;
+
+    HarmonyDesc(track_idx_t m_track, Harmony* m_harmony, FretDiagram* m_fretDiagram)
+        : m_track(m_track), m_harmony(m_harmony),
+        m_fretDiagram(m_fretDiagram) {}
+
+    HarmonyDesc()
+        : m_track(0), m_harmony(nullptr), m_fretDiagram(nullptr) {}
+};
+
+using HarmonyMap = std::multimap<int, HarmonyDesc>;
 
 //---------------------------------------------------------
 //   VoiceDesc
@@ -222,11 +244,12 @@ extern String accSymId2SmuflMxmlString(const SymId id);
 extern String accidentalType2MxmlString(const AccidentalType type);
 extern String accidentalType2SmuflMxmlString(const AccidentalType type);
 extern AccidentalType mxmlString2accidentalType(const String mxmlName, const String smufl);
+extern String mxmlAccidentalTextToChar(const String mxmlName);
 extern SymId mxmlString2accSymId(const String mxmlName, const String smufl = {});
 extern AccidentalType microtonalGuess(double val);
 extern bool isLaissezVibrer(const SymId id);
 extern const Articulation* findLaissezVibrer(const Chord* chord);
 extern String errorStringWithLocation(int line, int col, const String& error);
-extern String checkAtEndElement(const XmlStreamReader& e, const String& expName);
+extern String checkAtEndElement(const muse::XmlStreamReader& e, const String& expName);
 } // namespace Ms
 #endif

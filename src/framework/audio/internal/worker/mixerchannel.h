@@ -19,18 +19,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_AUDIO_MIXERCHANNEL_H
-#define MU_AUDIO_MIXERCHANNEL_H
+#ifndef MUSE_AUDIO_MIXERCHANNEL_H
+#define MUSE_AUDIO_MIXERCHANNEL_H
 
 #include "global/modularity/ioc.h"
 #include "global/async/asyncable.h"
+#include "global/async/notification.h"
 
 #include "ifxresolver.h"
 #include "ifxprocessor.h"
 #include "track.h"
 #include "internal/dsp/compressor.h"
 
-namespace mu::audio {
+namespace muse::audio {
 class MixerChannel : public ITrackAudioOutput, public async::Asyncable
 {
     Inject<fx::IFxResolver> fxResolver;
@@ -40,6 +41,12 @@ public:
     explicit MixerChannel(const TrackId trackId, const unsigned int sampleRate, unsigned int audioChannelsCount);
 
     TrackId trackId() const;
+    IAudioSourcePtr source() const;
+
+    bool muted() const;
+    async::Notification mutedChanged() const;
+
+    void notifyNoAudioSignal();
 
     const AudioOutputParams& outputParams() const override;
     void applyOutputParams(const AudioOutputParams& requiredParams) override;
@@ -70,6 +77,7 @@ private:
 
     dsp::CompressorPtr m_compressor = nullptr;
 
+    async::Notification m_mutedChanged;
     mutable async::Channel<AudioOutputParams> m_paramsChanges;
     mutable AudioSignalsNotifier m_audioSignalNotifier;
 };
@@ -77,4 +85,4 @@ private:
 using MixerChannelPtr = std::shared_ptr<MixerChannel>;
 }
 
-#endif // MU_AUDIO_MIXERCHANNEL_H
+#endif // MUSE_AUDIO_MIXERCHANNEL_H

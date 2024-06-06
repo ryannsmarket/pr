@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_EXTENSIONS_EXTENSIONSUIENGINE_H
-#define MU_EXTENSIONS_EXTENSIONSUIENGINE_H
+#ifndef MUSE_EXTENSIONS_EXTENSIONSUIENGINE_H
+#define MUSE_EXTENSIONS_EXTENSIONSUIENGINE_H
 
 #include <QObject>
 
@@ -32,16 +32,18 @@
 #include "../api/extapi.h"
 #include "../api/v1/extapiv1.h"
 
-namespace mu::extensions {
+namespace muse::extensions {
 class QmlApiEngine;
-class ExtensionsUiEngine : public QObject, public IExtensionsUiEngine
+class ExtensionsUiEngine : public QObject, public IExtensionsUiEngine, public Injectable
 {
     Q_OBJECT
 
-    Inject<ui::IUiEngine> uiEngine;
+    Inject<ui::IUiEngine> uiEngine = { this };
 
 public:
-    ExtensionsUiEngine() = default;
+    ExtensionsUiEngine(const modularity::ContextPtr& iocCtx)
+        : Injectable(iocCtx) {}
+
     ~ExtensionsUiEngine();
 
     QQmlEngine* qmlEngine() const;
@@ -67,4 +69,4 @@ private:
 };
 }
 
-#endif // MU_EXTENSIONS_EXTENSIONSUIENGINE_H
+#endif // MUSE_EXTENSIONS_EXTENSIONSUIENGINE_H

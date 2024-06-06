@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2024 MuseScore BVBA and others
+ * Copyright (C) 2024 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,16 +29,16 @@
 #include "engraving/dom/instrtemplate.h"
 #include "engraving/dom/mscore.h"
 
-static mu::testing::SuiteEnvironment importexport_se(
+static muse::testing::SuiteEnvironment importexport_se(
 {
-    new mu::draw::DrawModule(),
+    new muse::draw::DrawModule(),
     new mu::engraving::EngravingModule()
 },
     nullptr,
     []() {
     LOGI() << "notation tests suite post init";
 
-    mu::engraving::ScoreRW::setRootPath(mu::String::fromUtf8(notation_tests_DATA_ROOT));
+    mu::engraving::ScoreRW::setRootPath(muse::String::fromUtf8(notation_tests_DATA_ROOT));
 
     mu::engraving::MScore::testMode = true;
     mu::engraving::MScore::testWriteStyleToScore = false;

@@ -31,7 +31,8 @@
 
 #include "log.h"
 
-using namespace mu::audio;
+using namespace muse;
+using namespace muse::audio;
 
 void RegisterAudioPluginsScenario::init()
 {
@@ -47,7 +48,7 @@ void RegisterAudioPluginsScenario::init()
     }
 }
 
-mu::Ret RegisterAudioPluginsScenario::registerNewPlugins()
+Ret RegisterAudioPluginsScenario::registerNewPlugins()
 {
     TRACEFUNC;
 
@@ -64,7 +65,7 @@ mu::Ret RegisterAudioPluginsScenario::registerNewPlugins()
     }
 
     if (newPluginPaths.empty()) {
-        return make_ok();
+        return muse::make_ok();
     }
 
     processPluginsRegistration(newPluginPaths);
@@ -75,7 +76,7 @@ mu::Ret RegisterAudioPluginsScenario::registerNewPlugins()
 
 void RegisterAudioPluginsScenario::processPluginsRegistration(const io::paths_t& pluginPaths)
 {
-    Ret ret = interactive()->showProgress(mu::trc("audio", "Scanning audio plugins"), &m_progress);
+    Ret ret = interactive()->showProgress(muse::trc("audio", "Scanning audio plugins"), &m_progress);
     if (!ret) {
         LOGE() << ret.toString();
     }
@@ -107,10 +108,10 @@ void RegisterAudioPluginsScenario::processPluginsRegistration(const io::paths_t&
         }
     }
 
-    m_progress.finished.send(make_ok());
+    m_progress.finished.send(muse::make_ok());
 }
 
-mu::Ret RegisterAudioPluginsScenario::registerPlugin(const io::path_t& pluginPath)
+Ret RegisterAudioPluginsScenario::registerPlugin(const io::path_t& pluginPath)
 {
     TRACEFUNC;
 
@@ -142,10 +143,10 @@ mu::Ret RegisterAudioPluginsScenario::registerPlugin(const io::path_t& pluginPat
         }
     }
 
-    return make_ok();
+    return muse::make_ok();
 }
 
-mu::Ret RegisterAudioPluginsScenario::registerFailedPlugin(const io::path_t& pluginPath, int failCode)
+Ret RegisterAudioPluginsScenario::registerFailedPlugin(const io::path_t& pluginPath, int failCode)
 {
     TRACEFUNC;
 

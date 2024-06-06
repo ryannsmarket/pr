@@ -19,15 +19,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_DRAW_IFONTFACE_H
-#define MU_DRAW_IFONTFACE_H
+#ifndef MUSE_DRAW_IFONTFACE_H
+#define MUSE_DRAW_IFONTFACE_H
 
 #include <msdfgen.h>
 
 #include "global/io/path.h"
 #include "types/fontstypes.h"
 
-namespace mu::draw {
+namespace muse::draw {
 using f26dot6_t = long;         // A signed 26.6 fixed-point type used for vectorial pixel coordinates.
 
 inline long to_f26d6(float v) { return static_cast<long>(v * 64); }
@@ -46,7 +46,7 @@ public:
 
     virtual ~IFontFace() = default;
 
-    virtual bool load(const FaceKey& key, const mu::io::path_t& path, bool isSymbolMode) = 0;
+    virtual bool load(const FaceKey& key, const io::path_t& path, bool isSymbolMode) = 0;
 
     virtual const FaceKey& key() const = 0;
     virtual bool isSymbolMode() const = 0;
@@ -131,4 +131,4 @@ inline bool operator==(const msdfgen::Shape& s1, const msdfgen::Shape& s2)
     return true;
 }
 
-#endif // MU_DRAW_IFONTFACE_H
+#endif // MUSE_DRAW_IFONTFACE_H

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -288,7 +288,7 @@ void MeasureLayout::createMMRest(LayoutContext& ctx, Measure* firstMeasure, Meas
     ElementList oldList = mmrMeasure->takeElements();
     ElementList newList = lastMeasure->el();
     for (EngravingItem* e : firstMeasure->el()) {
-        if (e->isMarker()) {
+        if (e->isMarker() && firstMeasure != lastMeasure) {
             newList.push_back(e);
         }
     }
@@ -465,13 +465,13 @@ void MeasureLayout::createMMRest(LayoutContext& ctx, Measure* firstMeasure, Meas
         // clone elements from underlying measure to mmr
         for (EngravingItem* e : underlyingSeg->annotations()) {
             // look at elements in underlying measure
-            if (!mu::contains(BREAK_TYPES, e->type())) {
+            if (!muse::contains(BREAK_TYPES, e->type())) {
                 continue;
             }
             // try to find a match in mmr
             bool found = false;
             for (EngravingItem* ee : s->annotations()) {
-                if (mu::contains(e->linkList(), static_cast<EngravingObject*>(ee))) {
+                if (muse::contains(e->linkList(), static_cast<EngravingObject*>(ee))) {
                     found = true;
                     break;
                 }
@@ -488,13 +488,13 @@ void MeasureLayout::createMMRest(LayoutContext& ctx, Measure* firstMeasure, Meas
         // this should not happen since the elements are linked?
         const auto annotations = s->annotations(); // make a copy since we alter the list
         for (EngravingItem* e : annotations) { // look at elements in mmr
-            if (!mu::contains(BREAK_TYPES, e->type())) {
+            if (!muse::contains(BREAK_TYPES, e->type())) {
                 continue;
             }
             // try to find a match in underlying measure
             bool found = false;
             for (EngravingItem* ee : underlyingSeg->annotations()) {
-                if (mu::contains(e->linkList(), static_cast<EngravingObject*>(ee))) {
+                if (muse::contains(e->linkList(), static_cast<EngravingObject*>(ee))) {
                     found = true;
                     break;
                 }
@@ -536,7 +536,7 @@ static bool validMMRestMeasure(const LayoutContext& ctx, const Measure* m)
             if (!e->staff()->show()) {
                 continue;
             }
-            if (!mu::contains(BREAK_TYPES, e->type())) {
+            if (!muse::contains(BREAK_TYPES, e->type())) {
                 return false;
             }
         }
@@ -607,7 +607,7 @@ static bool breakMultiMeasureRest(const LayoutContext& ctx, Measure* m)
         Fraction measureEnd = m->endTick();
         bool spannerStartsInside = spannerStart >= measureStart && spannerStart < measureEnd;
         bool spannerEndsInside = spannerEnd >= measureStart && spannerEnd < measureEnd;
-        if (mu::contains(breakSpannerTypes, s->type()) && (spannerStartsInside || spannerEndsInside)) {
+        if (muse::contains(breakSpannerTypes, s->type()) && (spannerStartsInside || spannerEndsInside)) {
             return true;
         }
     }
@@ -623,7 +623,7 @@ static bool breakMultiMeasureRest(const LayoutContext& ctx, Measure* m)
             Fraction measureEnd = prevMeas->endTick();
             bool spannerStartsInside = spannerStart > measureStart && spannerStart < measureEnd;
             bool spannerEndsInside = spannerEnd > measureStart && spannerEnd < measureEnd;
-            if (mu::contains(breakSpannerTypes, s->type()) && (spannerStartsInside || spannerEndsInside)) {
+            if (muse::contains(breakSpannerTypes, s->type()) && (spannerStartsInside || spannerEndsInside)) {
                 return true;
             }
         }
@@ -655,11 +655,11 @@ static bool breakMultiMeasureRest(const LayoutContext& ctx, Measure* m)
     }
 
     auto breakForAnnotation = [&](EngravingItem* e) {
-        if (mu::contains(ALWAYS_BREAK_TYPES, e->type())) {
+        if (muse::contains(ALWAYS_BREAK_TYPES, e->type())) {
             return true;
         }
         bool breakForElement = e->systemFlag() || e->staff()->show();
-        if (mu::contains(CONDITIONAL_BREAK_TYPES, e->type()) && breakForElement) {
+        if (muse::contains(CONDITIONAL_BREAK_TYPES, e->type()) && breakForElement) {
             return true;
         }
         return false;
@@ -1731,7 +1731,8 @@ void MeasureLayout::addSystemHeader(Measure* m, bool isFirstSystem, LayoutContex
                 if (isFirstClef && searchMeasure->tick() >= clefTick) {
                     // Need to check previous measure for clef change if one not found in this measure
                     Segment* clefSeg = searchMeasure->findFirstR(SegmentType::Clef | SegmentType::HeaderClef, Fraction(0, 0));
-                    if (Measure* prevMeas = searchMeasure->prevMeasure(); !clefSeg) {
+                    Measure* prevMeas = searchMeasure->prevMeasure();
+                    if (prevMeas && !clefSeg) {
                         clefSeg = prevMeas->findSegment(SegmentType::Clef, m->tick());
                     }
                     if (clefSeg && clefSeg->enabled()) {
@@ -1750,11 +1751,7 @@ void MeasureLayout::addSystemHeader(Measure* m, bool isFirstSystem, LayoutContex
                         }
                     }
                 }
-                // Get next measure, factoring in MMRs
-                searchMeasure = searchMeasure->nextMeasure();
-                if (searchMeasure && searchMeasure->hasMMRest()) {
-                    searchMeasure = searchMeasure->mmRest();
-                }
+                searchMeasure = searchMeasure->nextMeasureMM();
             }
         }
 
@@ -1925,6 +1922,9 @@ void MeasureLayout::removeSystemTrailer(Measure* m, LayoutContext& ctx)
 {
     bool changed = false;
     for (Segment* seg = m->last(); seg != m->first(); seg = seg->prev()) {
+        if (seg->isTimeTickType()) {
+            continue;
+        }
         if (!seg->trailer()) {
             break;
         }
@@ -2049,9 +2049,9 @@ void MeasureLayout::stretchMeasureInPracticeMode(Measure* m, double targetWidth,
             double spacing = s->spacing();
             double widthWithoutSpacing = s->width() - spacing;
             double segmentStretch = s->stretch();
-            x += spacing * (RealIsNull(segmentStretch) ? 1 : segmentStretch);
+            x += spacing * (muse::RealIsNull(segmentStretch) ? 1 : segmentStretch);
             s->mutldata()->setPosX(x);
-            x += widthWithoutSpacing * (RealIsNull(segmentStretch) ? 1 : segmentStretch);
+            x += widthWithoutSpacing * (muse::RealIsNull(segmentStretch) ? 1 : segmentStretch);
             s = s->nextEnabled();
         }
     }
@@ -2149,26 +2149,6 @@ void MeasureLayout::computeWidth(Measure* m, LayoutContext& ctx, Fraction minTic
         return;
     }
     double x = 0.0;
-    bool first = m->isFirstInSystem();
-
-    // left barriere:
-    //    Make sure no elements crosses the left boarder if first measure in a system.
-    //
-    Shape ls(first ? RectF(0.0, -DBL_MAX, 0.0, DBL_MAX) : RectF(0.0, 0.0, 0.0, m->spatium() * 4));
-
-    x = HorizontalSpacing::minLeft(s, ls);
-
-    if (s->isStartRepeatBarLineType()) {
-        System* sys = m->system();
-        MeasureBase* pmb = m->prev();
-        if (pmb && pmb->isMeasure() && pmb->system() == sys && pmb->repeatEnd()) {
-            Segment* seg = toMeasure(pmb)->last();
-            // overlap end repeat barline with start repeat barline
-            if (seg->isEndBarLineType()) {
-                x -= ctx.conf().styleMM(Sid::endBarWidth) * m->mag();
-            }
-        }
-    }
 
     ChordLayout::updateGraceNotes(m, ctx);
 
@@ -2177,6 +2157,42 @@ void MeasureLayout::computeWidth(Measure* m, LayoutContext& ctx, Fraction minTic
 
     m->setSqueezableSpace(0.0);
     computeWidth(m, ctx, s, x, isSystemHeader, minTicks, maxTicks, stretchCoeff, overrideMinMeasureWidth);
+}
+
+void MeasureLayout::layoutTimeTickAnchors(Measure* m, LayoutContext& ctx)
+{
+    bool darker = false;
+    for (Segment& segment : m->segments()) {
+        if (!segment.isTimeTickType()) {
+            continue;
+        }
+
+        Segment* prevSeg = segment.prev();
+        while (prevSeg && !prevSeg->isChordRestType()) {
+            prevSeg = prevSeg->prev();
+        }
+        if (!prevSeg || prevSeg->ticks().isZero()) {
+            continue;
+        }
+
+        Fraction prevSegDuration = prevSeg->ticks();
+        Fraction thisDuration = segment.ticks();
+        Fraction relativeTick = segment.rtick() - prevSeg->rtick();
+
+        double relativeX = prevSeg->width() * (relativeTick.toDouble() / prevSeg->ticks().toDouble());
+        double relativeWidth = prevSeg->width() * (thisDuration.toDouble() / prevSegDuration.toDouble());
+
+        segment.mutldata()->setPosX(prevSeg->x() + relativeX);
+        segment.setWidth(relativeWidth);
+
+        for (EngravingItem* item : segment.elist()) {
+            if (item) {
+                TLayout::layoutItem(item, ctx);
+                toTimeTickAnchor(item)->mutldata()->setDarker(darker);
+            }
+        }
+        darker = !darker;
+    }
 }
 
 //---------------------------------------------------------
@@ -2214,7 +2230,8 @@ void MeasureLayout::computeWidth(Measure* m, LayoutContext& ctx, Segment* s, dou
         // skipped in computeMinWidth() -- the only way this would be an issue here is
         // if this method was called specifically with the invisible segment specified
         // which I'm pretty sure doesn't happen at this point. still...
-        if (!s->enabled() || !s->visible() || s->allElementsInvisible() || (s->isRightAligned() && s != m->firstEnabled())) {
+        if (!s->enabled() || !s->visible() || s->allElementsInvisible() || (s->isRightAligned() && s != m->firstEnabled())
+            || s->isTimeTickType()) {
             s->setWidth(0);
             s = s->next();
             continue;
@@ -2412,7 +2429,7 @@ void MeasureLayout::layoutPartialWidth(StaffLines* lines, LayoutContext& ctx, do
         lines->mutldata()->setPosY(st->yoffset().val() * _spatium);
     } else {
         _lines = 5;
-        lines->setColor(EngravingItem::engravingConfiguration()->defaultColor());
+        lines->setColor(lines->configuration()->defaultColor());
     }
     lines->setLw(ctx.conf().styleS(Sid::staffLineWidth).val() * _spatium);
     double x1 = lines->pos().x();
@@ -2425,7 +2442,7 @@ void MeasureLayout::layoutPartialWidth(StaffLines* lines, LayoutContext& ctx, do
         ldata->setBbox(ldata->bbox().adjusted(0, -extraSize, 0, extraSize));
     }
 
-    std::vector<mu::LineF> ll;
+    std::vector<LineF> ll;
     for (int i = 0; i < _lines; ++i) {
         if (alignRight) {
             ll.push_back(LineF(x2 - wPartial, y, x2, y));

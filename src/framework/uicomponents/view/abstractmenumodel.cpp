@@ -25,14 +25,14 @@
 
 #include "log.h"
 
-using namespace mu::uicomponents;
-using namespace mu::ui;
-using namespace mu::actions;
+using namespace muse::uicomponents;
+using namespace muse::ui;
+using namespace muse::actions;
 
 const int AbstractMenuModel::INVALID_ITEM_INDEX = -1;
 
 AbstractMenuModel::AbstractMenuModel(QObject* parent)
-    : QAbstractListModel(parent)
+    : QAbstractListModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
 {
 }
 
@@ -224,7 +224,7 @@ MenuItem* AbstractMenuModel::makeSeparator()
     return item;
 }
 
-void AbstractMenuModel::onActionsStateChanges(const actions::ActionCodeList& codes)
+void AbstractMenuModel::onActionsStateChanges(const muse::actions::ActionCodeList& codes)
 {
     if (codes.empty()) {
         return;

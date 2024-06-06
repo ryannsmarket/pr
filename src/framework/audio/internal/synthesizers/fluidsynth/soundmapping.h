@@ -20,14 +20,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_AUDIO_SOUNDMAPPING_H
-#define MU_AUDIO_SOUNDMAPPING_H
+#ifndef MUSE_AUDIO_SOUNDMAPPING_H
+#define MUSE_AUDIO_SOUNDMAPPING_H
 
 #include "global/async/channel.h"
 #include "mpe/events.h"
 #include "midi/miditypes.h"
 
-namespace mu::audio {
+namespace muse::audio {
 struct SoundMappingKey {
     mpe::SoundId id = mpe::SoundId::Undefined;
     mpe::SoundSubCategories subCategories;
@@ -791,18 +791,19 @@ inline const midi::Programs& findPrograms(const mpe::PlaybackSetupData& setupDat
 {
     const std::map<SoundMappingKey, midi::Programs>& mapping = mappingByCategory(setupData.category);
 
-    mpe::SoundSubCategories subCategorySet = setupData.subCategorySet;
-    mu::remove(subCategorySet, mpe::SoundSubCategory::Primary);
-    mu::remove(subCategorySet, mpe::SoundSubCategory::Secondary);
+    mpe::SoundSubCategories subCategorySet = setupData.soundSubCategories();
+    muse::remove(subCategorySet, mpe::SoundSubCategory::Primary);
+    muse::remove(subCategorySet, mpe::SoundSubCategory::Secondary);
 
-    auto search = mapping.find({ setupData.id, subCategorySet });
+    mpe::SoundId soundId = setupData.soundId();
+    auto search = mapping.find({ soundId, subCategorySet });
 
     if (search != mapping.cend()) {
         return search->second;
     }
 
-    static midi::Programs empty;
-    return empty;
+    static const midi::Programs fallback { midi::Program(0, 0) };
+    return fallback;
 }
 
 inline const ArticulationMapping& articulationSounds(const mpe::PlaybackSetupData& setupData)
@@ -932,7 +933,9 @@ inline const ArticulationMapping& articulationSounds(const mpe::PlaybackSetupDat
         { mpe::ArticulationType::Mute, midi::Program(0, 59) }
     };
 
-    if (setupData.id == mpe::SoundId::Guitar) {
+    mpe::SoundId soundId = setupData.soundId();
+
+    if (soundId == mpe::SoundId::Guitar) {
         if (setupData.contains(mpe::SoundSubCategory::Acoustic)) {
             return ACOUSTIC_GUITAR;
         }
@@ -942,7 +945,7 @@ inline const ArticulationMapping& articulationSounds(const mpe::PlaybackSetupDat
         }
     }
 
-    if (setupData.id == mpe::SoundId::BassGuitar) {
+    if (soundId == mpe::SoundId::BassGuitar) {
         if (setupData.contains(mpe::SoundSubCategory::Acoustic)) {
             return ACOUSTIC_BASS_GUITAR;
         }
@@ -952,35 +955,35 @@ inline const ArticulationMapping& articulationSounds(const mpe::PlaybackSetupDat
         }
     }
 
-    if (setupData.id == mpe::SoundId::Violin && setupData.contains(mpe::SoundSubCategory::Section)) {
+    if (soundId == mpe::SoundId::Violin && setupData.contains(mpe::SoundSubCategory::Section)) {
         return VIOLIN_SECTION;
     }
 
-    if (setupData.id == mpe::SoundId::Violin) {
+    if (soundId == mpe::SoundId::Violin) {
         return VIOLIN;
     }
 
-    if (setupData.id == mpe::SoundId::Viola && setupData.contains(mpe::SoundSubCategory::Section)) {
+    if (soundId == mpe::SoundId::Viola && setupData.contains(mpe::SoundSubCategory::Section)) {
         return VIOLA_SECTION;
     }
 
-    if (setupData.id == mpe::SoundId::Viola) {
+    if (soundId == mpe::SoundId::Viola) {
         return VIOLA;
     }
 
-    if (setupData.id == mpe::SoundId::Violoncello && setupData.contains(mpe::SoundSubCategory::Section)) {
+    if (soundId == mpe::SoundId::Violoncello && setupData.contains(mpe::SoundSubCategory::Section)) {
         return VIOLONCELLO_SECTION;
     }
 
-    if (setupData.id == mpe::SoundId::Violoncello) {
+    if (soundId == mpe::SoundId::Violoncello) {
         return VIOLONCELLO;
     }
 
-    if (setupData.id == mpe::SoundId::Contrabass && setupData.contains(mpe::SoundSubCategory::Section)) {
+    if (soundId == mpe::SoundId::Contrabass && setupData.contains(mpe::SoundSubCategory::Section)) {
         return CONTRABASS_SECTION;
     }
 
-    if (setupData.id == mpe::SoundId::Contrabass) {
+    if (soundId == mpe::SoundId::Contrabass) {
         return CONTRABASS;
     }
 
@@ -989,7 +992,7 @@ inline const ArticulationMapping& articulationSounds(const mpe::PlaybackSetupDat
             mpe::SoundId::Viol, mpe::SoundId::PardessusViol, mpe::SoundId::ViolaDaGamba, mpe::SoundId::Violone
         };
 
-        if (mu::contains(VIOL_SECTION, setupData.id)) {
+        if (muse::contains(VIOL_SECTION, soundId)) {
             return BASIC_VIOL_SECTION;
         }
 
@@ -1004,14 +1007,6 @@ inline const ArticulationMapping& articulationSounds(const mpe::PlaybackSetupDat
     return empty;
 }
 
-static const mpe::ArticulationTypeSet LEGATO_CC_SUPPORTED_TYPES = {
-    mpe::ArticulationType::Legato, mpe::ArticulationType::Acciaccatura,
-    mpe::ArticulationType::PreAppoggiatura, mpe::ArticulationType::PostAppoggiatura,
-    mpe::ArticulationType::Trill, mpe::ArticulationType::TrillBaroque,
-    mpe::ArticulationType::Tremolo8th, mpe::ArticulationType::Tremolo16th,
-    mpe::ArticulationType::Tremolo32nd, mpe::ArticulationType::Tremolo64th
-};
-
 static const mpe::ArticulationTypeSet PEDAL_CC_SUPPORTED_TYPES = {
     mpe::ArticulationType::Pedal
 };
@@ -1022,11 +1017,6 @@ static const mpe::ArticulationTypeSet BEND_SUPPORTED_TYPES = {
     mpe::ArticulationType::Fall, mpe::ArticulationType::QuickFall, mpe::ArticulationType::Doit,
     mpe::ArticulationType::Plop, mpe::ArticulationType::Scoop, mpe::ArticulationType::SlideOutDown,
     mpe::ArticulationType::SlideInAbove, mpe::ArticulationType::SlideInBelow
-};
-
-static const mpe::ArticulationTypeSet AFTERTOUCH_SUPPORTED_TYPES = {
-    mpe::ArticulationType::Vibrato, mpe::ArticulationType::MoltoVibrato,
-    mpe::ArticulationType::SenzaVibrato, mpe::ArticulationType::WideVibrato
 };
 
 struct ChannelMap {
@@ -1132,4 +1122,4 @@ private:
 };
 }
 
-#endif // MU_AUDIO_SOUNDMAPPING_H
+#endif // MUSE_AUDIO_SOUNDMAPPING_H

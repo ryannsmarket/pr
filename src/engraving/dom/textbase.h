@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,7 +26,6 @@
 #include <variant>
 
 #include "draw/fontmetrics.h"
-#include "draw/types/color.h"
 
 #include "modularity/ioc.h"
 #include "../iengravingfontsprovider.h"
@@ -180,13 +179,13 @@ public:
     const TextBlock& curLine() const;
     TextBlock& curLine();
 
-    mu::RectF cursorRect() const;
+    RectF cursorRect() const;
     bool movePosition(TextCursor::MoveOperation op, TextCursor::MoveMode mode = TextCursor::MoveMode::MoveAnchor, int count = 1);
     void selectWord();
     void moveCursorToEnd() { movePosition(TextCursor::MoveOperation::End); }
     void moveCursorToStart() { movePosition(TextCursor::MoveOperation::Start); }
     Char currentCharacter() const;
-    bool set(const mu::PointF& p, TextCursor::MoveMode mode = TextCursor::MoveMode::MoveAnchor);
+    bool set(const PointF& p, TextCursor::MoveMode mode = TextCursor::MoveMode::MoveAnchor);
     String selectedText(bool withFormat = false) const;
     String extractText(int r1, int c1, int r2, int c2, bool withFormat = false) const;
     void updateCursorFormat();
@@ -214,20 +213,26 @@ private:
 
 class TextFragment
 {
-    INJECT_STATIC(IEngravingFontsProvider, engravingFonts)
+public:
+    muse::GlobalInject<IEngravingFontsProvider> engravingFonts;
+
 public:
     mutable CharFormat format;
-    mu::PointF pos;                    // y is relative to TextBlock->y()
+    PointF pos;                    // y is relative to TextBlock->y()
     mutable String text;
+
+    TextFragment() = default;
+    TextFragment(const String& s);
+    TextFragment(TextCursor*, const String&);
+    TextFragment(const TextFragment& f);
+
+    TextFragment& operator =(const TextFragment& f);
 
     bool operator ==(const TextFragment& f) const;
 
-    TextFragment();
-    TextFragment(const String& s);
-    TextFragment(TextCursor*, const String&);
     TextFragment split(int column);
-    void draw(mu::draw::Painter*, const TextBase*) const;
-    mu::draw::Font font(const TextBase*) const;
+    void draw(muse::draw::Painter*, const TextBase*) const;
+    muse::draw::Font font(const TextBase*) const;
     int columns() const;
     void changeFormat(FormatId id, const FormatValue& data);
 };
@@ -240,16 +245,18 @@ public:
 class TextBlock
 {
 public:
-    TextBlock() {}
+    TextBlock() = default;
+
     bool operator ==(const TextBlock& x) const { return m_fragments == x.m_fragments; }
     bool operator !=(const TextBlock& x) const { return m_fragments != x.m_fragments; }
-    void draw(mu::draw::Painter*, const TextBase*) const;
+    void draw(muse::draw::Painter*, const TextBase*) const;
     void layout(const TextBase*);
     const std::list<TextFragment>& fragments() const { return m_fragments; }
     std::list<TextFragment>& fragments() { return m_fragments; }
     std::list<TextFragment> fragmentsWithoutEmpty();
-    const mu::RectF& boundingRect() const { return m_bbox; }
-    mu::RectF boundingRect(int col1, int col2, const TextBase*) const;
+    const Shape& shape() const { return m_shape; }
+    const RectF& boundingRect() const { return m_shape.bbox(); }
+    RectF boundingRect(int col1, int col2, const TextBase*) const;
     size_t columns() const;
     void insert(TextCursor*, const String&);
     void insertEmptyFragmentIfNeeded(TextCursor*);
@@ -276,7 +283,7 @@ private:
     std::list<TextFragment> m_fragments;
     double m_y = 0.0;
     double m_lineSpacing = 0.0;
-    mu::RectF m_bbox;
+    Shape m_shape;
     bool m_eol = false;
 };
 
@@ -288,8 +295,6 @@ class TextBase : public EngravingItem
 {
     OBJECT_ALLOCATOR(engraving, TextBase)
 
-    INJECT(IEngravingFontsProvider, engravingFonts)
-
     M_PROPERTY2(bool, isTextLinkedToMaster, setTextLinkedToMaster, true)
 
 public:
@@ -300,8 +305,8 @@ public:
 
     Text& operator=(const Text&) = delete;
 
-    virtual void drawEditMode(mu::draw::Painter* p, EditData& ed, double currentViewScaling) override;
-    static void drawTextWorkaround(mu::draw::Painter* p, mu::draw::Font& f, const mu::PointF& pos, const String& text);
+    virtual void drawEditMode(muse::draw::Painter* p, EditData& ed, double currentViewScaling) override;
+    static void drawTextWorkaround(muse::draw::Painter* p, muse::draw::Font& f, const PointF& pos, const String& text);
 
     Align align() const { return m_align; }
     void setAlign(Align a) { m_align = a; }
@@ -340,6 +345,10 @@ public:
     virtual void endEdit(EditData&) override;
     void movePosition(EditData&, TextCursor::MoveOperation);
 
+    virtual void startEditNonTextual(EditData&);
+    virtual bool editNonTextual(EditData&);
+    virtual void endEditNonTextual(EditData&);
+
     bool deleteSelectedText(EditData&);
 
     void selectAll(TextCursor*);
@@ -349,11 +358,14 @@ public:
 
     virtual void paste(EditData& ed, const String& txt);
 
-    mu::RectF pageRectangle() const;
+    RectF pageRectangle() const;
+
+    const Shape& highResShape() const { return ldata()->highResShape.value(); }
+    void computeHighResShape(const muse::draw::FontMetrics& fontMetrics);
 
     void dragTo(EditData&);
 
-    std::vector<mu::LineF> dragAnchorLines() const override;
+    std::vector<LineF> dragAnchorLines() const override;
 
     virtual bool acceptDrop(EditData&) const override;
     virtual EngravingItem* drop(EditData&) override;
@@ -376,8 +388,8 @@ public:
     bool inHexState() const { return m_hexState >= 0; }
     void endHexState(EditData&);
 
-    mu::draw::Font font() const;
-    mu::draw::FontMetrics fontMetrics() const;
+    muse::draw::Font font() const;
+    muse::draw::FontMetrics fontMetrics() const;
 
     bool isPropertyLinkedToMaster(Pid id) const override;
     bool isUnlinkedFromMaster() const override;
@@ -430,15 +442,15 @@ public:
     friend class TextCursor;
     using EngravingObject::undoChangeProperty;
 
-    mu::draw::Color textColor() const;
+    Color textColor() const;
     FrameType frameType() const { return m_frameType; }
     void setFrameType(FrameType val) { m_frameType = val; }
     double textLineSpacing() const { return m_textLineSpacing; }
     void setTextLineSpacing(double val) { m_textLineSpacing = val; }
-    mu::draw::Color bgColor() const { return m_bgColor; }
-    void setBgColor(const mu::draw::Color& val) { m_bgColor = val; }
-    mu::draw::Color frameColor() const { return m_frameColor; }
-    void setFrameColor(const mu::draw::Color& val) { m_frameColor = val; }
+    Color bgColor() const { return m_bgColor; }
+    void setBgColor(const Color& val) { m_bgColor = val; }
+    Color frameColor() const { return m_frameColor; }
+    void setFrameColor(const Color& val) { m_frameColor = val; }
     Spatium frameWidth() const { return m_frameWidth; }
     void setFrameWidth(Spatium val) { m_frameWidth = val; }
     Spatium paddingWidth() const { return m_paddingWidth; }
@@ -450,11 +462,13 @@ public:
         std::vector<TextBlock> blocks;
         bool layoutInvalid = true;
 
-        mu::RectF frame;
+        RectF frame;
 
         size_t rows() const { return blocks.size(); }
         const TextBlock& textBlock(size_t i) const { return blocks.at(i); }
         TextBlock& textBlock(size_t i) { return blocks[i]; }
+
+        ld_field<Shape> highResShape = { "[TextBase] highResShape", Shape() };
     };
     DECLARE_LAYOUTDATA_METHODS(TextBase)
 
@@ -466,6 +480,13 @@ public:
     //! NOTE It can only be set for some types of text, see who has the setter.
     //! At the moment it's: Text, Jump, Marker
     bool layoutToParentWidth() const { return m_layoutToParentWidth; }
+
+    void setApplyToVoice(VoiceApplication v) { m_applyToVoice = v; }
+    VoiceApplication applyToVoice() const { return m_applyToVoice; }
+    void setDirection(DirectionV v) { m_direction = v; }
+    DirectionV direction() const { return m_direction; }
+    void setCenterBetweenStaves(AutoOnOff v) { m_centerBetweenStaves = v; }
+    AutoOnOff centerBetweenStaves() const { return m_centerBetweenStaves; }
 
 protected:
     TextBase(const ElementType& type, EngravingItem* parent = 0, TextStyleType tid = TextStyleType::DEFAULT,
@@ -483,7 +504,7 @@ protected:
 
 private:
 
-    void drawSelection(mu::draw::Painter*, const mu::RectF&) const;
+    void drawSelection(muse::draw::Painter*, const RectF&) const;
     void insert(TextCursor*, char32_t code, LayoutData* ldata) const;
     String genText(const LayoutData* ldata) const;
     void genText();
@@ -506,8 +527,8 @@ private:
 
     FrameType m_frameType = FrameType::NO_FRAME;
     double m_textLineSpacing = 1.0;
-    mu::draw::Color m_bgColor;
-    mu::draw::Color m_frameColor;
+    Color m_bgColor;
+    Color m_frameColor;
     Spatium m_frameWidth;
     Spatium m_paddingWidth;
     int m_frameRound = 0;
@@ -524,6 +545,10 @@ private:
     bool m_primed = 0;
 
     TextCursor* m_cursor = nullptr;
+
+    VoiceApplication m_applyToVoice = VoiceApplication::ALL_VOICE_IN_INSTRUMENT;
+    DirectionV m_direction = DirectionV::AUTO;
+    AutoOnOff m_centerBetweenStaves = AutoOnOff::AUTO;
 };
 
 inline bool isTextNavigationKey(int key, KeyboardModifiers modifiers)

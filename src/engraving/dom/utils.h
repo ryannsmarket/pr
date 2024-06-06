@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -41,7 +41,7 @@ class Tuplet;
 
 enum class Key;
 
-extern mu::RectF handleRect(const mu::PointF& pos);
+extern RectF handleRect(const PointF& pos);
 
 extern int pitchKeyAdjust(int note, Key);
 extern int line2pitch(int line, ClefType clef, Key);
@@ -64,8 +64,8 @@ int diatonicUpDown(Key, int pitch, int steps);
 
 extern Note* nextChordNote(Note* note);
 extern Note* prevChordNote(Note* note);
-extern Segment* nextSeg1(Segment* s, track_idx_t& track);
-extern Segment* prevSeg1(Segment* seg, track_idx_t& track);
+extern Segment* nextSeg1(Segment* s);
+extern Segment* prevSeg1(Segment* seg);
 
 extern Note* searchTieNote(Note* note);
 extern Note* searchTieNote114(Note* note);

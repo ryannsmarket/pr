@@ -212,18 +212,17 @@
             </TimeSig>
           <Tempo>
             <tempo>0.583333</tempo>
-            <followText>1</followText>
             <text><font size="12"/><b>Grave</b></text>
             </Tempo>
           <Dynamic>
             <subtype>pp</subtype>
             <velocity>33</velocity>
-            <placement>above</placement>
+            <direction>up</direction>
             </Dynamic>
           <Spanner type="HairPin">
             <HairPin>
               <subtype>0</subtype>
-              <placement>above</placement>
+              <direction>up</direction>
               </HairPin>
             <next>
               <location>
@@ -236,7 +235,6 @@
             <Lyrics>
               <ticks>9600</ticks>
               <ticks_f>20/4</ticks_f>
-              <offset x="0" y="-1.71429"/>
               <text>ahh</text>
               </Lyrics>
             <Note>
@@ -410,6 +408,7 @@
           <Dynamic>
             <subtype>mf</subtype>
             <velocity>80</velocity>
+            <direction>down</direction>
             </Dynamic>
           <Chord>
             <durationType>quarter</durationType>

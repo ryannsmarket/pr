@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -48,15 +48,16 @@ class Segment;
 class Instrument;
 class RepeatList;
 
-class PlaybackModel : public async::Asyncable
+class PlaybackModel : public muse::async::Asyncable
 {
-    INJECT(mpe::IArticulationProfilesRepository, profilesRepository)
+public:
+    INJECT(muse::mpe::IArticulationProfilesRepository, profilesRepository)
 
 public:
     void load(Score* score);
     void reload();
 
-    async::Notification dataChanged() const;
+    muse::async::Notification dataChanged() const;
 
     bool isPlayRepeatsEnabled() const;
     void setPlayRepeats(const bool isEnabled);
@@ -68,17 +69,18 @@ public:
     InstrumentTrackId chordSymbolsTrackId(const ID& partId) const;
     bool isChordSymbolsTrack(const InstrumentTrackId& trackId) const;
 
+    bool hasSoundFlags() const;
     bool hasSoundFlags(const InstrumentTrackId& trackId) const;
 
-    const mpe::PlaybackData& resolveTrackPlaybackData(const InstrumentTrackId& trackId);
-    const mpe::PlaybackData& resolveTrackPlaybackData(const ID& partId, const String& instrumentId);
+    const muse::mpe::PlaybackData& resolveTrackPlaybackData(const InstrumentTrackId& trackId);
+    const muse::mpe::PlaybackData& resolveTrackPlaybackData(const ID& partId, const String& instrumentId);
     void triggerEventsForItems(const std::vector<const EngravingItem*>& items);
 
     void triggerMetronome(int tick);
 
     InstrumentTrackIdSet existingTrackIdSet() const;
-    async::Channel<InstrumentTrackId> trackAdded() const;
-    async::Channel<InstrumentTrackId> trackRemoved() const;
+    muse::async::Channel<InstrumentTrackId> trackAdded() const;
+    muse::async::Channel<InstrumentTrackId> trackRemoved() const;
 
 private:
     static const InstrumentTrackId METRONOME_TRACK_ID;
@@ -94,8 +96,8 @@ private:
 
     struct TrackBoundaries
     {
-        track_idx_t trackFrom = mu::nidx;
-        track_idx_t trackTo = mu::nidx;
+        track_idx_t trackFrom = muse::nidx;
+        track_idx_t trackTo = muse::nidx;
     };
 
     InstrumentTrackId idKey(const EngravingItem* item) const;
@@ -125,10 +127,10 @@ private:
     void collectChangesTracks(const InstrumentTrackId& trackId, ChangedTrackIdSet* result);
     void notifyAboutChanges(const InstrumentTrackIdSet& oldTracks, const InstrumentTrackIdSet& changedTracks);
 
-    void removeEventsFromRange(const track_idx_t trackFrom, const track_idx_t trackTo, const mpe::timestamp_t timestampFrom = -1,
-                               const mpe::timestamp_t timestampTo = -1);
-    void removeTrackEvents(const InstrumentTrackId& trackId, const mpe::timestamp_t timestampFrom = -1,
-                           const mpe::timestamp_t timestampTo = -1);
+    void removeEventsFromRange(const track_idx_t trackFrom, const track_idx_t trackTo, const muse::mpe::timestamp_t timestampFrom = -1,
+                               const muse::mpe::timestamp_t timestampTo = -1);
+    void removeTrackEvents(const InstrumentTrackId& trackId, const muse::mpe::timestamp_t timestampFrom = -1,
+                           const muse::mpe::timestamp_t timestampTo = -1);
 
     TrackBoundaries trackBoundaries(const ScoreChangesRange& changesRange) const;
     TickBoundaries tickBoundaries(const ScoreChangesRange& changesRange) const;
@@ -137,7 +139,7 @@ private:
 
     std::vector<const EngravingItem*> filterPlayableItems(const std::vector<const EngravingItem*>& items) const;
 
-    mpe::ArticulationsProfilePtr defaultActiculationProfile(const InstrumentTrackId& trackId) const;
+    muse::mpe::ArticulationsProfilePtr defaultActiculationProfile(const InstrumentTrackId& trackId) const;
 
     Score* m_score = nullptr;
     bool m_expandRepeats = true;
@@ -147,11 +149,11 @@ private:
     PlaybackSetupDataResolver m_setupResolver;
 
     std::unordered_map<InstrumentTrackId, PlaybackContext> m_playbackCtxMap;
-    std::unordered_map<InstrumentTrackId, mpe::PlaybackData> m_playbackDataMap;
+    std::unordered_map<InstrumentTrackId, muse::mpe::PlaybackData> m_playbackDataMap;
 
-    async::Notification m_dataChanged;
-    async::Channel<InstrumentTrackId> m_trackAdded;
-    async::Channel<InstrumentTrackId> m_trackRemoved;
+    muse::async::Notification m_dataChanged;
+    muse::async::Channel<InstrumentTrackId> m_trackAdded;
+    muse::async::Channel<InstrumentTrackId> m_trackRemoved;
 };
 }
 

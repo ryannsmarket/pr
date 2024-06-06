@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,7 +31,7 @@
 #include "audio/iaudiodriver.h"
 
 namespace mu::appshell {
-class CommonAudioApiConfigurationModel : public QObject, public async::Asyncable
+class CommonAudioApiConfigurationModel : public QObject, public muse::async::Asyncable
 {
     Q_OBJECT
 
@@ -41,8 +41,8 @@ class CommonAudioApiConfigurationModel : public QObject, public async::Asyncable
     Q_PROPERTY(unsigned int bufferSize READ bufferSize NOTIFY bufferSizeChanged)
     Q_PROPERTY(QList<unsigned int> bufferSizeList READ bufferSizeList NOTIFY bufferSizeListChanged)
 
-    INJECT(audio::IAudioConfiguration, audioConfiguration)
-    INJECT(audio::IAudioDriver, audioDriver)
+    INJECT(muse::audio::IAudioConfiguration, audioConfiguration)
+    INJECT(muse::audio::IAudioDriver, audioDriver)
 
 public:
     explicit CommonAudioApiConfigurationModel(QObject* parent = nullptr);

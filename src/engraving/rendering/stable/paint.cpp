@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,10 +31,11 @@
 
 #include "log.h"
 
+using namespace muse::draw;
 using namespace mu::engraving;
 using namespace mu::engraving::rendering::stable;
 
-void Paint::paintScore(draw::Painter* painter, Score* score, const IScoreRenderer::PaintOptions& opt)
+void Paint::paintScore(Painter* painter, Score* score, const IScoreRenderer::PaintOptions& opt)
 {
     TRACEFUNC;
     if (!score) {
@@ -208,7 +209,7 @@ SizeF Paint::pageSizeInch(const Score* score, const IScoreRenderer::PaintOptions
     return pageRect.size() / mu::engraving::DPI;
 }
 
-void Paint::paintItem(mu::draw::Painter& painter, const EngravingItem* item)
+void Paint::paintItem(Painter& painter, const EngravingItem* item)
 {
     TRACEFUNC;
     if (item->ldata()->isSkipDraw()) {
@@ -222,7 +223,7 @@ void Paint::paintItem(mu::draw::Painter& painter, const EngravingItem* item)
     painter.translate(-itemPosition);
 }
 
-void Paint::paintItems(mu::draw::Painter& painter, const std::vector<EngravingItem*>& items)
+void Paint::paintItems(Painter& painter, const std::vector<EngravingItem*>& items)
 {
     TRACEFUNC;
     std::vector<EngravingItem*> sortedItems(items.begin(), items.end());

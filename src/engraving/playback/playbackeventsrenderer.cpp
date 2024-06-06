@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -42,7 +42,8 @@
 #include "filters/chordfilter.h"
 
 using namespace mu::engraving;
-using namespace mu::mpe;
+using namespace muse;
+using namespace muse::mpe;
 
 static ArticulationMap makeStandardArticulationMap(const ArticulationsProfilePtr profile, timestamp_t timestamp, duration_t duration)
 {
@@ -54,7 +55,7 @@ static ArticulationMap makeStandardArticulationMap(const ArticulationsProfilePtr
                           0);
 
     ArticulationMap articulations;
-    articulations.emplace(ArticulationType::Standard, mu::mpe::ArticulationAppliedData(std::move(meta), 0, mu::mpe::HUNDRED_PERCENT));
+    articulations.emplace(ArticulationType::Standard, mpe::ArticulationAppliedData(std::move(meta), 0, mpe::HUNDRED_PERCENT));
     articulations.preCalculateAverageData();
 
     return articulations;
@@ -259,7 +260,7 @@ void PlaybackEventsRenderer::renderNoteEvents(const Chord* chord, const int tick
 
     const Score* score = chord->score();
 
-    auto chordTnD = timestampAndDurationFromStartAndDurationTicks(score, chordPosTick + tickPositionOffset, chordDurationTicks);
+    auto chordTnD = timestampAndDurationFromStartAndDurationTicks(score, chordPosTick, chordDurationTicks, tickPositionOffset);
 
     BeatsPerSecond bps = score->tempomap()->tempo(chordPosTick);
     TimeSigFrac timeSignatureFraction = score->sigmap()->timesig(chordPosTick).timesig();
@@ -323,7 +324,7 @@ void PlaybackEventsRenderer::renderRestEvents(const Rest* rest, const int tickPo
     int durationTicks = rest->ticks().ticks();
 
     auto nominalTnD
-        = timestampAndDurationFromStartAndDurationTicks(rest->score(), positionTick + tickPositionOffset, durationTicks);
+        = timestampAndDurationFromStartAndDurationTicks(rest->score(), positionTick, durationTicks, tickPositionOffset);
 
     result[nominalTnD.timestamp].emplace_back(mpe::RestEvent(nominalTnD.timestamp, nominalTnD.duration,
                                                              static_cast<voice_layer_idx_t>(rest->voice())));

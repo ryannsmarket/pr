@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,10 +26,11 @@
 
 using namespace mu;
 using namespace mu::playback;
-using namespace mu::ui;
-using namespace mu::uicomponents;
-using namespace mu::actions;
-using namespace mu::audio;
+using namespace muse;
+using namespace muse::ui;
+using namespace muse::uicomponents;
+using namespace muse::actions;
+using namespace muse::audio;
 
 static const ActionCode TOGGLE_MIXER_SECTION_ACTION("toggle-mixer-section");
 static const ActionCode TOGGLE_AUX_SEND_ACTION("toggle-aux-send");
@@ -264,7 +265,7 @@ void MixerPanelContextMenuModel::toggleAuxSend(const ActionData& args)
     configuration()->setAuxSendVisible(auxSendIndex, newVisibilityValue);
 }
 
-void MixerPanelContextMenuModel::toggleAuxChannel(const actions::ActionData& args)
+void MixerPanelContextMenuModel::toggleAuxChannel(const ActionData& args)
 {
     if (args.empty()) {
         return;

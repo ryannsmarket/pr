@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -274,8 +274,9 @@ Chord::Chord(Segment* parent)
     m_playEventType    = PlayEventType::Auto;
     m_spaceLw          = 0.;
     m_spaceRw          = 0.;
-    m_crossMeasure    = CrossMeasure::UNKNOWN;
-    m_graceIndex   = 0;
+    m_crossMeasure     = CrossMeasure::UNKNOWN;
+    m_graceIndex       = 0;
+    m_combineVoice       = true;
 }
 
 Chord::Chord(const Chord& c, bool link)
@@ -316,7 +317,8 @@ Chord::Chord(const Chord& c, bool link)
     m_playEventType  = c.m_playEventType;
     m_stemDirection  = c.m_stemDirection;
     m_noteType       = c.m_noteType;
-    m_crossMeasure  = CrossMeasure::UNKNOWN;
+    m_crossMeasure   = CrossMeasure::UNKNOWN;
+    m_combineVoice     = c.m_combineVoice;
 
     if (c.m_stem) {
         add(Factory::copyStem(*(c.m_stem)));
@@ -410,7 +412,7 @@ void Chord::undoUnlink()
 
 Chord::~Chord()
 {
-    DeleteAll(m_articulations);
+    muse::DeleteAll(m_articulations);
 
     if (tremoloTwoChord()) {
         if (tremoloTwoChord()->chord1() == this) {
@@ -429,8 +431,8 @@ Chord::~Chord()
         delete ll;
         ll = llNext;
     }
-    DeleteAll(m_graceNotes);
-    DeleteAll(m_notes);
+    muse::DeleteAll(m_graceNotes);
+    muse::DeleteAll(m_notes);
 }
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
@@ -882,7 +884,7 @@ void Chord::remove(EngravingItem* e)
     case ElementType::ORNAMENT:
     {
         Articulation* a = toArticulation(e);
-        if (!mu::remove(m_articulations, a)) {
+        if (!muse::remove(m_articulations, a)) {
             LOGD("ChordRest::remove(): articulation not found");
         }
     }
@@ -1491,13 +1493,13 @@ double Chord::calcDefaultStemLength()
         double bottomLine = lineDistance * (staffLineCount - 1.0);
         double target = 0.0;
         double midLine = middleLine / 4.0 * lineDistance;
-        if (RealIsEqualOrMore(lineDistance / _spatium, 1.0)) {
+        if (muse::RealIsEqualOrMore(lineDistance / _spatium, 1.0)) {
             // need to extend to middle line, or to opposite line if staff is < 2sp tall
             if (bottomLine < 2 * _spatium) {
                 target = ldata()->up ? topLine : bottomLine;
             } else {
                 double twoSpIn = ldata()->up ? bottomLine - (2 * _spatium) : topLine + (2 * _spatium);
-                target = RealIsEqual(lineDistance / _spatium, 1.0) ? midLine : twoSpIn;
+                target = muse::RealIsEqual(lineDistance / _spatium, 1.0) ? midLine : twoSpIn;
             }
         } else {
             // need to extend to second line in staff, or to opposite line if staff has < 3 lines
@@ -1738,7 +1740,7 @@ void Chord::cmdUpdateNotes(AccidentalState* as)
 //   pagePos
 //---------------------------------------------------------
 
-mu::PointF Chord::pagePos() const
+PointF Chord::pagePos() const
 {
     if (isGrace()) {
         PointF p(pos());
@@ -1878,19 +1880,12 @@ Note* Chord::findNote(int pitch, int skip) const
 
 void Chord::undoChangeSpanArpeggio(Arpeggio* a)
 {
-    const std::list<EngravingObject*> links = linkList();
-    for (EngravingObject* linkedObject : links) {
-        if (linkedObject == this) {
-            score()->undo(new ChangeSpanArpeggio(this, a));
-            continue;
-        }
-        Chord* chord = toChord(linkedObject);
-        Score* score = chord->score();
-        EngravingItem* linkedArp = chord->spanArpeggio();
-        if (score && linkedArp) {
-            score->undo(new ChangeSpanArpeggio(chord, toArpeggio(linkedArp)));
-        }
+    if (m_spanArpeggio == a) {
+        return;
     }
+
+    // TODO: change arpeggio for links
+    score()->undo(new ChangeSpanArpeggio(this, a));
 }
 
 ChordLine* Chord::chordLine() const
@@ -2041,7 +2036,7 @@ EngravingItem* Chord::drop(EditData& data)
     return 0;
 }
 
-void Chord::setColor(const mu::draw::Color& color)
+void Chord::setColor(const Color& color)
 {
     ChordRest::setColor(color);
 
@@ -2108,6 +2103,7 @@ PropertyValue Chord::getProperty(Pid propertyId) const
     case Pid::SMALL:           return isSmall();
     case Pid::STEM_DIRECTION:  return PropertyValue::fromValue<DirectionV>(stemDirection());
     case Pid::PLAY: return isChordPlayable();
+    case Pid::COMBINE_VOICE: return combineVoice();
     default:
         return ChordRest::getProperty(propertyId);
     }
@@ -2125,6 +2121,7 @@ PropertyValue Chord::propertyDefault(Pid propertyId) const
     case Pid::SMALL:           return false;
     case Pid::STEM_DIRECTION:  return PropertyValue::fromValue<DirectionV>(DirectionV::AUTO);
     case Pid::PLAY: return true;
+    case Pid::COMBINE_VOICE: return true;
     default:
         return ChordRest::propertyDefault(propertyId);
     }
@@ -2151,6 +2148,9 @@ bool Chord::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::PLAY:
         setIsChordPlayable(v.toBool());
+        break;
+    case Pid::COMBINE_VOICE:
+        setCombineVoice(v.toBool());
         break;
     default:
         return ChordRest::setProperty(propertyId, v);
@@ -2444,9 +2444,9 @@ void Chord::removeMarkings(bool keepTremolo)
     if (arpeggio()) {
         remove(arpeggio());
     }
-    DeleteAll(graceNotes());
+    muse::DeleteAll(graceNotes());
     graceNotes().clear();
-    DeleteAll(articulations());
+    muse::DeleteAll(articulations());
     articulations().clear();
     for (Note* n : notes()) {
         for (EngravingItem* e : n->el()) {
@@ -3146,7 +3146,7 @@ void Chord::undoChangeProperty(Pid id, const PropertyValue& newValue, PropertyFl
         }, false);
     }
 
-    EngravingItem::undoChangeProperty(id, newValue, ps);
+    ChordRest::undoChangeProperty(id, newValue, ps);
 }
 
 std::set<SymId> Chord::articulationSymbolIds() const

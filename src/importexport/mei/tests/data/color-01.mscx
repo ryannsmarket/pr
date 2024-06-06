@@ -192,7 +192,7 @@
               </HairPin>
             <next>
               <location>
-                <measures>1</measures>
+                <fractions>3/4</fractions>
                 </location>
               </next>
             </Spanner>
@@ -224,6 +224,13 @@
               <tpc>14</tpc>
               </Note>
             </Chord>
+          <Spanner type="HairPin">
+            <prev>
+              <location>
+                <fractions>-3/4</fractions>
+                </location>
+              </prev>
+            </Spanner>
           <Chord>
             <durationType>quarter</durationType>
             <Note>
@@ -246,13 +253,6 @@
         </Measure>
       <Measure>
         <voice>
-          <Spanner type="HairPin">
-            <prev>
-              <location>
-                <measures>-1</measures>
-                </location>
-              </prev>
-            </Spanner>
           <Chord>
             <durationType>quarter</durationType>
             <Note>
@@ -354,8 +354,13 @@
                 </prev>
               </Spanner>
             <Note>
-              <pitch>64</pitch>
-              <tpc>18</tpc>
+              <Accidental>
+                <role>1</role>
+                <subtype>accidentalFlat</subtype>
+                <color r="215" g="131" b="255" a="255"/>
+                </Accidental>
+              <pitch>63</pitch>
+              <tpc>11</tpc>
               </Note>
             </Chord>
           </voice>
@@ -379,7 +384,7 @@
               </Pedal>
             <next>
               <location>
-                <fractions>1/1</fractions>
+                <fractions>1/2</fractions>
                 </location>
               </next>
             </Spanner>
@@ -428,6 +433,13 @@
               <tpc>14</tpc>
               </Note>
             </Chord>
+          <Spanner type="Pedal">
+            <prev>
+              <location>
+                <fractions>-1/2</fractions>
+                </location>
+              </prev>
+            </Spanner>
           <Chord>
             <durationType>half</durationType>
             <Note>
@@ -438,13 +450,6 @@
           <BarLine>
             <subtype>end</subtype>
             </BarLine>
-          <Spanner type="Pedal">
-            <prev>
-              <location>
-                <fractions>-1/1</fractions>
-                </location>
-              </prev>
-            </Spanner>
           </voice>
         </Measure>
       </Staff>

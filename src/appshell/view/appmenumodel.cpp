@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,13 +25,14 @@
 
 #include "log.h"
 
+using namespace muse;
 using namespace mu::appshell;
-using namespace mu::ui;
-using namespace mu::uicomponents;
+using namespace muse::ui;
+using namespace muse::uicomponents;
 using namespace mu::project;
-using namespace mu::workspace;
-using namespace mu::actions;
-using namespace mu::extensions;
+using namespace muse::workspace;
+using namespace muse::actions;
+using namespace muse::extensions;
 
 static QString makeId(const ActionCode& actionCode, int itemIndex)
 {
@@ -115,7 +116,7 @@ void AppMenuModel::setupConnections()
     });
 }
 
-MenuItem* AppMenuModel::makeMenuItem(const actions::ActionCode& actionCode, MenuItemRole menuRole)
+MenuItem* AppMenuModel::makeMenuItem(const ActionCode& actionCode, MenuItemRole menuRole)
 {
     MenuItem* item = makeMenuItem(actionCode);
     item->setRole(menuRole);
@@ -356,7 +357,7 @@ MenuItem* AppMenuModel::makeDiagnosticMenu()
         makeMenu(TranslatableString("appshell/menu/diagnostic", "&System"), systemItems, "menu-system")
     };
 
-#ifdef MUE_BUILD_MUSESAMPLER_MODULE
+#ifdef MUSE_MODULE_MUSESAMPLER
     MenuItemList museSamplerItems {
         makeMenuItem("musesampler-check"),
     };
@@ -425,7 +426,7 @@ MenuItemList AppMenuModel::makeRecentScoresItems()
     return items;
 }
 
-MenuItemList AppMenuModel::appendClearRecentSection(const uicomponents::MenuItemList& recentScores)
+MenuItemList AppMenuModel::appendClearRecentSection(const muse::uicomponents::MenuItemList& recentScores)
 {
     MenuItemList result = recentScores;
     result << makeSeparator()
@@ -644,11 +645,11 @@ MenuItemList AppMenuModel::makePluginsItems()
 
     auto addMenuItems = [this](MenuItemList& items, const Manifest& m) {
         if (m.actions.size() == 1) {
-            const extensions::Action& a = m.actions.at(0);
+            const muse::extensions::Action& a = m.actions.at(0);
             items << makeMenuItem(makeUriQuery(m.uri, a.code).toString(), TranslatableString::untranslatable(a.title));
         } else {
             MenuItemList sub;
-            for (const extensions::Action& a : m.actions) {
+            for (const muse::extensions::Action& a : m.actions) {
                 sub << makeMenuItem(makeUriQuery(m.uri, a.code).toString(), TranslatableString::untranslatable(a.title));
             }
             items << makeMenu(TranslatableString::untranslatable(m.title), sub);
@@ -659,7 +660,7 @@ MenuItemList AppMenuModel::makePluginsItems()
     MenuItemList pluginsWithoutCategories;
     for (const Manifest& m : enabledExtensions) {
         std::string categoryStr = m.category.toStdString();
-        if (mu::contains(categories, categoryStr)) {
+        if (muse::contains(categories, categoryStr)) {
             MenuItemList& items = categoriesMap[categoryStr];
             addMenuItems(items, m);
         } else {
@@ -668,7 +669,7 @@ MenuItemList AppMenuModel::makePluginsItems()
     }
 
     for (const auto& it : categoriesMap) {
-        TranslatableString categoryTitle = mu::value(categories, it.first, {});
+        TranslatableString categoryTitle = muse::value(categories, it.first, {});
         result << makeMenu(categoryTitle, it.second);
     }
 
