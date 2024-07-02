@@ -166,7 +166,9 @@ bool LinuxAudioDriver::open(const Spec& spec, Spec* activeSpec)
         return false;
     }
 
-    snd_pcm_hw_params_set_buffer_size_near(handle, params, &s_alsaData->samples);
+    snd_pcm_uframes_t ringBufferSize = s_alsaData->samples * 2;
+    snd_pcm_hw_params_set_buffer_size_near(handle, params, &ringBufferSize);
+    snd_pcm_hw_params_set_period_size_near(handle, params, &s_alsaData->samples, 0);
 
     rc = snd_pcm_hw_params(handle, params);
     if (rc < 0) {
