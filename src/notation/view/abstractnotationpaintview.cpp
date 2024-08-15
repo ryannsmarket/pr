@@ -277,7 +277,7 @@ void AbstractNotationPaintView::onLoadNotation(INotationPtr)
         }
     });
 
-    interaction->pianoKeyboardShadowNoteChanged().onReceive(this, [this](bool visible) {
+    interaction->shadowNoteChanged().onReceive(this, [this](bool visible) {
         if (m_shadowNoteRect.isValid()) {
             scheduleRedraw(m_shadowNoteRect);
 
@@ -512,31 +512,6 @@ void AbstractNotationPaintView::onShowItemRequested(const INotationInteraction::
 bool AbstractNotationPaintView::isNoteEnterMode() const
 {
     return notationNoteInput() ? notationNoteInput()->isNoteInputMode() : false;
-}
-
-void AbstractNotationPaintView::showShadowNote(const PointF& pos)
-{
-    TRACEFUNC;
-
-    bool visible = notationInteraction()->showShadowNote(pos);
-
-    if (m_shadowNoteRect.isValid()) {
-        scheduleRedraw(m_shadowNoteRect);
-
-        if (!visible) {
-            m_shadowNoteRect = RectF();
-            return;
-        }
-    }
-
-    RectF shadowNoteRect = fromLogical(notationInteraction()->shadowNoteRect());
-
-    if (shadowNoteRect.isValid()) {
-        compensateFloatPart(shadowNoteRect);
-        scheduleRedraw(shadowNoteRect);
-    }
-
-    m_shadowNoteRect = shadowNoteRect;
 }
 
 void AbstractNotationPaintView::showContextMenu(const ElementType& elementType, const QPointF& pos)
@@ -1160,6 +1135,13 @@ void AbstractNotationPaintView::hoverMoveEvent(QHoverEvent* event)
 {
     if (isInited()) {
         m_inputController->hoverMoveEvent(event);
+    }
+}
+
+void AbstractNotationPaintView::hoverLeaveEvent(QHoverEvent* event)
+{
+    if (isInited()) {
+        m_inputController->hoverLeaveEvent(event);
     }
 }
 

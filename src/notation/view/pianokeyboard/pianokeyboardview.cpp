@@ -566,8 +566,7 @@ void PianoKeyboardView::hoverMoveEvent(QHoverEvent* event)
     m_controller->setHoveredKey(keyAt(event->position()));
 }
 
-void PianoKeyboardView::hoverLeaveEvent(QHoverEvent* event)
+void PianoKeyboardView::hoverLeaveEvent(QHoverEvent*)
 {
     m_controller->setHoveredKey(std::nullopt);
-    event->accept();
 }
