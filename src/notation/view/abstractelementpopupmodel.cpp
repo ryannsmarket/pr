@@ -51,7 +51,7 @@ PopupModelType AbstractElementPopupModel::modelType() const
     return m_modelType;
 }
 
-QRect AbstractElementPopupModel::itemRect() const
+QRectF AbstractElementPopupModel::itemRect() const
 {
     return m_itemRect;
 }
@@ -214,7 +214,7 @@ const mu::engraving::ElementTypeSet& AbstractElementPopupModel::dependentElement
 
 void AbstractElementPopupModel::updateItemRect()
 {
-    QRect rect = m_item ? fromLogical(m_item->canvasBoundingRect()).toQRect() : QRect();
+    QRectF rect = m_item ? fromLogical(m_item->canvasBoundingRect()).toQRectF() : QRectF();
 
     if (m_itemRect != rect) {
         m_itemRect = rect;
