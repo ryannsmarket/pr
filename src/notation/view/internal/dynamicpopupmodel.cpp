@@ -128,6 +128,10 @@ void DynamicPopupModel::init()
         return;
     }
 
+    if (toDynamic(m_item)->empty()) {
+        m_item->setFlag(ElementFlag::IS_PREVIEW, true);
+    }
+
     IEngravingFontPtr engravingFont = m_item->score()->engravingFont();
 
     for (const QList<DynamicPopupModel::PageItem>& page : DYN_POPUP_PAGES) {
@@ -157,6 +161,10 @@ void DynamicPopupModel::addOrChangeDynamic(int page, int index)
     m_item->undoChangeProperty(Pid::TEXT, Dynamic::dynamicText(DYN_POPUP_PAGES[page][index].dynType));
     m_item->undoChangeProperty(Pid::DYNAMIC_TYPE, DYN_POPUP_PAGES[page][index].dynType);
     endCommand();
+
+    if (m_item->flag(ElementFlag::IS_PREVIEW)) {
+        m_item->setFlag(ElementFlag::IS_PREVIEW, false);
+    }
 
     INotationInteractionPtr interaction = currentNotation()->interaction();
 
@@ -188,6 +196,40 @@ void DynamicPopupModel::addHairpinToDynamic(ItemType itemType)
 
     m_item->score()->addHairpinToDynamic(pin, toDynamic(m_item));
 
+    endCommand();
+    updateNotation();
+}
+
+void DynamicPopupModel::showPreview(int page, int index)
+{
+    IF_ASSERT_FAILED(m_item) {
+        return;
+    }
+
+    if (!m_item->isDynamic() || !m_item->flag(ElementFlag::IS_PREVIEW)) {
+        return;
+    }
+
+    beginCommand();
+    m_item->setProperty(Pid::TEXT, Dynamic::dynamicText(DYN_POPUP_PAGES[page][index].dynType));
+    m_item->setProperty(Pid::DYNAMIC_TYPE, DYN_POPUP_PAGES[page][index].dynType);
+    endCommand();
+    updateNotation();
+}
+
+void DynamicPopupModel::hidePreview()
+{
+    IF_ASSERT_FAILED(m_item) {
+        return;
+    }
+
+    if (!m_item->isDynamic() || !m_item->flag(ElementFlag::IS_PREVIEW)) {
+        return;
+    }
+
+    beginCommand();
+    m_item->setProperty(Pid::TEXT, String());
+    m_item->setProperty(Pid::DYNAMIC_TYPE, DynamicType::OTHER);
     endCommand();
     updateNotation();
 }
