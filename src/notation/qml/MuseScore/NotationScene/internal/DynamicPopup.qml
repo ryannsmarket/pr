@@ -133,7 +133,7 @@ StyledPopupView {
                             ctx.beginPath();
                             ctx.moveTo(4, root.buttonHeight / 2);
                             ctx.lineTo(width - 4, root.buttonHeight / 2 + 4);
-                            ctx.strokeStyle = ui.theme.fontPrimary;
+                            ctx.strokeStyle = ui.theme.fontPrimaryColor;
                             ctx.lineWidth = 1;
                             ctx.stroke();
                         }
@@ -161,7 +161,7 @@ StyledPopupView {
                             ctx.beginPath();
                             ctx.moveTo(width - 4, root.buttonHeight / 2);
                             ctx.lineTo(4, root.buttonHeight / 2 + 4);
-                            ctx.strokeStyle = ui.theme.fontPrimary;
+                            ctx.strokeStyle = ui.theme.fontPrimaryColor;
                             ctx.lineWidth = 1;
                             ctx.stroke();
                         }
