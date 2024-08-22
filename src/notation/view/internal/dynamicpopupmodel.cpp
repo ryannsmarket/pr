@@ -81,6 +81,9 @@ DynamicPopupModel::DynamicPopupModel(QObject* parent)
 
 QString DynamicPopupModel::fontFamily() const
 {
+    IF_ASSERT_FAILED(m_item) {
+        return QString();
+    }
     return QString::fromStdString(m_item->score()->engravingFont()->family());
 }
 
