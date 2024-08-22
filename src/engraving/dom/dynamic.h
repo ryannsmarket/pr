@@ -152,6 +152,8 @@ public:
 
     void findAdjacentHairpins();
 
+    RectF adjustedBoundingRect() const;
+
 private:
 
     M_PROPERTY(bool, avoidBarLines, setAvoidBarLines)
