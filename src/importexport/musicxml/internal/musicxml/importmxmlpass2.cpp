@@ -7299,7 +7299,7 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
     const String placement = m_e.attribute("placement");
     const bool printObject = m_e.asciiAttribute("print-object") != "no";
 
-    String kind, kindText, functionText, symbols, parens;
+    String kind, kindText, functionText, inversionText, symbols, parens;
     std::list<HDegree> degreeList;
 
     FretDiagram* fd = nullptr;
@@ -7342,8 +7342,33 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
             ha->setRootTpc(Tpc::TPC_INVALID);
             ha->setBaseTpc(Tpc::TPC_INVALID);
             functionText = m_e.readText();
-            // TODO: parse to decide between ROMAN and NASHVILLE
             ha->setHarmonyType(HarmonyType::ROMAN);
+        } else if (m_e.name() == "numeral") {
+            ha->setRootTpc(Tpc::TPC_INVALID);
+            ha->setBaseTpc(Tpc::TPC_INVALID);
+            while (m_e.readNextStartElement()) {
+                if (m_e.name() == "numeral-root") {
+                    String numeralRoot = m_e.readText();
+                    String numeralRootText = m_e.attribute("text");
+                    // TODO analyze text and import as roman numerals
+                    ha->setHarmonyType(HarmonyType::NASHVILLE);
+                    ha->setFunction(numeralRoot);
+                } else if (m_e.name() == "numeral-alter") {
+                    const int alter = m_e.readText().toInt();
+                    switch (alter) {
+                    case -1:
+                        ha->setFunction(u"b" + ha->hFunction());
+                        break;
+                    case 1:
+                        ha->setFunction(u"#" + ha->hFunction());
+                        break;
+                    default:
+                        break;
+                    }
+                } else {
+                    skipLogCurrElem();
+                }
+            }
         } else if (m_e.name() == "kind") {
             // attributes: use-symbols  yes-no
             //             text, stack-degrees, parentheses-degree, bracket-degrees,
@@ -7356,8 +7381,16 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
                 ha->setRootTpc(Tpc::TPC_INVALID);
             }
         } else if (m_e.name() == "inversion") {
-            // attributes: print-style
-            skipLogCurrElem();
+            const int inversion = m_e.readText().toInt();
+            switch (inversion) {
+            case 1: inversionText = "6";
+                break;
+            case 2: inversionText = "64";
+                break;
+            default:
+                inversionText = "";
+                break;
+            }
         } else if (m_e.name() == "bass") {
             String step;
             int alter = 0;
@@ -7427,13 +7460,15 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
     const ChordDescription* d = nullptr;
     if (ha->rootTpc() != Tpc::TPC_INVALID) {
         d = ha->fromXml(kind, kindText, symbols, parens, degreeList);
+    } else if (!ha->hFunction().empty()) {
+        d = ha->fromXml(kind, kindText, symbols, parens, degreeList);
     }
     if (d) {
         ha->setId(d->id);
         ha->setTextName(d->names.front());
     } else {
         ha->setId(-1);
-        String textName = functionText + kindText;
+        String textName = functionText + kindText + inversionText;
         ha->setTextName(textName);
     }
     ha->render();
