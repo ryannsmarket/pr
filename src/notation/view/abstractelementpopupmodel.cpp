@@ -30,6 +30,7 @@ static const QMap<mu::engraving::ElementType, PopupModelType> ELEMENT_POPUP_TYPE
     { mu::engraving::ElementType::CAPO, PopupModelType::TYPE_CAPO },
     { mu::engraving::ElementType::STRING_TUNINGS, PopupModelType::TYPE_STRING_TUNINGS },
     { mu::engraving::ElementType::SOUND_FLAG, PopupModelType::TYPE_SOUND_FLAG },
+    { mu::engraving::ElementType::DYNAMIC, PopupModelType::TYPE_DYNAMIC },
 };
 
 static const QHash<PopupModelType, mu::engraving::ElementTypeSet> POPUP_DEPENDENT_ELEMENT_TYPES = {
@@ -37,6 +38,7 @@ static const QHash<PopupModelType, mu::engraving::ElementTypeSet> POPUP_DEPENDEN
     { PopupModelType::TYPE_CAPO, { mu::engraving::ElementType::CAPO } },
     { PopupModelType::TYPE_STRING_TUNINGS, { mu::engraving::ElementType::STRING_TUNINGS } },
     { PopupModelType::TYPE_SOUND_FLAG, { mu::engraving::ElementType::SOUND_FLAG, mu::engraving::ElementType::STAFF_TEXT } },
+    { PopupModelType::TYPE_DYNAMIC, { mu::engraving::ElementType::DYNAMIC } },
 };
 
 AbstractElementPopupModel::AbstractElementPopupModel(PopupModelType modelType, QObject* parent)
@@ -49,7 +51,7 @@ PopupModelType AbstractElementPopupModel::modelType() const
     return m_modelType;
 }
 
-QRect AbstractElementPopupModel::itemRect() const
+QRectF AbstractElementPopupModel::itemRect() const
 {
     return m_itemRect;
 }
@@ -212,7 +214,17 @@ const mu::engraving::ElementTypeSet& AbstractElementPopupModel::dependentElement
 
 void AbstractElementPopupModel::updateItemRect()
 {
-    QRect rect = m_item ? fromLogical(m_item->canvasBoundingRect()).toQRect() : QRect();
+    QRectF rect;
+
+    if (!m_item) {
+        rect = QRect();
+    } else {
+        if (m_item->isDynamic()) {
+            rect = fromLogical(toDynamic(m_item)->adjustedBoundingRect()).toQRectF();
+        } else {
+            rect = fromLogical(m_item->canvasBoundingRect()).toQRectF();
+        }
+    }
 
     if (m_itemRect != rect) {
         m_itemRect = rect;
