@@ -69,8 +69,10 @@ PreferencesPage {
         NoteInputPlaySection {
             playNotesWhenEditing: noteInputModel.playNotesWhenEditing
             playChordWhenEditing: noteInputModel.playChordWhenEditing
+            playNotesOnMidiInput: noteInputModel.playNotesOnMidiInput
             playChordSymbolWhenEditing: noteInputModel.playChordSymbolWhenEditing
             notePlayDurationMilliseconds: noteInputModel.notePlayDurationMilliseconds
+
 
             navigation.section: root.navigationSection
             navigation.order: root.navigationOrderStart + 2
@@ -89,6 +91,10 @@ PreferencesPage {
 
             onNotePlayDurationChangeRequested: function(duration) {
                 noteInputModel.notePlayDurationMilliseconds = duration
+            }
+
+            onPlayNotesOnMidiInputChangeRequested: function(play) {
+                noteInputModel.playNotesOnMidiInput = play
             }
         }
 
