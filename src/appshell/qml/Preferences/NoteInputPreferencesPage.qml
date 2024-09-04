@@ -73,7 +73,6 @@ PreferencesPage {
             playChordSymbolWhenEditing: noteInputModel.playChordSymbolWhenEditing
             notePlayDurationMilliseconds: noteInputModel.notePlayDurationMilliseconds
 
-
             navigation.section: root.navigationSection
             navigation.order: root.navigationOrderStart + 2
 

@@ -316,7 +316,7 @@ void PlaybackController::playElements(const std::vector<const notation::Engravin
         return;
     }
 
-    if (!configuration()->playNotesWhenEditing()) {
+    if ((!isMidi && !configuration()->playNotesWhenEditing()) || (isMidi && !configuration()->playNotesOnMidiInput())) {
         return;
     }
 
