@@ -115,6 +115,8 @@ DockPage {
             objectName: "notationToolBar"
             title: qsTrc("appshell", "Notation toolbar")
 
+            navigationSection: root.topToolKeyNavSec
+
             floatable: false
             closable: false
             resizable: false
@@ -124,7 +126,7 @@ DockPage {
             contentBottomPadding: 2
 
             NotationToolBar {
-                navigationPanel.section: root.topToolKeyNavSec
+                navigationPanel.section: notationToolBar.navigationSection
                 navigationPanel.order: 2
             }
         },
@@ -134,6 +136,8 @@ DockPage {
 
             objectName: pageModel.playbackToolBarName()
             title: qsTrc("appshell", "Playback controls")
+
+            navigationSection: root.topToolKeyNavSec
 
             separatorsVisible: false
             alignment: DockToolBarAlignment.Right
@@ -146,7 +150,7 @@ DockPage {
             ]
 
             PlaybackToolBar {
-                navigationPanelSection: root.topToolKeyNavSec
+                navigationPanelSection: playbackToolBar.navigationSection
                 navigationPanelOrder: 3
 
                 floating: playbackToolBar.floating
@@ -154,8 +158,11 @@ DockPage {
         },
 
         DockToolBar {
+            id: undoRedoToolBar
             objectName: pageModel.undoRedoToolBarName()
             title: qsTrc("appshell", "Undo/redo")
+
+            navigationSection: root.topToolKeyNavSec
 
             floatable: false
             closable: false
@@ -166,7 +173,7 @@ DockPage {
             contentBottomPadding: 2
 
             UndoRedoToolBar {
-                navigationPanel.section: root.topToolKeyNavSec
+                navigationPanel.section: undoRedoToolBar.navigationSection
                 navigationPanel.order: 4
             }
         }
@@ -178,6 +185,8 @@ DockPage {
 
             objectName: pageModel.noteInputBarName()
             title: qsTrc("appshell", "Note input")
+
+            navigationSection: root.noteInputKeyNavSec
 
             dropDestinations: [
                 root.toolBarTopDropDestination,
@@ -195,7 +204,7 @@ DockPage {
                 maximumWidth: noteInputBar.width
                 maximumHeight: noteInputBar.height
 
-                navigationPanel.section: root.noteInputKeyNavSec
+                navigationPanel.section: noteInputBar.navigationSection
                 navigationPanel.order: 1
             }
         }
@@ -220,6 +229,7 @@ DockPage {
 
             PalettesPanel {
                 navigationSection: palettesPanel.navigationSection
+                navigationOrderStart: palettesPanel.contentNavigationPanelOrderStart
 
                 Component.onCompleted: {
                     palettesPanel.contextMenuModel = contextMenuModel
@@ -245,6 +255,7 @@ DockPage {
 
             InstrumentsPanel {
                 navigationSection: instrumentsPanel.navigationSection
+                navigationOrderStart: instrumentsPanel.contentNavigationPanelOrderStart
 
                 Component.onCompleted: {
                     instrumentsPanel.contextMenuModel = contextMenuModel
@@ -270,6 +281,7 @@ DockPage {
 
             InspectorForm {
                 navigationSection: inspectorPanel.navigationSection
+                navigationOrderStart: inspectorPanel.contentNavigationPanelOrderStart
                 notationView: root.notationView
             }
         },
@@ -295,6 +307,7 @@ DockPage {
 
             SelectionFilterPanel {
                 navigationSection: selectionFilterPanel.navigationSection
+                navigationOrderStart: selectionFilterPanel.contentNavigationPanelOrderStart
             }
         },
         
@@ -325,9 +338,16 @@ DockPage {
 
             MixerPanel {
                 navigationSection: mixerPanel.navigationSection
+                contentNavigationPanelOrderStart: mixerPanel.contentNavigationPanelOrderStart
 
                 Component.onCompleted: {
                     mixerPanel.contextMenuModel = contextMenuModel
+                    mixerPanel.toolbarComponent = toolbarComponent
+                }
+
+                Component.onDestruction: {
+                    mixerPanel.contextMenuModel = null
+                    mixerPanel.toolbarComponent = null
                 }
 
                 onResizeRequested: function(newWidth, newHeight) {
@@ -359,6 +379,7 @@ DockPage {
 
             PianoKeyboardPanel {
                 navigationSection: pianoKeyboardPanel.navigationSection
+                contentNavigationPanelOrderStart: pianoKeyboardPanel.contentNavigationPanelOrderStart
 
                 Component.onCompleted: {
                     pianoKeyboardPanel.contextMenuModel = contextMenuModel
@@ -389,6 +410,7 @@ DockPage {
 
             Timeline {
                 navigationSection: timelinePanel.navigationSection
+                contentNavigationPanelOrderStart: timelinePanel.contentNavigationPanelOrderStart
             }
         },
 
@@ -413,7 +435,8 @@ DockPage {
             navigationSection: root.navigationPanelSec(drumsetPanel.location)
 
             DrumsetPanel {
-                navigationSection: timelinePanel.navigationSection
+                navigationSection: drumsetPanel.navigationSection
+                contentNavigationPanelOrderStart: drumsetPanel.contentNavigationPanelOrderStart
             }
         },
 
@@ -462,7 +485,7 @@ DockPage {
     statusBar: DockStatusBar {
         objectName: pageModel.statusBarName()
 
-        contentNavigationPanel: content.navigationPanel
+        navigationSection: content.navigationSection
 
         NotationStatusBar {
             id: content
