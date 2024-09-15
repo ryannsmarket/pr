@@ -2721,6 +2721,16 @@ bool NotationInteraction::moveSelectionAvailable(MoveSelectionType type) const
         return !isElementEditStarted();
     }
 
+    EngravingItem* el = score()->selection().element();
+    const std::set<ElementType> allowedTextEditTypes = {
+        ElementType::STAFF_TEXT,
+        ElementType::SYSTEM_TEXT,
+        ElementType::EXPRESSION
+    };
+    if (isTextEditingStarted() && el && allowedTextEditTypes.find(el->type()) != allowedTextEditTypes.end()) {
+        return true;
+    }
+
     if (isGripEditStarted()) {
         return true;
     }
@@ -2979,6 +2989,11 @@ void NotationInteraction::moveElementSelection(MoveDirection d)
     EngravingItem* el = score()->selection().element();
     if (!el && !score()->selection().elements().empty()) {
         el = score()->selection().elements().back();
+    }
+
+    if (isTextEditingStarted() && el && el->isTextBase()) {
+        navigateToNearText(d);
+        return;
     }
 
     bool isLeftDirection = MoveDirection::Left == d;
