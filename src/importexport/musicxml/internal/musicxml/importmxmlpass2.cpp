@@ -2923,7 +2923,7 @@ void MusicXMLParserPass2::staffDetails(const String& partId, Measure* measure)
 
     staff_idx_t staffIdx = m_score->staffIdx(part) + n;
 
-    StringData* t = new StringData;
+    StringData stringData;
     String visible = m_e.attribute("print-object");
     String spacing = m_e.attribute("print-spacing");
     if (visible == "no") {
@@ -2957,15 +2957,13 @@ void MusicXMLParserPass2::staffDetails(const String& partId, Measure* measure)
             // save staff lines for later
             staffLines = m_e.readText().toInt();
             // for a TAB staff also resize the string table and init with zeroes
-            if (t) {
-                if (0 < staffLines) {
-                    t->stringList() = std::vector<instrString>(staffLines);
-                } else {
-                    m_logger->logError(String(u"illegal staff-lines %1").arg(staffLines), &m_e);
-                }
+            if (0 < staffLines) {
+                stringData.stringList() = std::vector<instrString>(staffLines);
+            } else {
+                m_logger->logError(String(u"illegal staff-lines %1").arg(staffLines), &m_e);
             }
         } else if (m_e.name() == "staff-tuning") {
-            staffTuning(t);
+            staffTuning(&stringData);
         } else if (m_e.name() == "staff-size") {
             const double val = m_e.readText().toDouble() / 100;
             m_score->staff(staffIdx)->setProperty(Pid::MAG, val);
@@ -2978,20 +2976,18 @@ void MusicXMLParserPass2::staffDetails(const String& partId, Measure* measure)
         setStaffLines(m_score, staffIdx, staffLines);
     }
 
-    if (t) {
-        Instrument* i = part->instrument();
-        if (m_score->staff(staffIdx)->isTabStaff(Fraction(0, 1))) {
-            if (i->stringData()->frets() == 0) {
-                t->setFrets(25);
-            } else {
-                t->setFrets(i->stringData()->frets());
-            }
-        }
-        if (t->strings() > 0) {
-            i->setStringData(*t);
+    Instrument* i = part->instrument();
+    if (m_score->staff(staffIdx)->isTabStaff(Fraction(0, 1))) {
+        if (i->stringData()->frets() == 0) {
+            stringData.setFrets(25);
         } else {
-            m_logger->logError(u"trying to change string data (not supported)", &m_e);
+            stringData.setFrets(i->stringData()->frets());
         }
+        if (stringData.strings() > 0) {
+            i->setStringData(stringData);
+        }
+    } else if (stringData.strings() > 0) {
+        m_logger->logError(u"trying to change string data for non-TAB staff (not supported)", &m_e);
     }
 }
 
