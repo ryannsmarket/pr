@@ -20,8 +20,6 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-cmake_policy(SET CMP0091 OLD) # not set MSVC default args
-
 project(mscore LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -95,7 +93,7 @@ set(MUE_VTEST_MSCORE_REF_BIN "${CMAKE_CURRENT_LIST_DIR}/../MU_ORIGIN/MuseScore/b
 # === Compile ===
 option(MUE_COMPILE_INSTALL_QTQML_FILES "Whether to bundle qml files along with the installation (relevant on macOS only)" ON)
 option(MUE_COMPILE_USE_UNITY "Use unity build." ON)
-option(MUE_COMPILE_USE_CCACHE "Try use ccache" ON)
+option(MUE_COMPILE_USE_COMPILER_CACHE "Try to use compiler cache: tries sccache, ccache, buildcache in that order. Use COMPILER_CACHE_PROGRAM to specify a specific compiler cache program." ON)
 option(MUE_COMPILE_USE_SHARED_LIBS_IN_DEBUG "Build shared libs if possible in debug" OFF)
 option(MUE_COMPILE_MACOS_PRECOMPILED_DEPS_PATH "Path to precompiled dependencies (macOS only; optional: if not specified, some libraries will be used from the system and others will be built from source)" "")
 
@@ -134,9 +132,10 @@ set(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
 
 include(SetupBuildEnvironment)
 include(GetPlatformInfo)
-if (MUE_COMPILE_USE_CCACHE)
-    include(TryUseCcache)
-endif(MUE_COMPILE_USE_CCACHE)
+
+if (MUE_COMPILE_USE_COMPILER_CACHE)
+    include(SetupCompilerCache)
+endif(MUE_COMPILE_USE_COMPILER_CACHE)
 
 
 ###########################################
