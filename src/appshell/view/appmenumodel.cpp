@@ -83,7 +83,7 @@ bool AppMenuModel::isGlobalMenuAvailable()
 
 mu::notation::INotationUndoStackPtr AppMenuModel::undoStack() const
 {
-    mu::notation::INotationPtr notation = context()->currentNotation();
+    mu::notation::INotationPtr notation = globalContext()->currentNotation();
     return notation ? notation->undoStack() : nullptr;
 }
 
@@ -143,7 +143,7 @@ void AppMenuModel::setupConnections()
         pluginsItem.setSubitems(makePluginsMenuSubitems());
     });
 
-    context()->currentNotationChanged().onNotify(this, [this]() {
+    globalContext()->currentNotationChanged().onNotify(this, [this]() {
         auto stack = undoStack();
         if (stack) {
             stack->stackChanged().onNotify(this, [this]() {

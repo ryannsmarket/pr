@@ -59,7 +59,7 @@ public:
     muse::Inject<muse::update::IUpdateConfiguration> updateConfiguration = { this };
     muse::Inject<muse::IGlobalConfiguration> globalConfiguration = { this };
     muse::Inject<project::IProjectConfiguration> projectConfiguration = { this };
-    muse::Inject<mu::context::IGlobalContext> context = { this };
+    muse::Inject<mu::context::IGlobalContext> globalContext = { this };
 
 public:
     explicit AppMenuModel(QObject* parent = nullptr);
