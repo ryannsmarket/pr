@@ -965,7 +965,12 @@ void NotationActionController::move(MoveDirection direction, bool quickly)
 {
     TRACEFUNC;
     auto interaction = currentNotationInteraction();
-    if (!interaction || interaction->selection()->isNone()) {
+    if (!interaction) {
+        return;
+    }
+
+    if (interaction->selection()->isNone()) {
+        moveSelection(MoveSelectionType::EngravingItem, direction);
         return;
     }
 
