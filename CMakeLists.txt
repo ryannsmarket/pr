@@ -16,9 +16,9 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>. 
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
 
 project(mscore LANGUAGES C CXX)
 
@@ -93,7 +93,7 @@ set(MUE_VTEST_MSCORE_REF_BIN "${CMAKE_CURRENT_LIST_DIR}/../MU_ORIGIN/MuseScore/b
 # === Compile ===
 option(MUE_COMPILE_INSTALL_QTQML_FILES "Whether to bundle qml files along with the installation (relevant on macOS only)" ON)
 option(MUE_COMPILE_USE_UNITY "Use unity build." ON)
-option(MUE_COMPILE_USE_CCACHE "Try use ccache" ON)
+option(MUE_COMPILE_USE_COMPILER_CACHE "Try to use compiler cache: tries sccache, ccache, buildcache in that order. Use COMPILER_CACHE_PROGRAM to specify a specific compiler cache program." ON)
 option(MUE_COMPILE_USE_SHARED_LIBS_IN_DEBUG "Build shared libs if possible in debug" OFF)
 option(MUE_COMPILE_MACOS_PRECOMPILED_DEPS_PATH "Path to precompiled dependencies (macOS only; optional: if not specified, some libraries will be used from the system and others will be built from source)" "")
 
@@ -132,9 +132,10 @@ set(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
 
 include(SetupBuildEnvironment)
 include(GetPlatformInfo)
-if (MUE_COMPILE_USE_CCACHE)
-    include(TryUseCcache)
-endif(MUE_COMPILE_USE_CCACHE)
+
+if (MUE_COMPILE_USE_COMPILER_CACHE)
+    include(SetupCompilerCache)
+endif(MUE_COMPILE_USE_COMPILER_CACHE)
 
 
 ###########################################
@@ -149,12 +150,11 @@ if (MUE_COMPILE_MACOS_PRECOMPILED_DEPS_PATH)
     set(MUE_COMPILE_USE_SYSTEM_OPUS ON)
 endif()
 
-set(QT_MIN_VERSION "6.2.4")
 if (MUSE_MODULE_NETWORK_WEBSOCKET)
     set(QT_ADD_WEBSOCKET ON)
 endif()
 
-include(FindQt6)
+include(SetupQt6)
 
 if (MUE_DOWNLOAD_SOUNDFONT)
     include(DownloadSoundFont)
