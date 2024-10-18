@@ -27,6 +27,8 @@
 #include "importmusicxmlpass1.h"
 #include "../shared/musicxmlsupport.h"
 #include "../shared/musicxmltypes.h"
+#include "importmusicxmlnoteduration.h"
+#include "importmusicxmlnotepitch.h"
 #include "musicxmltupletstate.h"
 
 namespace mu::engraving {
@@ -61,6 +63,7 @@ class Tie;
 class Trill;
 class Tuplet;
 class Volta;
+enum class NoteType;
 enum class TupletBracketType : char;
 enum class TupletNumberType : char;
 }
@@ -340,9 +343,9 @@ public:
     MusicXmlParserNotations(muse::XmlStreamReader& e, engraving::Score* score, MusicXmlLogger* logger, MusicXmlParserPass2& pass2);
     void parse();
     void addToScore(engraving::ChordRest* const cr, engraving::Note* const note, const int tick, SlurStack& slurs,
-                    engraving::Glissando* glissandi[MAX_NUMBER_LEVEL][2], MusicXmlSpannerMap& spanners, TrillStack& trills,
-                    MusicXmlTieMap& ties, std::vector<engraving::Note*>& unstartedTieNotes, std::vector<engraving::Note*>& unendedTieNotes,
-                    ArpeggioMap& arpMap, DelayedArpMap& delayedArps);
+                    std::array<std::array<engraving::Glissando*, 2>, MAX_NUMBER_LEVEL>& glissandi, MusicXmlSpannerMap& spanners,
+                    TrillStack& trills, MusicXmlTieMap& ties, std::vector<engraving::Note*>& unstartedTieNotes,
+                    std::vector<engraving::Note*>& unendedTieNotes, ArpeggioMap& arpMap, DelayedArpMap& delayedArps);
     muse::String errors() const { return m_errors; }
     MusicXmlTupletDesc tupletDesc() const { return m_tupletDesc; }
     bool hasTremolo() const { return m_hasTremolo; }
@@ -392,6 +395,115 @@ private:
     bool m_wavyLineStop = false;
 };
 
+class MusicXmlParserNote
+{
+public:
+    MusicXmlParserNote(muse::XmlStreamReader& e, engraving::Score* score, MusicXmlLogger* logger, MusicXmlParserPass1& pass1,
+                       MusicXmlParserPass2& pass2, const muse::String& partId, engraving::Measure* measure, const engraving::Fraction sTime,
+                       const engraving::Fraction prevSTime, engraving::Fraction& missingPrev, engraving::Fraction& dura,
+                       engraving::Fraction& missingCurr, muse::String& currentVoice, GraceChordList& gcl, size_t& gac, Beams& currBeams,
+                       FiguredBassList& fbl, int& alt, MusicXmlTupletStates& tupletStates, Tuplets& tuplets, ArpeggioMap& arpMap,
+                       DelayedArpMap& delayedArps);
+    engraving::Note* parse();
+    muse::String errors() const { return m_errors; }
+private:
+    void skipLogCurrElem();
+    static engraving::NoteHeadGroup convertNotehead(muse::String mxmlName);
+
+    void stem();
+    void beam();
+    void computeBeamMode();
+    void handleBeamAndStemDir(engraving::Beam*& beam);
+
+    static bool isWholeMeasureRest(const muse::String& type, const engraving::Fraction dura, const engraving::Fraction mDura);
+    engraving::TDuration determineDuration(const bool rest, const bool measureRest, const muse::String& type);
+
+    engraving::Chord* findOrCreateChord() const;
+    engraving::Chord* createGraceChord() const;
+    engraving::NoteType graceNoteType() const;
+
+    void setPitch(const MusicXmlInstruments& instruments, const int octaveShift, const engraving::Instrument* const instrument);
+
+    inline bool isSmall() const { return m_cue || m_isSmall; }
+    void handleDisplayStep();
+    void handleSmallness();
+    void setNoteHead();
+
+    void addTremolo(engraving::Chord*& tremStart);
+    void addFiguredBassElements();
+
+    void setDrumset() const;
+    void xmlSetDrumsetPitch(const engraving::Staff* staff, engraving::Instrument* instrument);
+
+    void addInferredStickings() const;
+    void addGraceNoteLyrics();
+    void addLyrics();
+    void addLyric(engraving::Lyrics* l, int lyricNo);
+
+    void notePrintSpacingNo();
+    void addError(const muse::String& error);
+
+    inline engraving::track_idx_t track() const { return m_track + m_voice; }
+
+    muse::XmlStreamReader& m_e;
+    engraving::Score* m_score;
+    MusicXmlLogger* m_logger;
+    muse::String m_errors;
+    MusicXmlParserPass1& m_pass1;
+    MusicXmlParserPass2& m_pass2;
+    muse::String m_partId;
+    engraving::Chord* m_chord = nullptr;
+    engraving::ChordRest* m_chordRest = nullptr;
+    engraving::Note* m_note = nullptr;
+
+    // ARGS FROM MusicXmlParserPass2::note
+    // TODO reduce by creating xml parser context object
+    engraving::Measure* m_measure;
+    const engraving::Fraction m_sTime;
+    const engraving::Fraction m_prevSTime;
+    engraving::Fraction& m_missingPrev;
+    engraving::Fraction& m_durationFraction;
+    engraving::Fraction& m_missingCurr;
+    muse::String& m_currentVoice;
+    GraceChordList& m_graceChordsList;
+    size_t& m_graceAfterCount;
+    Beams& m_currBeams;
+    FiguredBassList& m_figuredBassList;
+    int& m_alter;
+    MusicXmlTupletStates& m_tupletStates;
+    Tuplets& m_tuplets;
+    ArpeggioMap& m_arpMap;
+    DelayedArpMap& m_delayedArps;
+
+    MusicXmlParserLyric m_lyricParser;
+    MusicXmlParserNotations m_notationsParser;
+    MusicXmlNoteDuration m_noteDurationParser;
+    MusicXmlNotePitch m_notePitchParser;
+
+    bool m_cue = false;
+    bool m_isSmall = false;
+    engraving::NoteHeadGroup m_headGroup = engraving::NoteHeadGroup::HEAD_NORMAL;
+    engraving::Color m_noteheadColor = engraving::Color::BLACK;
+    bool m_noteheadParentheses = false;
+    muse::String m_noteheadFilled;
+    bool m_graceSlash = false;
+    engraving::DirectionV m_stemDir = engraving::DirectionV::AUTO;
+    bool m_noStem = false;
+
+    std::map<int, muse::String> m_beamTypes;
+    engraving::BeamMode m_beamMode;
+
+    muse::String m_instrumentId;
+
+    int m_staffMove = 0;
+    int m_track = 0;
+    int m_voice = 0;
+
+    engraving::Fraction m_noteStartTime;
+    engraving::Fraction m_timeMod;
+    engraving::TDuration m_duration;
+};
+
 //---------------------------------------------------------
 //   MusicXmlParserPass2
 //---------------------------------------------------------
@@ -428,6 +540,22 @@ public:
         m_inferredPerc.push_back(instr);
     }
 
+    void duration(engraving::Fraction& dura);
+
+    int divs() const { return m_divs; }
+    MusicXmlSlash measureStyleSlash() const { return m_measureStyleSlash; }
+    engraving::Chord*& tremStart() { return m_tremStart; }
+
+    SlurStack& slurs() { return m_slurs; }
+    TrillStack& trills() { return m_trills; }
+    std::array<std::array<engraving::Glissando*, 2>, MAX_NUMBER_LEVEL>& glissandi() { return m_glissandi; }
+    MusicXmlSpannerMap& spanners() { return m_spanners; }
+    MusicXmlTieMap& ties() { return m_ties; }
+    std::vector<engraving::Note*>& unstartedTieNotes() { return m_unstartedTieNotes; }
+    std::vector<engraving::Note*>& unendedTieNotes() { return m_unendedTieNotes; }
+    std::vector<GraceNoteLyrics>& graceNoteLyrics() { return m_graceNoteLyrics; }
+    MusicXmlLyricsExtend& extendedLyrics() { return m_extendedLyrics; }
+
 private:
     void addError(const muse::String& error);      // Add an error to be shown in the GUI
     void initPartState(const muse::String& partId);
@@ -452,18 +580,14 @@ private:
                           engraving::Fraction& missingCurr, muse::String& currentVoice, GraceChordList& gcl, size_t& gac, Beams& currBeams,
                           FiguredBassList& fbl, int& alt, MusicXmlTupletStates& tupletStates, Tuplets& tuplets, ArpeggioMap& arpMap,
                           DelayedArpMap& delayedArps);
-    void notePrintSpacingNo(engraving::Fraction& dura);
     engraving::FiguredBassItem* figure(const int idx, const bool paren, engraving::FiguredBass* parent);
     engraving::FiguredBass* figuredBass();
     engraving::FretDiagram* frame();
     void harmony(const muse::String& partId, engraving::Measure* measure, const engraving::Fraction& sTime, HarmonyMap& harmonyMap);
     engraving::Accidental* accidental();
-    void beam(std::map<int, muse::String>& beamTypes);
-    void duration(engraving::Fraction& dura);
     void forward(engraving::Fraction& dura);
     void backup(engraving::Fraction& dura);
     void timeModification(engraving::Fraction& timeMod, engraving::TDuration& normalType);
-    void stem(engraving::DirectionV& sd, bool& nost);
     void doEnding(const muse::String& partId, engraving::Measure* measure, const muse::String& number, const muse::String& type,
                   const engraving::Color color, const muse::String& text, const bool print);
     void staffDetails(const muse::String& partId, engraving::Measure* measure = nullptr);
@@ -473,9 +597,6 @@ private:
     // multi-measure rest state handling
     void setMultiMeasureRestCount(int count);
     int getAndDecMultiMeasureRestCount();
-
-    void xmlSetDrumsetPitch(engraving::Note* note, const engraving::Chord* chord, const engraving::Staff* staff, int step, int octave,
-                            engraving::NoteHeadGroup headGroup, engraving::DirectionV& stemDir, engraving::Instrument* instrument);
 
     // generic pass 2 data
 
@@ -502,7 +623,7 @@ private:
     InferredTempoLineStack m_inferredTempoLines;
     MusicXmlExtendedSpannerDesc m_dummyNewMusicXmlSpannerDesc;
 
-    engraving::Glissando* m_glissandi[MAX_NUMBER_LEVEL][2];     // Current slides ([0]) / glissandi ([1])
+    std::array<std::array<engraving::Glissando*, 2>, MAX_NUMBER_LEVEL> m_glissandi;     // Current slides ([0]) / glissandi ([1])
 
     MusicXmlTieMap m_ties;
     std::vector<engraving::Note*> m_unstartedTieNotes;
